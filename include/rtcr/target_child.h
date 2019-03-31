@@ -1,0 +1,133 @@
+/*
+ * \brief  Child creation
+ * \author Denis Huber
+ * \author Johannes Fischer
+ * \date   2019-03-23
+ */
+
+#ifndef _RTCR_TARGET_CHILD_H_
+#define _RTCR_TARGET_CHILD_H_
+
+/* Genode includes */
+#include <base/env.h>
+#include <base/child.h>
+#include <base/service.h>
+#include <base/snprintf.h>
+#include <rom_session/connection.h>
+#include <cpu_session/cpu_session.h>
+#include <util/list.h>
+
+/* Rtcr includes */
+//#include "target_state.h"
+
+#include <rtcr_cpu/cpu_session_handler.h>
+#include <rtcr_pd/pd_session_handler.h>
+#include <rtcr_ram/ram_session_handler.h>
+#include <rtcr_rm/rm_session_handler.h>
+#include <rtcr_rom/rom_session_handler.h>
+
+
+#include <rtcr/session_handler_factory.h>
+
+namespace Rtcr {
+	class Target_child;
+}
+
+
+/**
+ * Encapsulates the policy and creation of the child
+ */
+class Rtcr::Target_child : public Genode::Child_policy
+{
+private:
+	/**
+	 * Child's unique name and filename of child's rom module
+	 */
+	Genode::String<32>  _name;
+	/**
+	 * Local environment
+	 */
+	Genode::Env        &_env;
+	/**
+	 * Local allocator
+	 */
+	Genode::Allocator  &_md_alloc;
+	/**
+	 * Entrypoint for managing child's resource-sessions (PD, CPU, RAM)
+	 */
+	Genode::Entrypoint  _resources_ep;
+	/**
+	 * Entrypoint for child's creation
+	 */
+	Genode::Entrypoint  _child_ep;
+	/**
+	 * Indicator whether child was bootstraped or not
+	 */
+	bool                _in_bootstrap;
+
+	/**
+	 * Needed for child's creation
+	 */
+	Genode::Child::Initial_thread  *_initial_thread;
+	/**
+	 * Needed for child's creation
+	 */
+	Genode::Region_map_client      *_address_space;
+	/**
+	 * Registry for parent's services (parent of RTCR component). It is shared between all children.
+	 */
+	Genode::Service_registry      &_parent_services;
+	/**
+	 * Child object
+	 */
+	Genode::Child                 *_child;
+
+	Genode::List<Session_handler> _session_handlers;
+
+	
+public:
+
+	/**
+	 * Constructor
+	 *
+	 * TODO Separate child's name and filename to support multiple child's with the same rom module
+	 */
+	Target_child(Genode::Env &env,
+		     Genode::Allocator &md_alloc,
+		     Genode::Service_registry &parent_services,
+		     const char *name);
+
+	~Target_child();
+
+	Cpu_session_handler *cpu_handler;
+	Ram_session_handler *ram_handler;
+	Pd_session_handler *pd_handler;
+	Rm_session_handler *rm_handler;
+	Rom_session_handler *rom_handler;		
+
+	
+	/**
+	 * Start child from scratch
+	 */
+	void start();
+	/**
+	 * Pause child
+	 */
+	//	void pause()  { _resources.cpu.pause_threads();  }
+	/**
+	 * Resume child
+	 */
+	//	void resume() { _resources.cpu.resume_threads(); }
+
+	
+	/****************************
+	 ** Child-policy interface **
+	 ****************************/
+
+	const char *name() const { return _name.string(); }
+	Genode::Service *resolve_session_request(const char *service_name, const char *args);
+	void filter_session_args(const char *service, char *args, Genode::size_t args_len);
+
+};
+
+#endif /* _RTCR_TARGET_CHILD_H_ */
