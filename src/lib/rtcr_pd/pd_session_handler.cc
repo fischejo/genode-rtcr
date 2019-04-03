@@ -591,7 +591,7 @@ void Pd_session_handler::_destroy_stored_signal_context(Target_state &state,
     Genode::destroy(state._alloc, &stored_info);
 }
 
-Genode::addr_t Pd_session_handler::_find_kcap_by_badge(Genode::uint16_t badge)
+Genode::addr_t Pd_session_handler::find_kcap_by_badge(Genode::uint16_t badge)
 {
 #ifdef VERBOSE
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");

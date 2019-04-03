@@ -48,7 +48,6 @@ class Rtcr::Session_handler_factory
   static Session_handler_factory* get(char const* name);  
   static Session_handler_factory* first();
   Session_handler_factory* next();
-
 };
 
 

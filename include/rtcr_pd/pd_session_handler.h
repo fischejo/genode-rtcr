@@ -56,12 +56,6 @@ private:
      */
     Pd_session_component &_find_session(const char *label, Pd_root &pd_root);
 
-    /**
-     * \brief Return the kcap for a given badge from _capability_map_infos
-     * Refactored from `checkpointer.h`
-     * Return the kcap for a given badge. If there is no, return 0.
-     */
-    Genode::addr_t _find_kcap_by_badge(Genode::uint16_t badge);
 
     /**
      * \brief Destroys the _kcap_mappings list.
@@ -125,15 +119,26 @@ public:
     Pd_session_component &session();
 
     /**
-     * Getter for `kcap_mappings` list
+     * Getter for `kcap_mappings` list (Wer bruacht sie eigentlich?)
      */        
     Genode::List<Kcap_badge_info> &kcap_mappings();
 
+    /**
+     * \brief Return the kcap for a given badge from _capability_map_infos
+     * Refactored from `checkpointer.h`
+     * Return the kcap for a given badge. If there is no, return 0.
+     */
+    Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge);
+
+  
   
     void prepare_checkpoint(Target_state &state);
     void checkpoint(Target_state &state);
     void session_restore();
 
+    char const* name() {
+      return "PD";
+    }
 	
 };
 

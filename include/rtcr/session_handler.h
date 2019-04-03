@@ -15,16 +15,27 @@
 
 
 namespace Rtcr {
-	class Session_handler;
+    class Session_handler;
 }
 
 class Rtcr::Session_handler : public Genode::List<Session_handler>::Element
 {
 public:
-	virtual void session_init() = 0;
-	virtual void session_checkpoint() = 0;
-	virtual void session_restore() = 0;
-	//	virtual char const* name() = 0;	
+    virtual void prepare_checkpoint(Target_state &state) = 0;
+    virtual void checkpoint(Target_state &state) = 0;
+
+    virtual void session_restore() = 0;
+  
+    virtual char const* name() = 0;
+
+    Session_handler *find_by_name(char const* name)
+	{
+	    if(name == this->name())
+		return this;
+	    Sesion_handler *next = next();
+	    return next ? next->find_by_name(name) : 0;
+	}
+	
 };
 
 
