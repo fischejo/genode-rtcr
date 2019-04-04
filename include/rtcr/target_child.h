@@ -17,17 +17,12 @@
 #include <cpu_session/cpu_session.h>
 #include <util/list.h>
 
-/* Rtcr includes */
-//#include "target_state.h"
+/* Local includes */
+#include <rtcr_core/core_module.h>
 
-#include <rtcr_cpu/cpu_session_handler.h>
-#include <rtcr_pd/pd_session_handler.h>
-#include <rtcr_ram/ram_session_handler.h>
-#include <rtcr_rm/rm_session_handler.h>
-#include <rtcr_rom/rom_session_handler.h>
-
-
-#include <rtcr/session_handler_factory.h>
+// not used right now
+//#include <rtcr/module.h>
+//#include <rtcr/module_factory.h>
 
 namespace Rtcr {
 	class Target_child;
@@ -82,7 +77,7 @@ private:
 	 */
 	Genode::Child                 *_child;
 
-	Genode::List<Session_handler> _session_handlers;
+
 
 	
 public:
@@ -99,12 +94,7 @@ public:
 
 	~Target_child();
 
-	Cpu_session_handler *cpu_handler;
-	Ram_session_handler *ram_handler;
-	Pd_session_handler *pd_handler;
-	Rm_session_handler *rm_handler;
-	Rom_session_handler *rom_handler;		
-
+	Core_module *core_module;
 	
 	/**
 	 * Start child from scratch

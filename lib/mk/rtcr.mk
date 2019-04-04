@@ -1,6 +1,6 @@
-SRC_CC = target_child.cc session_handler_factory.cc
-vpath % $(REP_DIR)/src/core
-LIBS   = rtcr_pd rtcr_cpu rtcr_ram rtcr_rm rtcr_rom
+SRC_CC = target_child.cc
+vpath % $(REP_DIR)/src/rtcr
+LIBS   = rtcr_core
 CC_OPT += -DVERBOSE
 CC_OPT += -DDEBUG
 
