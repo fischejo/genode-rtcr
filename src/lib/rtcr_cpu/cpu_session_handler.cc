@@ -289,7 +289,22 @@ void Cpu_session_handler::session_restore()
 }
 
 
+Cpu_session_component &Cpu_session_handler::session()
+{
+    return _session;
+}
 
+
+Genode::Local_service &Cpu_session_handler::service()
+{
+    return _service;
+}
+
+
+Pd_root &Cpu_session_handler::root()
+{
+    return _root;
+}
 
 
 

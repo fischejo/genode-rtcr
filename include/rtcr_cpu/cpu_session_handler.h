@@ -107,17 +107,7 @@ public:
     
     char const* name() {
 	return "CPU";
-    }
-
-
-
-
-
-
-
-
-
-    
+    }    
 };
 
 

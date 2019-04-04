@@ -25,55 +25,63 @@
 #include <rtcr_ram/ram_session.h>
 
 namespace Rtcr {
-  class Ram_session_handler;
-  class Ram_session_handler_factory;  
+    class Ram_session_handler;
+    class Ram_session_handler_factory;  
 }
 
 using namespace Rtcr;
 
+
 class Rtcr::Ram_session_handler: public Session_handler
 {
+private:
+    Genode::Env        &_env;
+    Genode::Allocator  &_md_alloc;
+    Genode::Entrypoint &_ep;	
+
+    Ram_root &_root;
+    Genode::Local_service &_service;
+    Ram_session_component   &_session;
+
+  
 public:
-	Ram_session_handler(Genode::Env &env,
-			    Genode::Allocator &md_alloc,
-			    Genode::Entrypoint &ep,
-			    const char* label,
-			    bool &bootstrap);
+    Ram_session_handler(Genode::Env &env,
+			Genode::Allocator &md_alloc,
+			Genode::Entrypoint &ep,
+			const char* label,
+			Genode::size_t granularity,
+			bool &bootstrap);
 	
-	~Ram_session_handler();
+    ~Ram_session_handler();
 
-        void session_init();
-	void session_checkpoint();
-	void session_restore();
+    void prepare_checkpoint(Target_state &state);
+    void checkpoint(Target_state &state);
+    void session_restore();
 
-	Ram_root *ram_root;
-	Genode::Local_service *ram_service;
-	Ram_session_component  *ram_session;	
-
-	Genode::Env        &_env;
-	Genode::Allocator  &_md_alloc;
-	Genode::Entrypoint &_ep;	
+    char const* name() {
+      return "RAM";
+    }
 	
 };
 
 // create a factory class for Cpu_session_handler
 class Rtcr::Ram_session_handler_factory : public Session_handler_factory
 {
- public:
-  Session_handler* create(Genode::Env &env,
-			  Genode::Allocator &md_alloc,
-			  Genode::Entrypoint &ep,
-			  Genode::List<Session_handler> *_session_handlers,			  
-			  const char* label,
-			  bool &bootstrap)
-  {
-    return new (md_alloc) Ram_session_handler(env, md_alloc, ep, label, bootstrap);
-  }
+public:
+    Session_handler* create(Genode::Env &env,
+			    Genode::Allocator &md_alloc,
+			    Genode::Entrypoint &ep,
+			    Genode::List<Session_handler> *_session_handlers,			  
+			    const char* label,
+			    bool &bootstrap)
+	{
+	    return new (md_alloc) Ram_session_handler(env, md_alloc, ep, label, 0, bootstrap);
+	}
     
-  char const* name()
-  {
-    return "RAM";
-  }
+    char const* name()
+	{
+	    return "RAM";
+	}
   
 };
 
