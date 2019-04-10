@@ -10,10 +10,10 @@ using namespace Rtcr;
 
 
 Core_module_cpu::Core_module_cpu(Genode::Env &env,
-					 Genode::Allocator &md_alloc,
-					 Genode::Entrypoint &ep,
-					 const char* label,
-					 bool &bootstrap)
+				 Genode::Allocator &md_alloc,
+				 Genode::Entrypoint &ep,
+				 const char* label,
+				 bool &bootstrap)
     :
     _env(env),
     _md_alloc(md_alloc),
@@ -62,7 +62,7 @@ void Core_module_cpu::_checkpoint(Target_state &state)
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
 #endif
     Genode::List<Cpu_session_component> &child_infos = state._stored_session_component ?
-    Genode::List<Stored_cpu_session_info> &stored_infos = state._stored_cpu_sessions;
+	Genode::List<Stored_cpu_session_info> &stored_infos = state._stored_cpu_sessions;
     Cpu_session_component *child_info = nullptr;
     Stored_cpu_session_info *stored_info = nullptr;
 
@@ -77,7 +77,7 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	  Genode::addr_t childs_kcap = Core_module_pd::find_kcap_by_badge(child_info->cap().local_name());
+	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
 	    stored_info = new (state._alloc) Stored_cpu_session_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
@@ -110,7 +110,7 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 
 
 void Core_module_cpu::_destroy_stored_cpu_session(Target_state &state,
-						      Stored_cpu_session_info &stored_info)
+						  Stored_cpu_session_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
@@ -125,7 +125,7 @@ void Core_module_cpu::_destroy_stored_cpu_session(Target_state &state,
 
 
 void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
-					       Genode::List<Cpu_thread_component> &child_infos)
+					   Genode::List<Cpu_thread_component> &child_infos)
 {
 #ifdef DEBUG
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
@@ -146,7 +146,7 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	  Genode::addr_t childs_kcap = Core_module_pd::find_kcap_by_badge(child_info->cap().local_name());
+	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
 	    stored_info = new (state._alloc) Stored_cpu_thread_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}

@@ -22,9 +22,9 @@ Core_module::Core_module(Genode::Env &env,
 			 bool &bootstrap)
     :
     Core_module_pd(env, md_alloc, ep, label, bootstrap),
-    Core_module_cpu(env, md_alloc, ep, label, bootstrap), /* depends on Core_module_pd::Core_module_pd */
-    Core_module_rm(env, md_alloc, ep, label, bootstrap), /* depends on Core_module_pd::Core_module_pd */
-    Core_module_ram(env, md_alloc, ep, label, 0, bootstrap), /* depends on Core_module_pd::Core_module_pd */
+    Core_module_cpu(env, md_alloc, ep, label, bootstrap), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_rm(env, md_alloc, ep, label, bootstrap), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_ram(env, md_alloc, ep, label, 0, bootstrap), /* depends on Core_module_pd::Core_module_pd() */
     Core_module_rom(env, md_alloc, ep, label, bootstrap)
 {
   
@@ -33,15 +33,22 @@ Core_module::Core_module(Genode::Env &env,
 
 void Core_module::checkpoint(Target_state &state)
 {  
-    /* Preparations */
-    Core_module_pd::_create_kcap_mappings(state);  /* Now find_kcap_by_badge is initialized */
+    /* initialize `kcap_mappings` variable. This step depends on Core_module_ram::Core_module_ram() */
+    Core_module_pd::_create_kcap_mappings(state);
+
+    /* initialize `region_map` variable. This step depends on Core_module_pd::Core_module_pd() */
     Core_module_rm::_create_region_map_dataspace_list(state); /* Now ... */
 
     /* Checkpointing */
-    Core_module_pd::_checkpoint(state); /* depends on Core_module_rm::_create_region_map_dataspace_list */
-    Core_module_cpu::_checkpoint(state); /* depends on Core_module_rm::_create_region_map_dataspace_list */
-    Core_module_rm::_checkpoint(state); /* depends on Core_module_rm::_create_region_map_dataspace_list */
-    Core_module_ram::_checkpoint(state); /* depends on Core_module_rm::_create_region_map_dataspace_list */
+    Core_module_pd::_checkpoint(state);  /* depends on Core_module_pd::_create_kcap_mappings */
+    Core_module_cpu::_checkpoint(state);  /* depends on Core_module_pd::_create_kcap_mappings */
+    Core_module_rm::_checkpoint(state);  /* depends on Core_module_pd::_create_kcap_mappings */
+
+    /* depends on Core_module_pd::_create_kcap_mappings */
+    /* depends on Core_module_rm::_create_region_map_dataspace_list */    
+    Core_module_ram::_checkpoint(state);
+
+    Core_module_ram::_checkpoint_temp_wrapper(state);
 }
 
 
@@ -60,8 +67,3 @@ void resume()
 {
     Core_module_cpu::_resume();
 }
-
-
-
-TODO in all classes:
-_find_kcap_by_badge -> Core_module_pd::find_kcap_by_badge

@@ -15,6 +15,7 @@
 
 /* Local includes */
 #include <rtcr/module.h>
+#include <rtcr/target_state.h>
 #include <rtcr_core/core_module_cpu.h>
 #include <rtcr_core/core_module_ram.h>
 #include <rtcr_core/core_module_pd.h>
@@ -39,7 +40,13 @@ public:
      * As every module requires this method, it is public to othe rmodules.
      */
     virtual Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge) = 0;
+    virtual Ref_badge_info find_region_map_by_badge(Genode::uint16_t badge) = 0;
 
+  // implemented in core_module_rm
+  // used by core_module_pd
+    virtual void _prepare_region_maps(Target_state &state,
+				      Genode::List<Stored_region_map_info> &stored_infos,
+				      Genode::List<Region_map_component> &child_infos) = 0;
 
     /* Methods required by Target_child */
     virtual Pd_root &pd_root() = 0;

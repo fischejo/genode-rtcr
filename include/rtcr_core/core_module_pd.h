@@ -19,6 +19,7 @@
 
 
 #include <rtcr_core/core_module.h>
+#include <rtcr/target_state.h>
 #include <rtcr_core/pd/pd_session.h>
 #include <rtcr_core/pd/kcap_badge_info.h>
 #include <rtcr_core/pd/ref_badge_innfo.h>
@@ -70,8 +71,12 @@ private:
      * from state_infos. Now an updated capability map is ready to used for the next steps to store the
      * kcap for each RPC object.
      */
+
+    // level: 1
     Genode::List<Kcap_badge_info> _create_kcap_mappings(Target_state &state);
+    // level: 1.1
     Genode::List<Ref_badge_info> _mark_and_attach_designated_dataspaces(Attached_region_info &ar_info);
+    // level: 1.2
     void _detach_and_unmark_designated_dataspaces(Genode::List<Ref_badge_info> &badge_infos, Attached_region_info &ar_info);
 
     
@@ -87,6 +92,15 @@ private:
     void _prepare_signal_contexts(Target_state &state, Genode::List<Signal_context_info> &child_infos);
     void _destroy_stored_signal_context(Target_state &state, Stored_signal_context_info &stored_info);
 
+  /* This method is an exact copy from core_module_rm. It is copied in order to
+     minimize the dependencies between both classes. */
+    void _destroy_stored_region_map(Target_state &state,
+				    Stored_region_map_info &stored_info);
+
+  /* This method is an exact copy from core_module_rm. It is copied in order to
+     minimize the dependencies between both classes. */
+    void _destroy_stored_attached_region(Target_state &state,
+					 Stored_attached_region_info &stored_info);
 
 /* implement virtual methods of Core_module_base */
   Pd_root & pd_root() {

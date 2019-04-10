@@ -22,7 +22,6 @@ Core_module_pd::Core_module_pd(Genode::Env &env,
     _pd_root(env, md_alloc, ep, bootstrap),
     _pd_service("PD", _pd_root),
     _pd_session(_find_session(label, _pd_root))
-    _ram_session(ram_session) ?
 {
 #ifdef VERBOSE
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
@@ -80,7 +79,7 @@ void Core_module_pd::_create_kcap_mappings(&Target_state state)
     Genode::List<Kcap_badge_info> result;
 
     /* Retrieve cap_idx_alloc_addr */
-    Genode::Pd_session_client pd_client(_session.parent_cap());
+    Genode::Pd_session_client pd_client(_pd_session.parent_cap());
     addr_t const cap_idx_alloc_addr = Genode::Foc_native_pd_client(
 	pd_client.native_pd()).cap_map_info();
     state._cap_idx_alloc_addr = cap_idx_alloc_addr;
@@ -91,7 +90,7 @@ void Core_module_pd::_create_kcap_mappings(&Target_state state)
 	
     /* Find child's dataspace containing the capability map
      * It is found via cap_idx_alloc_addr */
-    Attached_region_info *ar_info = _session
+    Attached_region_info *ar_info = _pd_session
 	.address_space_component()
 	.parent_state()
 	.attached_regions
@@ -201,7 +200,7 @@ Genode::List<Ref_badge_info> Core_module_pd::_mark_and_attach_designated_dataspa
     
     Genode::List<Ref_badge_info> result_infos;
 
-    Managed_region_map_info *mrm_info = ar_info.managed_dataspace(_ram_session.parent_state().ram_dataspaces);
+    Managed_region_map_info *mrm_info = ar_info.managed_dataspace(ram_session().parent_state().ram_dataspaces);
     if(mrm_info) {
 	Designated_dataspace_info *dd_info = mrm_info->dd_infos.first();
 	while(dd_info) {
@@ -227,7 +226,7 @@ void Core_module_pd::_detach_and_unmark_designated_dataspaces(Genode::List<Ref_b
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
 #endif
   
-    Managed_region_map_info *mrm_info = ar_info.managed_dataspace(_ram_session.parent_state().ram_dataspaces);
+    Managed_region_map_info *mrm_info = ar_info.managed_dataspace(ram_session().parent_state().ram_dataspaces);
     if(mrm_info && badge_infos.first()) {
 	Designated_dataspace_info *dd_info = mrm_info->dd_infos.first();
 	while(dd_info) {
@@ -263,10 +262,10 @@ void Core_module_pd::_checkpoint(Target_state &state);
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	    Genode::addr_t childs_pd_kcap  = _find_kcap_by_badge(child_info->cap().local_name());
-	    Genode::addr_t childs_add_kcap = _find_kcap_by_badge(child_info->address_space_component().cap().local_name());
-	    Genode::addr_t childs_sta_kcap = _find_kcap_by_badge(child_info->stack_area_component().cap().local_name());
-	    Genode::addr_t childs_lin_kcap = _find_kcap_by_badge(child_info->linker_area_component().cap().local_name());
+	    Genode::addr_t childs_pd_kcap  = find_kcap_by_badge(child_info->cap().local_name());
+	    Genode::addr_t childs_add_kcap = find_kcap_by_badge(child_info->address_space_component().cap().local_name());
+	    Genode::addr_t childs_sta_kcap = find_kcap_by_badge(child_info->stack_area_component().cap().local_name());
+	    Genode::addr_t childs_lin_kcap = find_kcap_by_badge(child_info->linker_area_component().cap().local_name());
 	    stored_info = new (state._alloc) Stored_pd_session_info(*child_info,
 								    childs_pd_kcap,
 								    childs_add_kcap,
@@ -275,8 +274,9 @@ void Core_module_pd::_checkpoint(Target_state &state);
 	    stored_infos.insert(stored_info);
 	}
 
-	// Wrap Region_maps of child's and checkpointer's PD session in lists for reusing _prepare_region_maps
-	// The linked list pointers of the three regions maps are usually not used gloablly
+	/* Wrap Region_maps of child's and checkpointer's PD session in lists
+	 * for reusing _prepare_region_maps The linked list pointers of the
+	 * three regions maps are usually not used gloablly */
 	Genode::List<Stored_region_map_info> temp_stored;
 	temp_stored.insert(&stored_info->stored_linker_area);
 	temp_stored.insert(&stored_info->stored_stack_area);
@@ -285,26 +285,28 @@ void Core_module_pd::_checkpoint(Target_state &state);
 	temp_child.insert(&child_info->linker_area_component());
 	temp_child.insert(&child_info->stack_area_component());
 	temp_child.insert(&child_info->address_space_component());
-	// Update stored_info
+	/* Update stored_info */
 
 	_prepare_native_caps(state, child_info->parent_state().native_caps);
 	_prepare_signal_sources(state, child_info->parent_state().signal_sources);
 	_prepare_signal_contexts(state, child_info->parent_state().signal_contexts);
-	_prepare_region_maps(temp_stored, temp_child);
+
+	// reuse the function from core_module_rm...
+	_prepare_region_maps(state, temp_stored, temp_child);
 
 	child_info = child_info->next();
     }
 
-    // Delete old stored_infos, if the child misses corresponding infos in its list
+    /* Delete old stored_infos, if the child misses corresponding infos in its list */
     stored_info = stored_infos.first();
     while(stored_info) {
 	Stored_pd_session_info *next_info = stored_info->next();
 
-	// Find corresponding child_info
+	/* Find corresponding child_info */
 	child_info = child_infos.first();
 	if(child_info) child_info = child_info->find_by_badge(stored_info->badge);
 
-	// No corresponding child_info => delete it
+	/* No corresponding child_info => delete it */
 	if(!child_info) {
 	    stored_infos.remove(stored_info);
 	    _destroy_stored_pd_session(*stored_info);
@@ -315,7 +317,6 @@ void Core_module_pd::_checkpoint(Target_state &state);
 }
 
 
-// _state_alloc ?
 void Core_module_pd::_destroy_stored_pd_session(Target_state &state,
 						Stored_pd_session_info &stored_info)
 {
@@ -346,7 +347,42 @@ void Core_module_pd::_destroy_stored_pd_session(Target_state &state,
 }
 
 
-// TODO: find_by_native_badge implementd
+void Core_module_rm::_destroy_stored_region_map(Target_state &state, Stored_region_map_info &stored_info)
+{
+#ifdef DEBUG
+    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
+#endif      
+
+
+    while(Stored_attached_region_info *info = stored_info.stored_attached_region_infos.first()) {
+	stored_info.stored_attached_region_infos.remove(info);
+	_destroy_stored_attached_region(*info);
+    }
+    Genode::destroy(state._alloc, &stored_info);
+}
+
+
+void Core_module_rm::_destroy_stored_attached_region(Target_state &state,
+						     Stored_attached_region_info &stored_info)
+{
+#ifdef DEBUG
+    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
+#endif      
+
+    /* Pre-condition: This stored object is removed from its list, thus, a
+     * search for a stored dataspace will not return its memory content
+     * dataspace */
+    Genode::Dataspace_capability stored_ds_cap = state.find_stored_dataspace(
+	stored_info.attached_ds_badge);
+    
+    if(!stored_ds_cap.valid()) {
+	state._env.ram().free(stored_info.memory_content);
+    }
+
+    Genode::destroy(state._alloc, &stored_info);
+}
+
+
 
 void Core_module_pd::_prepare_native_caps(Target_state &state, Genode::List<Native_capability_info> &child_infos)
 {
@@ -369,7 +405,7 @@ void Core_module_pd::_prepare_native_caps(Target_state &state, Genode::List<Nati
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	    Genode::addr_t childs_kcap = _find_kcap_by_badge(child_info->cap.local_name());
+	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap.local_name());
 	    stored_info = new (state._alloc) Stored_native_capability_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
@@ -397,6 +433,7 @@ void Core_module_pd::_prepare_native_caps(Target_state &state, Genode::List<Nati
 	stored_info = next_info;
     }
 }
+
 
 void Core_module_pd::_destroy_stored_native_cap(Target_state &state, Stored_native_capability_info &stored_info)
 {
@@ -428,7 +465,7 @@ void Core_module_pd::_prepare_signal_sources(Target_state &state, Genode::List<S
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	    Genode::addr_t childs_kcap = _find_kcap_by_badge(child_info->cap.local_name());
+	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap.local_name());
 	    stored_info = new (state._alloc) Stored_signal_source_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
@@ -491,7 +528,7 @@ void Core_module_pd::_prepare_signal_contexts(Target_state &state,
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	    Genode::addr_t childs_kcap = _find_kcap_by_badge(child_info->cap.local_name());
+	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap.local_name());
 	    stored_info = new (state._alloc) Stored_signal_context_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}

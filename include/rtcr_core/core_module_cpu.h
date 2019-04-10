@@ -19,6 +19,7 @@
 #include <util/list.h>
 
 /* Local includes */
+#include <rtcr/target_state.h>
 #include <rtcr_core/core_module.h>
 #include <rtcr_core/cpu/cpu_session.h>
 
@@ -41,12 +42,22 @@ private:
     Genode::Local_service &_cpu_service;
     Cpu_session_component &_cpu_session;
     
+    // level 1
+    void _checkpoint(Target_state &state);
 
-    void _prepare_cpu_sessions(Target_state &state, Genode::List<Cpu_session_component> &child_infos);
-    void _destroy_stored_cpu_session(Target_state &state, Stored_cpu_session_info &stored_info);
+    // level 1.1
+    void _prepare_cpu_threads(Target_state &state,
+			      Genode::List<Cpu_thread_component> &child_infos);
 
-    void _prepare_cpu_threads(Target_state &state, , Genode::List<Cpu_thread_component> &child_infos);
-    void _destroy_stored_cpu_thread(Target_state &state, Stored_cpu_thread_info &stored_info);
+    
+    // level 1.2
+    void _destroy_stored_cpu_session(Target_state &state,
+				     Stored_cpu_session_info &stored_info);
+
+    // level 1.2.1
+    void _destroy_stored_cpu_thread(Target_state &state,
+				    Stored_cpu_thread_info &stored_info);
+
 
     Cpu_session_component &_find_session(const char *label, Cpu_root &cpu_root);    
 
@@ -59,17 +70,18 @@ private:
      */
     void _resume();
 
-  /* implement virtual methods of Core_module_base */
-  Cpu_root & cpu_root() {
-    return _cpu_root;
-  }
+    
+    /* implement virtual methods of Core_module_base */
+    Cpu_root & cpu_root() {
+	return _cpu_root;
+    }
   
-  Genode::Local_service &cpu_service() {
-    return _cpu_service;
-  }
-  Cpu_session_component &cpu_session() {
-    return _cpu_session;
-  }
+    Genode::Local_service &cpu_service() {
+	return _cpu_service;
+    }
+    Cpu_session_component &cpu_session() {
+	return _cpu_session;
+    }
 
   
 };
