@@ -11,24 +11,30 @@ using namespace Rtcr;
 
 Core_module_cpu::Core_module_cpu(Genode::Env &env,
 				 Genode::Allocator &md_alloc,
-				 Genode::Entrypoint &ep,
-				 const char* label,
-				 bool &bootstrap)
+				 Genode::Entrypoint &ep)
     :
     _env(env),
     _md_alloc(md_alloc),
-    _ep(ep),
-    _cpu_root(env, md_alloc, ep, pd_root(), bootstrap),
-    _cpu_service("CPU", _cpu_root),
-    _cpu_session(_find_session(label, _cpu_root))
+    _ep(ep)
+{
+
+}
+
+void Core_module_cpu::_init(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
 #endif
+
+    _cpu_root = new (_md_alloc) Cpu_root(_env, _md_alloc, _ep, pd_root(), bootstrap);
+    _cpu_service = new (_md_alloc) Genode::Local_service("CPU", _cpu_root);
+    _cpu_session = _find_session(label, cpu_root());  
 }
 
 
-Cpu_session_component &Core_module_cpu::_find_session(const char *label, Cpu_root &cpu_root)
+
+
+Cpu_session_component *Core_module_cpu::_find_session(const char *label, Cpu_root &cpu_root)
 {
     /* Preparing argument string */
     char args_buf[160];
@@ -48,11 +54,14 @@ Cpu_session_component &Core_module_cpu::_find_session(const char *label, Cpu_roo
 	throw Genode::Exception();
     }
 
-    return *cpu_session;
+    return cpu_session;
 }
 
 
-Core_module_cpu::~Core_module_cpu() {}
+Core_module_cpu::~Core_module_cpu() {
+   Genode::destroy(_md_alloc, _cpu_root);
+   Genode::destroy(_md_alloc, _cpu_service);
+}
 
 
 
@@ -61,7 +70,7 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 #ifdef DEBUG
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
 #endif
-    Genode::List<Cpu_session_component> &child_infos = state._stored_session_component ?
+    Genode::List<Cpu_session_component> &child_infos =  cpu_root().session_infos();
 	Genode::List<Stored_cpu_session_info> &stored_infos = state._stored_cpu_sessions;
     Cpu_session_component *child_info = nullptr;
     Stored_cpu_session_info *stored_info = nullptr;
@@ -74,7 +83,7 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 	/* Find corresponding state_info */
 	stored_info = stored_infos.first();
 	if(stored_info) stored_info = stored_info->find_by_badge(child_info->cap().local_name());
-
+	
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
@@ -84,7 +93,9 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 
 	/* Update stored_info */
 	stored_info->sigh_badge = child_info->parent_state().sigh.local_name();
-	_prepare_cpu_threads(state, child_info->parent_state().cpu_threads);
+	_prepare_cpu_threads(state,
+			     stored_info->stored_cpu_thread_infos,
+			     child_info->parent_state().cpu_threads);
 
 	child_info = child_info->next();
     }
@@ -125,12 +136,13 @@ void Core_module_cpu::_destroy_stored_cpu_session(Target_state &state,
 
 
 void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
+					   Genode::List<Stored_cpu_thread_info> &stored_infos,
 					   Genode::List<Cpu_thread_component> &child_infos)
 {
 #ifdef DEBUG
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
 #endif
-    Genode::List<Stored_cpu_thread_info> &stored_infos = stored_info->stored_cpu_thread_infos;
+
     Cpu_thread_component *child_info = nullptr;
     Stored_cpu_thread_info *stored_info = nullptr;
 
@@ -176,7 +188,7 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 	    /* No corresponding child_info => delete it */
 	    if(!child_info) {
 		stored_infos.remove(stored_info);
-		_destroy_stored_cpu_thread(*stored_info);
+		_destroy_stored_cpu_thread(state, *stored_info);
 	    }
 
 	    stored_info = next_info;

@@ -6,11 +6,6 @@
  */
 
 #include <rtcr_core/core_module.h>
-#include <rtcr_core/core_module_pd.h>
-#include <rtcr_core/core_module_cpu.h>
-#include <rtcr_core/core_module_rm.h>
-#include <rtcr_core/core_module_ram.h>
-#include <rtcr_core/core_module_rom.h>
 
 using namespace Rtcr;
 
@@ -21,13 +16,17 @@ Core_module::Core_module(Genode::Env &env,
 			 const char* label,
 			 bool &bootstrap)
     :
-    Core_module_pd(env, md_alloc, ep, label, bootstrap),
-    Core_module_cpu(env, md_alloc, ep, label, bootstrap), /* depends on Core_module_pd::Core_module_pd() */
-    Core_module_rm(env, md_alloc, ep, label, bootstrap), /* depends on Core_module_pd::Core_module_pd() */
-    Core_module_ram(env, md_alloc, ep, label, 0, bootstrap), /* depends on Core_module_pd::Core_module_pd() */
-    Core_module_rom(env, md_alloc, ep, label, bootstrap)
+  Core_module_pd(env, md_alloc, ep),
+    Core_module_cpu(env, md_alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_rm(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_ram(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_rom(env, md_alloc, ep)
 {
-  
+  Core_module_pd::_init(label, bootstrap);
+  Core_module_cpu::_init(label, bootstrap);
+  Core_module_rm::_init(label, bootstrap);
+  Core_module_ram::_init(label, 0, bootstrap);
+  Core_module_rom::_init(label, bootstrap);  
 }
 
 
@@ -37,7 +36,7 @@ void Core_module::checkpoint(Target_state &state)
     Core_module_pd::_create_kcap_mappings(state);
 
     /* initialize `region_map` variable. This step depends on Core_module_pd::Core_module_pd() */
-    Core_module_rm::_create_region_map_dataspace_list(state); /* Now ... */
+    Core_module_rm::_create_region_map_dataspaces_list();
 
     /* Checkpointing */
     Core_module_pd::_checkpoint(state);  /* depends on Core_module_pd::_create_kcap_mappings */
@@ -57,13 +56,13 @@ void Core_module::restore(Target_state &state)
 
 }
 
-void pause()
+void Core_module::pause()
 {
-    Core_module_cpu::_pause();
+  Core_module_cpu::_pause();
 }
 
 
-void resume()
+void Core_module::resume()
 {
-    Core_module_cpu::_resume();
+  Core_module_cpu::_resume();
 }

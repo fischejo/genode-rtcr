@@ -77,7 +77,7 @@ private:
 	 */
 	Genode::Child                 *_child;
 
-
+	Core_module *core;
 
 	
 public:
@@ -94,7 +94,7 @@ public:
 
 	~Target_child();
 
-	Core_module *core_module;
+
 	
 	/**
 	 * Start child from scratch

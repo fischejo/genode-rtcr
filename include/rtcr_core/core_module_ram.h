@@ -18,7 +18,7 @@
 
 
 /* Local includes */
-#include <rtcr_core/core_module.h>
+#include <rtcr_core/core_module_base.h>
 #include <rtcr/target_state.h>
 
 #include <rtcr_core/ram/ram_session.h>
@@ -34,16 +34,16 @@ namespace Rtcr {
 using namespace Rtcr;
 
 
-class Rtcr::Core_module_ram: public Core_module_base
+class Rtcr::Core_module_ram: public virtual Core_module_base
 {
 private:
     Genode::Env        &_env;
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;	
 
-    Ram_root &_ram_root;
-    Genode::Local_service &_ram_service;
-    Ram_session_component   &_ram_session;
+    Ram_root *_ram_root;
+    Genode::Local_service *_ram_service;
+    Ram_session_component *_ram_session;
 
     /**
      * Mapping to find a copy dataspace for a given original dataspace badge
@@ -51,9 +51,7 @@ private:
     Genode::List<Dataspace_translation_info> _dataspace_translations;
     Genode::List<Simplified_managed_dataspace_info> _managed_dataspaces;
 
-
-    // level: 1    
-    void _checkpoint(Target_state &state);
+    Ram_session_component *_find_session(const char *label, Ram_root &ram_root);  
 
     // level: 1.1
     void _prepare_ram_dataspaces(Target_state &state,
@@ -71,13 +69,8 @@ private:
     void _destroy_stored_ram_dataspace(Target_state &state,
 				       Stored_ram_dataspace_info &stored_info);    
 
-
-    
-    // level 2
-    void _checkpoint_temp_wrapper(Target_state &state);
-
     // level 2.1
-    VOID _create_managed_dataspace_list();
+    void _create_managed_dataspace_list();
 
     // level 2.2
     void _detach_designated_dataspaces();
@@ -92,28 +85,35 @@ private:
 				       Genode::addr_t dst_offset,
 				       Genode::size_t size);
 
+protected:
+    // level: 1    
+    void _checkpoint(Target_state &state);
+  void _init(const char* label, Genode::size_t granularity, bool &bootstrap);
+    // level 2
+    void _checkpoint_temp_wrapper(Target_state &state);
+
     
     /* implement virtual methods of Core_module_base */
-    Ram_root & ram_root() {
-	return _ram_root;
+    Ram_root &ram_root() {
+	return *_ram_root;
     }
-  
+
+public:
+    
     Genode::Local_service &ram_service() {
-	return _ram_service;
+	return *_ram_service;
     }
     Ram_session_component &ram_session() {
-	return _ram_session;
+	return *_ram_session;
     }
   
-public:
-    Ram_session_handler(Genode::Env &env,
+
+    Core_module_ram(Genode::Env &env,
 			Genode::Allocator &md_alloc,
-			Genode::Entrypoint &ep,
-			const char* label,
-			Genode::size_t granularity,
-			bool &bootstrap);
+		    Genode::Entrypoint &ep);
+
 	
-    ~Ram_session_handler();
+    ~Core_module_ram();
 
   	
 };

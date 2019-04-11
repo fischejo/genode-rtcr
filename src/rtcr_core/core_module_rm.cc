@@ -12,25 +12,30 @@ using namespace Rtcr;
 
 Core_module_rm::Core_module_rm(Genode::Env &env,
 			       Genode::Allocator &md_alloc,
-			       Genode::Entrypoint &ep,
-			       const char* label,
-			       bool &bootstrap)
-
+			       Genode::Entrypoint &ep)
     :
     _env(env),
     _md_alloc(md_alloc),
-    _ep(ep),
-    _rm_root(env, md_alloc, ep, bootstrap),
-    _rm_service("RM", _rm_root)
+    _ep(ep)
+{
+    
+}  
+
+void Core_module_rm::_init(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
 #endif
-}  
+    _rm_root = new (_md_alloc) Rm_root(_env, _md_alloc, _ep, bootstrap);
+    _rm_service = new (_md_alloc) Genode::Local_service("RM", _rm_root);    
+}
+
 
 
 Core_module_rm::~Core_module_rm()
 {
+    Genode::destroy(_md_alloc, _rm_root);
+    Genode::destroy(_md_alloc, _rm_service);        
 }
 
 
@@ -48,9 +53,8 @@ void Core_module_rm::_create_region_map_dataspaces_list()
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
 #endif  
 
-    Genode::List<Rm_session_component> *rm_sessions = &_rm_root->session_infos();
-    Genode::List<Pd_session_component> &pd_sessions = pd_root()->session_infos();
-
+    Genode::List<Rm_session_component> &rm_sessions = rm_root().session_infos();
+    Genode::List<Pd_session_component> &pd_sessions = pd_root().session_infos();
     
     Genode::List<Ref_badge_info> result_list;
 
@@ -60,27 +64,27 @@ void Core_module_rm::_create_region_map_dataspaces_list()
 	Ref_badge_info *new_ref = nullptr;
 
 	/* Address space */
-	new_ref = new (_alloc) Ref_badge_info(pd_session->address_space_component().parent_state().ds_cap.local_name());
+	new_ref = new (_md_alloc) Ref_badge_info(pd_session->address_space_component().parent_state().ds_cap.local_name());
 	result_list.insert(new_ref);
 
 	/* Stack area  */
-	new_ref = new (_alloc) Ref_badge_info(pd_session->stack_area_component().parent_state().ds_cap.local_name());
+	new_ref = new (_md_alloc) Ref_badge_info(pd_session->stack_area_component().parent_state().ds_cap.local_name());
 	result_list.insert(new_ref);
 
 	/* Linker area */
-	new_ref = new (_alloc) Ref_badge_info(pd_session->linker_area_component().parent_state().ds_cap.local_name());
+	new_ref = new (_md_alloc) Ref_badge_info(pd_session->linker_area_component().parent_state().ds_cap.local_name());
 	result_list.insert(new_ref);
 
 	pd_session = pd_session->next();
     }
 
     /* Region maps of RM session, if there are any */
-    if(rm_sessions) {
-	Rm_session_component *rm_session = rm_sessions->first();
+    //    if(rm_sessions) {
+	Rm_session_component *rm_session = rm_sessions.first();
 	while(rm_session) {
 	    Region_map_component *region_map = rm_session->parent_state().region_maps.first();
 	    while(region_map) {
-		Ref_badge_info *new_ref = new (_alloc) Ref_badge_info(region_map->parent_state().ds_cap.local_name());
+		Ref_badge_info *new_ref = new (_md_alloc) Ref_badge_info(region_map->parent_state().ds_cap.local_name());
 		result_list.insert(new_ref);
 
 		region_map = region_map->next();
@@ -88,7 +92,7 @@ void Core_module_rm::_create_region_map_dataspaces_list()
 
 	    rm_session = rm_session->next();
 	}
-    }
+	//    }
 
     _region_maps = result_list;
 
@@ -193,7 +197,7 @@ void Core_module_rm::_prepare_region_maps(Target_state &state,
 				  child_info->parent_state().attached_regions);
 
 	/* Remeber region map's dataspace badge to remove the dataspace from _memory_to_checkpoint later */
-	Ref_badge_info *ref_badge = new (_alloc) Ref_badge_info(child_info->parent_state().ds_cap.local_name());
+	Ref_badge_info *ref_badge = new (_md_alloc) Ref_badge_info(child_info->parent_state().ds_cap.local_name());
 	_region_maps.insert(ref_badge);
 
 	child_info = child_info->next();
@@ -237,7 +241,7 @@ void Core_module_rm::_prepare_attached_regions(Target_state &state,
     child_info = child_infos.first();
     while(child_info) {
 	stored_info = stored_infos.first();
-	if(stored_info) stored_info = stored_find->info_by_addr(child_info->rel_addr);
+	if(stored_info) stored_info = stored_info->find_by_addr(child_info->rel_addr);
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
@@ -310,7 +314,7 @@ Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(
     } else {
 	/* Check whether the dataspace is somewhere in the stored session RPC objects */
 	ramds_cap = Genode::reinterpret_cap_cast<Genode::Ram_dataspace>(
-	    _find_stored_dataspace(child_info.attached_ds_cap.local_name()));
+	    state.find_stored_dataspace(child_info.attached_ds_cap.local_name()));
 
 	if(!ramds_cap.valid()) {
 	    ramds_cap = state._env.ram().alloc(child_info.size);
@@ -344,9 +348,9 @@ void Core_module_rm::_destroy_stored_rm_session(Target_state &state, Stored_rm_s
 
     while(Stored_region_map_info *info = stored_info.stored_region_map_infos.first()) {
 	stored_info.stored_region_map_infos.remove(info);
-	_destroy_stored_region_map(*info);
+	_destroy_stored_region_map(state, *info);
     }
-    Genode::destroy(_state._alloc, &stored_info);
+    Genode::destroy(state._alloc, &stored_info);
 }
 
 
@@ -359,7 +363,7 @@ void Core_module_rm::_destroy_stored_region_map(Target_state &state, Stored_regi
 
     while(Stored_attached_region_info *info = stored_info.stored_attached_region_infos.first()) {
 	stored_info.stored_attached_region_infos.remove(info);
-	_destroy_stored_attached_region(*info);
+	_destroy_stored_attached_region(state, *info);
     }
     Genode::destroy(state._alloc, &stored_info);
 }

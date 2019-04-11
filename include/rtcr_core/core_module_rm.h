@@ -19,7 +19,7 @@
 #include <region_map/client.h>
 
 /* Local includes */
-#include <rtcr_core/core_module.h>
+#include <rtcr_core/core_module_base.h>
 #include <rtcr/target_state.h>
 #include <rtcr_core/rm/rm_session.h>
 
@@ -30,28 +30,21 @@ namespace Rtcr {
 
 using namespace Rtcr;
 
-class Rtcr::Core_module_rm: public Core_module_base
+class Rtcr::Core_module_rm: public virtual Core_module_base
 {
 private:
     Genode::Env        &_env;
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;
 
-    Rm_root &_rm_root;
-    Genode::Local_service &_rm_service;
-
+    Rm_root *_rm_root;
+    Genode::Local_service *_rm_service;
 
     /**
      * List of dataspace badges which are (known) managed dataspaces
      * These dataspaces are not needed to be copied
      */
     Genode::List<Ref_badge_info> _region_maps;
-
-    // level 1
-    Genode::List<Ref_badge_info> _create_region_map_dataspaces_list();
-    
-    // level 2
-    void _checkpoint(Target_state &state);
 
     // level 2.1
     void _prepare_region_maps(Target_state &state,
@@ -80,27 +73,36 @@ private:
 					 Stored_attached_region_info &stored_info);
 
 
+ protected:    
+    // level 1
+    void _create_region_map_dataspaces_list();
+
+    // level 2
+    void _checkpoint(Target_state &state);
+    void _init(const char* label, bool &bootstrap);
+    Ref_badge_info *find_region_map_by_badge(Genode::uint16_t badge);
+    
+
     /* implement virtual methods of Core_module_base */
-    Rm_root & rm_root() {
-	return _rm_root;
+    Rm_root &rm_root() {
+	return *_rm_root;
     }
-  
+
+public:    
+    
     Genode::Local_service &rm_service() {
-	return _rm_service;
+	return *_rm_service;
     }
 
 
     
-public:
-    Rm_session_handler(Genode::Env &env,
-		       Genode::Allocator &md_alloc,
-		       Genode::Entrypoint &ep,
-		       const char* label,
-		       bool &bootstrap);
-	
-    ~Rm_session_handler();
 
-    Ref_badge_info *Core_module_rm::find_region_map_by_badge(Genode::uint16_t badge);
+    Core_module_rm(Genode::Env &env,
+		       Genode::Allocator &md_alloc,
+		   Genode::Entrypoint &ep);
+
+	
+    ~Core_module_rm();
   
 };
 

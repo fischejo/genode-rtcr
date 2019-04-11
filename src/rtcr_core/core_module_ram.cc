@@ -11,22 +11,25 @@ using namespace Rtcr;
 
 Core_module_ram::Core_module_ram(Genode::Env &env,
 				 Genode::Allocator &md_alloc,
-				 Genode::Entrypoint &ep,
-				 const char* label,
-				 Genode::size_t granularity,
-				 bool &bootstrap)
+				 Genode::Entrypoint &ep)
     :
     _env(env),
     _md_alloc(md_alloc),
-    _ep(ep),
-    _ram_root(env, md_alloc, ep, granularity, bootstrap),
-    _ram_service("RAM", _ram_root),
-    _ram_session(_find_session(label, _ram_root))
-{
-
+    _ep(ep)
+ {
+ 
 }  
 
-Ram_session_component &Core_module_ram::_find_session(const char *label, Ram_root &ram_root)
+void Core_module_ram::_init(const char* label,
+			    Genode::size_t granularity,
+			    bool &bootstrap)
+{
+  _ram_root = new (_md_alloc) Ram_root(_env, _md_alloc, _ep, granularity, bootstrap);
+  _ram_service = new (_md_alloc) Genode::Local_service("RAM", _ram_root);
+  _ram_session = _find_session(label, ram_root());
+}
+
+Ram_session_component *Core_module_ram::_find_session(const char *label, Ram_root &ram_root)
 {
 #ifdef DEBUG
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
@@ -49,7 +52,7 @@ Ram_session_component &Core_module_ram::_find_session(const char *label, Ram_roo
 	throw Genode::Exception();
     }
 
-    return *ram_session;
+    return ram_session;
 }
 
 
@@ -158,7 +161,7 @@ void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
 	Dataspace_translation_info *trans_info = _dataspace_translations.first();
 	if(trans_info) trans_info = trans_info->find_by_resto_badge(child_info->cap.local_name());
 	if(!trans_info) {
-	    trans_info = new (_alloc) Dataspace_translation_info(stored_info->memory_content,
+	    trans_info = new (_md_alloc) Dataspace_translation_info(stored_info->memory_content,
 								 child_info->cap,
 								 child_info->size);
 	    _dataspace_translations.insert(trans_info);
@@ -204,7 +207,7 @@ Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Target_
     
 //    Ref_badge_info *region_map_dataspace = _region_maps.first();
 //    if(region_map_dataspace) region_map_dataspace = region_map_dataspace->find_by_badge(child_info.cap.local_name());
-    Ref_badge_info *region_map_dataspace = find_region_map_by badge(child_info.cap.local_name());
+    Ref_badge_info *region_map_dataspace = find_region_map_by_badge(child_info.cap.local_name());
 
     if(region_map_dataspace) {
 	Genode::log("Dataspace ", child_info.cap, " is a region map.");
@@ -237,7 +240,7 @@ void Core_module_ram::_destroy_stored_ram_dataspace(Target_state &state,
     /* Pre-condition: This stored object is removed from its list, thus, a
      * search for a stored dataspace will not return its memory content
      * dataspace */
-    Genode::Dataspace_capability stored_ds_cap = _find_stored_dataspace(stored_info.badge);
+    Genode::Dataspace_capability stored_ds_cap = state.find_stored_dataspace(stored_info.badge);
     if(!stored_ds_cap.valid()) {
 	state._env.ram().free(stored_info.memory_content);
     }
@@ -312,7 +315,7 @@ void Core_module_ram::_create_managed_dataspace_list()
 		    Genode::Ram_dataspace_capability dd_info_cap =
 			Genode::reinterpret_cap_cast<Genode::Ram_dataspace>(dd_info->cap);
 
-		    sim_dd_infos.insert(new (_alloc) Sim_dd_info(dd_info_cap,
+		    sim_dd_infos.insert(new (_md_alloc) Sim_dd_info(dd_info_cap,
 								 dd_info->rel_addr,
 								 dd_info->size,
 								 dd_info->attached));
@@ -320,7 +323,7 @@ void Core_module_ram::_create_managed_dataspace_list()
 		    dd_info = dd_info->next();
 		}
 
-		_managed_dataspaces.insert(new (_alloc) Simplified_managed_dataspace_info(ramds_info->cap,
+		_managed_dataspaces.insert(new (_md_alloc) Simplified_managed_dataspace_info(ramds_info->cap,
 											  sim_dd_infos));
 	    }
 
@@ -334,7 +337,7 @@ void Core_module_ram::_create_managed_dataspace_list()
 
 void Core_module_ram::_detach_designated_dataspaces()
 {
-#ifdef
+#ifdef VERBOSE
     Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
 #endif
 

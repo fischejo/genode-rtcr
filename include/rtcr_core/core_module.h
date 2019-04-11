@@ -16,6 +16,7 @@
 /* Local includes */
 #include <rtcr/module.h>
 #include <rtcr/target_state.h>
+#include <rtcr_core/core_module_base.h>
 #include <rtcr_core/core_module_cpu.h>
 #include <rtcr_core/core_module_ram.h>
 #include <rtcr_core/core_module_pd.h>
@@ -25,60 +26,32 @@
 
 namespace Rtcr {
     class Core_module;
-    class Core_base;
 }
 
+using namespace Rtcr;
 
-class Rtcr::Core_module_base :
-{
-public:
-    /**
-     * \brief Return the kcap for a given badge from _capability_map_infos
-     * Refactored from `checkpointer.h`
-     * Return the kcap for a given badge. If there is no, return 0.
-     *
-     * As every module requires this method, it is public to othe rmodules.
-     */
-    virtual Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge) = 0;
-    virtual Ref_badge_info find_region_map_by_badge(Genode::uint16_t badge) = 0;
-
-  // implemented in core_module_rm
-  // used by core_module_pd
-    virtual void _prepare_region_maps(Target_state &state,
-				      Genode::List<Stored_region_map_info> &stored_infos,
-				      Genode::List<Region_map_component> &child_infos) = 0;
-
-    /* Methods required by Target_child */
-    virtual Pd_root &pd_root() = 0;
-    virtual Ram_root &ram_root() = 0;
-    virtual Cpu_root &cpu_root() = 0;
-    virtual Rm_root & rm_root() = 0;
-  
-    virtual Genode::Local_service &pd_service() = 0;
-    virtual Genode::Local_service &rm_service() = 0;
-    virtual Genode::Local_service &cpu_service() = 0;
-    virtual Genode::Local_service &ram_service() = 0;
-
-    virtual Cpu_session_component &cpu_session() = 0;
-    virtual Ram_session_component &ram_session() = 0;
-    virtual Pd_session_component &pd_session() = 0;
-};
-
-
-class Rtcr::Core_module : public Module,
+class Rtcr::Core_module : public Core_module_pd,
 			  public Core_module_cpu,
 			  public Core_module_ram,
-			  public Core_module_pd,
 			  public Core_module_rm,
 			  public Core_module_rom
 {
 public:
+  Core_module(Genode::Env &env,
+	      Genode::Allocator &md_alloc,
+	      Genode::Entrypoint &ep,
+	      const char* label,
+	      bool &bootstrap);
 
+  ~Core_module();
+
+  
     /* These methods are implemented for the Target_child */
     void pause();
     void resume();
     void checkpoint(Target_state &state);
     void restore(Target_state &state);
+
 };
 
 

@@ -15,3 +15,5 @@ vpath % $(REP_DIR)/src/rtcr_core/ram
 CC_OPT += -DVERBOSE
 CC_OPT += -DDEBUG
 
+LIBS   += base
+INC_DIR += $(BASE_DIR)/../base-foc/src/include

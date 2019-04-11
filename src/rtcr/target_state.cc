@@ -174,7 +174,7 @@ void Target_state::print(Genode::Output &output) const
 			rm_info = rm_info->next();
 		}
 	}
-	// LOG sessions
+	/*	// LOG sessions
 	{
 		Genode::print(output, "LOG sessions:\n");
 		Stored_log_session_info const *log_info = _stored_log_sessions.first();
@@ -195,12 +195,12 @@ void Target_state::print(Genode::Output &output) const
 			Genode::print(output, " ", *timer_info, "\n");
 			timer_info = timer_info->next();
 		}
-	}
+		} */
 }
 
 
 
-Genode::Dataspace_capability Core_module_ram::find_stored_dataspace(Genode::uint16_t badge)
+Genode::Dataspace_capability Target_state::find_stored_dataspace(Genode::uint16_t badge)
 {
     Genode::Dataspace_capability result;
 
@@ -220,8 +220,8 @@ Genode::Dataspace_capability Core_module_ram::find_stored_dataspace(Genode::uint
 }
 
 
-Genode::Dataspace_capability Core_module_ram::_find_stored_dataspace(Genode::uint16_t badge,
-								     Genode::List<Stored_ram_session_info> &state_infos)
+Genode::Dataspace_capability Target_state::_find_stored_dataspace(Genode::uint16_t badge,
+								  Genode::List<Stored_ram_session_info> &state_infos)
 {
     Genode::Dataspace_capability result;
 
@@ -241,8 +241,8 @@ Genode::Dataspace_capability Core_module_ram::_find_stored_dataspace(Genode::uin
 }
 
 
-Genode::Dataspace_capability Core_module_ram::_find_stored_dataspace(Genode::uint16_t badge,
-								     Genode::List<Stored_pd_session_info> &state_infos)
+Genode::Dataspace_capability Target_state::_find_stored_dataspace(Genode::uint16_t badge,
+								  Genode::List<Stored_pd_session_info> &state_infos)
 {
     Genode::Dataspace_capability result;
 
@@ -267,8 +267,8 @@ Genode::Dataspace_capability Core_module_ram::_find_stored_dataspace(Genode::uin
 }
 
 
-Genode::Dataspace_capability Core_module_ram::_find_stored_dataspace(Genode::uint16_t badge,
-								     Genode::List<Stored_rm_session_info> &state_infos)
+Genode::Dataspace_capability Target_state::_find_stored_dataspace(Genode::uint16_t badge,
+								  Genode::List<Stored_rm_session_info> &state_infos)
 {
     Genode::Dataspace_capability result;
 
@@ -289,8 +289,8 @@ Genode::Dataspace_capability Core_module_ram::_find_stored_dataspace(Genode::uin
 }
 
 
-Genode::Dataspace_capability Core_module_ram::_find_stored_dataspace(Genode::uint16_t badge,
-								     Genode::List<Stored_attached_region_info> &state_infos)
+Genode::Dataspace_capability Target_state::_find_stored_dataspace(Genode::uint16_t badge,
+								  Genode::List<Stored_attached_region_info> &state_infos)
 {
     Genode::Dataspace_capability result;
 

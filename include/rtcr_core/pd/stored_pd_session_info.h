@@ -14,9 +14,10 @@
 /* Rtcr includes */
 #include <rtcr_core/pd/pd_session.h>
 #include <rtcr_core/pd/stored_native_capability_info.h>
-#include <rtcr_core/pd/stored_region_map_info.h>
 #include <rtcr_core/pd/stored_signal_context_info.h>
 #include <rtcr_core/pd/stored_signal_source_info.h>
+
+#include <rtcr_core/rm/stored_region_map_info.h>
 
 #include <rtcr/stored_info_structs.h>
 

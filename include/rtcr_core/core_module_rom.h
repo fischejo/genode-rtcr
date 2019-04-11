@@ -18,7 +18,7 @@
 
 
 /* Local includes */
-#include <rtcr_core/core_module.h>
+#include <rtcr_core/core_module_base.h>
 #include <rtcr_core/rom/rom_session.h>
 
 
@@ -28,34 +28,39 @@ namespace Rtcr {
 
 using namespace Rtcr;
 
-class Rtcr::Core_module_rom: public Core_module_base
+class Rtcr::Core_module_rom: public virtual Core_module_base
 {
 private:
-    Rom_root &_rom_root;
-    Genode::Local_service &_rom_service;
-    Genode::Rom_connection &_rom_connection;
-	
+    Genode::Env        &_env;
+    Genode::Allocator  &_md_alloc;
+    Genode::Entrypoint &_ep;
+  
+    Rom_root *_rom_root;
+    Genode::Local_service *_rom_service;
+    Genode::Rom_connection *_rom_connection;
+
+
+public:    
     /* implement virtual methods of Core_module_base */
-    Rom_root & rom_root() {
-	return _rom_root;
+    Rom_root &rom_root() {
+	return *_rom_root;
     }
   
     Genode::Local_service &rom_service() {
-	return _rom_service;
+	return *_rom_service;
     }
 
     Genode::Rom_connection &rom_connection() {
-	return _rom_connection;
+	return *_rom_connection;
     }
   
-public:
-    Rom_session_handler(Genode::Env &env,
+
+    Core_module_rom(Genode::Env &env,
 			Genode::Allocator &md_alloc,
-			Genode::Entrypoint &ep,
-			const char* label,
-			bool &bootstrap);
-	
-    ~Rom_session_handler();
+		    Genode::Entrypoint &ep);
+
+    void _init(const char* label, bool &bootstrap);	
+    ~Core_module_rom();
   
 };
 

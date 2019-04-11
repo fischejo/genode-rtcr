@@ -15,14 +15,17 @@
 #include <base/child.h>
 #include <base/service.h>
 #include <base/snprintf.h>
-#include <util/list.h
+#include <util/list.h>
 
 
-#include <rtcr_core/core_module.h>
+#include <rtcr_core/core_module_base.h>
 #include <rtcr/target_state.h>
 #include <rtcr_core/pd/pd_session.h>
-#include <rtcr_core/pd/kcap_badge_info.h>
-#include <rtcr_core/pd/ref_badge_innfo.h>
+#include <rtcr_core/pd/ref_badge_info.h>
+#include <rtcr/kcap_badge_info.h>
+
+#include <foc_native_pd/client.h>
+
 
 namespace Rtcr {
     class Core_module_pd;
@@ -30,16 +33,16 @@ namespace Rtcr {
 
 using namespace Rtcr;
 
-class Rtcr::Core_module_pd: public Core_module_base
+class Rtcr::Core_module_pd : public virtual Rtcr::Core_module_base
 {
 private:
     Genode::Env        &_env;
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;
 
-    Pd_root &_pd_root;
-    Genode::Local_service &_pd_service;
-    Pd_session_component   &_pd_session;
+    Pd_root *_pd_root;
+    Genode::Local_service *_pd_service;
+    Pd_session_component *_pd_session;
 
     /**
      * Capability map in a condensed form
@@ -50,13 +53,14 @@ private:
     /**
      * Refactored from `target.child.h`. Previously `Target_child::Resources::_init_pd()`
      */
-    Pd_session_component &_find_session(const char *label, Pd_root &pd_root);
+    Pd_session_component *_find_session(const char *label, Pd_root &pd_root);
 
 
     /**
      * \brief Destroys the _kcap_mappings list.
      */
-    void _destroy_list(Genode::List<Kcap_badge_info> &list);    
+    void _destroy_list(Genode::List<Kcap_badge_info> &list);
+    void _destroy_list(Genode::List<Ref_badge_info> &list);
 
     /**
      * \brief Prepares the capability map state_infos
@@ -72,24 +76,28 @@ private:
      * kcap for each RPC object.
      */
 
-    // level: 1
-    Genode::List<Kcap_badge_info> _create_kcap_mappings(Target_state &state);
     // level: 1.1
     Genode::List<Ref_badge_info> _mark_and_attach_designated_dataspaces(Attached_region_info &ar_info);
     // level: 1.2
     void _detach_and_unmark_designated_dataspaces(Genode::List<Ref_badge_info> &badge_infos, Attached_region_info &ar_info);
 
-    
-    void _prepare_pd_sessions(Target_state &state, Genode::List<Pd_session_component> &child_infos);
+   
     void _destroy_stored_pd_session(Target_state &state, Stored_pd_session_info &stored_info);
 
-    void _prepare_native_caps(Target_state &state, Genode::List<Native_capability_info> &child_infos);
+    void _prepare_native_caps(Target_state &state,
+			      Genode::List<Stored_native_capability_info> &stored_infos,
+			      Genode::List<Native_capability_info> &child_infos);
+  
     void _destroy_stored_native_cap(Target_state &state, Stored_native_capability_info &stored_info);
 
-    void _prepare_signal_sources(Target_state &state, Genode::List<Signal_source_info> &child_infos);
+    void _prepare_signal_sources(Target_state &state,
+				 Genode::List<Stored_signal_source_info> &stored_infos,
+				 Genode::List<Signal_source_info> &child_infos);
     void _destroy_stored_signal_source(Target_state &state, Stored_signal_source_info &stored_info);
 
-    void _prepare_signal_contexts(Target_state &state, Genode::List<Signal_context_info> &child_infos);
+    void _prepare_signal_contexts(Target_state &state,
+				  Genode::List<Stored_signal_context_info> &stored_infos,
+				  Genode::List<Signal_context_info> &child_infos);
     void _destroy_stored_signal_context(Target_state &state, Stored_signal_context_info &stored_info);
 
   /* This method is an exact copy from core_module_rm. It is copied in order to
@@ -102,33 +110,38 @@ private:
     void _destroy_stored_attached_region(Target_state &state,
 					 Stored_attached_region_info &stored_info);
 
-/* implement virtual methods of Core_module_base */
-  Pd_root & pd_root() {
-    return _pd_root;
-  }
-  
-  Genode::Local_service &pd_service() {
-    return _pd_service;
-  }
-  Pd_session_component &pd_session() {
-    return _pd_session;
-  }
+protected:
+
+    // level: 1
+    void _create_kcap_mappings(Target_state &state);
     
-public:
+    void _checkpoint(Target_state &state);
+  void _init(const char* label, bool &bootstrap);
+public:    
+
+  /* implement virtual methods of Core_module_base */
+  virtual Pd_root &pd_root();
+  
+
+  /* implement virtual method of Core_module_base */
+  virtual Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge);	
+  
+  //public:
+
+  virtual Genode::Local_service &pd_service() {
+    return *_pd_service;
+  };
+  virtual Pd_session_component &pd_session() {
+    return *_pd_session;
+  };
+  
     Core_module_pd(Genode::Env &env,
-		       Genode::Allocator &md_alloc,
-		       Genode::Entrypoint &ep,
-		       const char* label,
-		       bool &bootstrap,
-		       Ram_session_component *ram_session)
+	      Genode::Allocator &md_alloc,
+		   Genode::Entrypoint &ep);
 
     ~Core_module_pd();
 
-  /* implement virtual method of Core_module_base */
-  Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge);	
 };
-
-
 
 
 #endif /* _RTCR_CORE_MODULE_PD_H_ */
