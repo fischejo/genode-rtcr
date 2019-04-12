@@ -53,7 +53,7 @@ Target_child::Target_child(Genode::Env &env,
 						     _resources_ep,
 						     _name.string(),
 						     _in_bootstrap,
-						     module_node);
+						     &module_node);
 
 		    if (!Genode::strcmp(provides.string(), "core")) {
 			Genode::log("Found module which provides 'core'.");
@@ -155,27 +155,19 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 		_in_bootstrap = false;
 	}
 
-	Genode::Service *service = 0;
 	
 	// Service known from parent?
-	service = _parent_services.find(service_name);
+	Genode::Service *service = _parent_services.find(service_name);
 	if(service)
+	    return service;
+
+	Module *module = modules.first();
+	while (module) {
+	    service = module->resolve_session_request(service_name, args);
+	    if(service)
 		return service;
-
-	// custom service?
-	if(!Genode::strcmp(service_name, "PD"))
-	{
-	  return &core->pd_service();
+	    module->next();
 	}
-	else if(!Genode::strcmp(service_name, "CPU"))
-	{
-	  return &core->cpu_service();
-	}
-	else if(!Genode::strcmp(service_name, "RAM"))
-	{
-	  return &core->ram_service();
-	}
-
 
 	// Service not known, cannot intercept it
 	if(!service)

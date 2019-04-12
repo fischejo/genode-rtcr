@@ -19,7 +19,7 @@ Core_module::Core_module(Genode::Env &env,
 			 Genode::Entrypoint &ep,
 			 const char* label,
 			 bool &bootstrap,
-			 Genode::Xml_node &config)
+			 Genode::Xml_node *config)
     :
     Core_module_pd(env, md_alloc, ep),
     Core_module_cpu(env, md_alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
@@ -72,3 +72,21 @@ void Core_module::resume()
 {
     Core_module_cpu::_resume();
 }
+
+
+Genode::Service *Core_module::resolve_session_request(const char *service_name,
+						       const char *args)
+{
+    if(!Genode::strcmp(service_name, "PD")) {
+	return &pd_service();
+    } else if(!Genode::strcmp(service_name, "CPU")) {
+	return &cpu_service();
+    } else if(!Genode::strcmp(service_name, "RAM")) {
+	return &ram_service();
+    } else {
+	Genode::Service *service = 0;	
+	return service;
+    }
+}
+
+

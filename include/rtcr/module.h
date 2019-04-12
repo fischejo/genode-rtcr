@@ -12,6 +12,7 @@
 #include <util/list.h>
 #include <base/heap.h>
 #include <util/list.h>
+#include <base/service.h>
 
 #include <rtcr/target_state.h>
 
@@ -25,7 +26,7 @@ public:
     virtual void checkpoint(Target_state &state) = 0;
     virtual void restore(Target_state &state) = 0;
   //    virtual const char * name() = 0;
-
+  virtual Genode::Service *resolve_session_request(const char *service_name, const char *args) = 0;
     /*
   Module *find_by_name(char const* name)
   {

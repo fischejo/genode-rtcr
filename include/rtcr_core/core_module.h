@@ -12,6 +12,7 @@
 #include <base/heap.h>
 #include <util/list.h>
 #include <os/config.h>
+#include <base/service.h>
 
 /* Local includes */
 #include <rtcr/module.h>
@@ -49,7 +50,7 @@ public:
 	      Genode::Entrypoint &ep,
 	      const char* label,
 	      bool &bootstrap,
-	      Genode::Xml_node &config);
+	      Genode::Xml_node *config);
 
   ~Core_module();
 
@@ -60,6 +61,8 @@ public:
     void checkpoint(Target_state &state);
     void restore(Target_state &state);
 
+    Genode::Service *resolve_session_request(const char *service_name, const char *args);
+    
 };
 
 
@@ -72,7 +75,7 @@ public:
 		 Genode::Entrypoint &ep,
 		 const char* label,
 		 bool &bootstrap,
-		 Genode::Xml_node &config)
+		 Genode::Xml_node *config)
   {
     return new (md_alloc) Core_module(env, md_alloc, ep, label, bootstrap, config);
   }
