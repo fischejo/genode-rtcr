@@ -17,12 +17,12 @@
 #include <cpu_session/cpu_session.h>
 #include <util/list.h>
 
+
 /* Local includes */
 #include <rtcr_core/core_module.h>
-
-// not used right now
-//#include <rtcr/module.h>
-//#include <rtcr/module_factory.h>
+#include <rtcr/module.h>
+#include <rtcr/module_factory.h>
+#include <rtcr/target_state.h>
 
 namespace Rtcr {
 	class Target_child;
@@ -78,7 +78,7 @@ private:
 	Genode::Child                 *_child;
 
 	Core_module *core;
-
+  	Genode::List<Module> modules;
 	
 public:
 
@@ -94,13 +94,17 @@ public:
 
 	~Target_child();
 
-
-	
+  
 	/**
 	 * Start child from scratch
 	 */
 	void start();
-	/**
+
+  void checkpoint(Target_state &state);
+  void restore(Target_state &state);
+
+
+  /**
 	 * Pause child
 	 */
 	//	void pause()  { _resources.cpu.pause_threads();  }
@@ -117,7 +121,7 @@ public:
 	const char *name() const { return _name.string(); }
 	Genode::Service *resolve_session_request(const char *service_name, const char *args);
 	void filter_session_args(const char *service, char *args, Genode::size_t args_len);
-
+  
 };
 
 #endif /* _RTCR_TARGET_CHILD_H_ */

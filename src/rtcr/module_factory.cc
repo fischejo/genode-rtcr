@@ -9,7 +9,7 @@
 using namespace Rtcr;
 
 // initialize List
-Session_handler_factory* Module_factory::_head = NULL;
+Module_factory* Module_factory::_head = NULL;
 
 Module_factory::~Module_factory() {}
 
@@ -28,12 +28,12 @@ void Module_factory::print()
     }
 }
 
-Module_factory* Module_factory::get(const char* name)
+Module_factory* Module_factory::get(const Module_name name)
 {
   Module_factory* r = Module_factory::first();
   while(r)
     {
-      if(!Genode::strcmp(r->name(), name))
+      if(!Genode::strcmp(r->name().string(), name.string()))
 	return r;
       r = r->next();
     }

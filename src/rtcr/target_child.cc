@@ -24,25 +24,57 @@ Target_child::Target_child(Genode::Env &env,
 	_parent_services (parent_services)
 {
 	Genode::log("\033[33m", __func__, "\033[0m(child=", _name.string(), ")");
-
-	// print all registered session handlers
-	//	Session_handler_factory::print();
-
-	core = new(md_alloc) Core_module(env,
-					 md_alloc,
-					 _resources_ep,
-					 _name.string(),
-					 _in_bootstrap);
 	
-	// create pd_session_handler
-	/*	core = Module_factory::get("core")->create(env,
-						   md_alloc,
-						   _resources_ep,
-						   &_session_handlers,
-						   _name.string(),
-						   _in_bootstrap);
-	*/
-	// Donate ram quota to child
+	// print all registered session handlers
+	Module_factory::print();
+
+	// parse module nodes of config
+	const Genode::Xml_node& config_node = Genode::config()->xml_node();
+
+	// load modules
+	try {
+	    Genode::Xml_node module_node = config_node.sub_node("module");
+	    while(true) {
+		// ignore modules which are manually disabled
+		if (!module_node.attribute_value("disabled", false)) {
+		    // parse module name and provide string
+		    Module_name const name = module_node.attribute_value("name", Module_name());
+		    Module_name const provides = module_node.attribute_value("provides", name);
+		    Genode::log("config::module name=", name, " provides=", provides);
+
+		    // find factory for module
+		    Module_factory *factory = Module_factory::get(name);
+		    if(!factory)
+			Genode::error("Module '", name, "' configured but no Module_factory found!");
+
+		    // create module 
+		    Module *module = factory->create(env,
+						     md_alloc,
+						     _resources_ep,
+						     _name.string(),
+						     _in_bootstrap,
+						     module_node);
+
+		    if (!Genode::strcmp(provides.string(), "core")) {
+			Genode::log("Found module which provides 'core'.");
+			core = dynamic_cast<Core_module*>(module);
+		    }
+
+		    modules.insert(module);
+		    Genode::log("Module '", name, "' loaded");
+		    module_node = module_node.next("module");		
+		}
+	    }
+	} catch (Genode::Xml_node::Nonexistent_sub_node n) {
+	    Genode::log("Module loading finished");
+	}
+
+	// make sure that there is a module which provides `core`.
+	if(!core)
+	    Genode::error("No module found which provides `core`!");
+
+
+        // Donate ram quota to child
 	// TODO Replace static quota donation with the amount of quota, the child needs
 	Genode::size_t donate_quota = 1024*1024;
 	core->ram_session().ref_account(env.ram_session_cap());
@@ -88,6 +120,26 @@ void Target_child::start()
 						 core->pd_service(),
 						 core->ram_service(),
 						 core->cpu_service());
+}
+
+
+void Target_child::checkpoint(Target_state &state)
+{
+    Module *module = modules.first();
+    while (module) {
+	module->checkpoint(state);
+	module = module->next();
+    }
+}
+
+
+void Target_child::restore(Target_state &state)
+{
+    Module *module = modules.first();
+    while (module) {
+	module->restore(state);
+	module->next();
+    }    
 }
 
 

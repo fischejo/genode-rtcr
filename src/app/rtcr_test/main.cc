@@ -24,7 +24,10 @@
 #include <base/log.h>
 #include <timer_session/connection.h>
 
+#include <os/config.h>
+
 #include <rtcr/target_child.h>
+
 
 Genode::size_t Component::stack_size() { return 64*1024; }
 
@@ -43,8 +46,7 @@ struct Rtcr::Main
 
   	Main(Genode::Env &env_) : env(env_)
 	{
-	  Timer::Connection timer(env);
-
+	  Timer::Connection timer(env);	  
 	  
 	  Target_child child (env,
 			      heap,

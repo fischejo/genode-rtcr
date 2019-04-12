@@ -11,14 +11,16 @@
 #include <util/list.h>
 #include <base/heap.h>
 #include <base/env.h>
-
+#include <os/config.h>
 /* Localn includes */
 #include <rtcr/module.h>
+#include <util/string.h>
 
 using namespace Rtcr;
 
 namespace Rtcr {
-	class Module_factory;
+  class Module_factory;
+  typedef Genode::String<16> Module_name;
 }
 
 class Rtcr::Module_factory
@@ -29,20 +31,21 @@ class Rtcr::Module_factory
   
  public:
 
+  
   virtual Module* create(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &ep,
-			 Genode::List<Session_handler> *_session_handlers,
 			 const char* label,
-			 bool &bootstrap) = 0;
+			 bool &bootstrap,
+			 Genode::Xml_node &config) = 0;
   
-  virtual char const* name() = 0;
+  virtual Module_name name() = 0;
   
   Module_factory();
   ~Module_factory();
 
   static void print();
-  static Module_factory* get(char const* name);  
+  static Module_factory* get(const Module_name name);  
   static Module_factory* first();
   Module_factory* next();
 };

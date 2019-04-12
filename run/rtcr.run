@@ -31,7 +31,12 @@ install_config {
 		<provides><service name="Timer"/></provides>
 	</start>
 	<start name="rtcr_test">
-		<resource name="RAM" quantum="1G"/>
+    		<resource name="RAM" quantum="1G"/>
+                <config>
+                    <module name="core" enable="true">
+                       <granularity>5</granularity>
+                    </module>
+                </config>
 	</start>
 </config>}
 

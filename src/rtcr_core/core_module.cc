@@ -9,24 +9,30 @@
 
 using namespace Rtcr;
 
+/* Create a static instance of the Core_module_factory. This registers the module */
+
+Rtcr::Core_module_factory _core_module_factory_instance;
+
 
 Core_module::Core_module(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &ep,
 			 const char* label,
-			 bool &bootstrap)
+			 bool &bootstrap,
+			 Genode::Xml_node &config)
     :
-  Core_module_pd(env, md_alloc, ep),
+    Core_module_pd(env, md_alloc, ep),
     Core_module_cpu(env, md_alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
     Core_module_rm(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
     Core_module_ram(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
     Core_module_rom(env, md_alloc, ep)
 {
-  Core_module_pd::_init(label, bootstrap);
-  Core_module_cpu::_init(label, bootstrap);
-  Core_module_rm::_init(label, bootstrap);
-  Core_module_ram::_init(label, 0, bootstrap);
-  Core_module_rom::_init(label, bootstrap);  
+  
+    Core_module_pd::_init(label, bootstrap);
+    Core_module_cpu::_init(label, bootstrap);
+    Core_module_rm::_init(label, bootstrap);
+    Core_module_ram::_init(label, 0, bootstrap);
+    Core_module_rom::_init(label, bootstrap);  
 }
 
 
@@ -58,11 +64,11 @@ void Core_module::restore(Target_state &state)
 
 void Core_module::pause()
 {
-  Core_module_cpu::_pause();
+    Core_module_cpu::_pause();
 }
 
 
 void Core_module::resume()
 {
-  Core_module_cpu::_resume();
+    Core_module_cpu::_resume();
 }
