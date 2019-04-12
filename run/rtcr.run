@@ -36,6 +36,7 @@ install_config {
                     <module name="core" enable="true">
                        <granularity>5</granularity>
                     </module>
+                    <module name="timer" />
                 </config>
 	</start>
 </config>}
