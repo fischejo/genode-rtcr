@@ -4,6 +4,7 @@ SRC_CC += core_module_pd.cc pd_session.cc
 SRC_CC += core_module_rm.cc rm_session.cc region_map_component.cc
 SRC_CC += core_module_rom.cc rom_session.cc
 SRC_CC += core_module_ram.cc ram_session.cc
+SRC_CC += core_module_log.cc log_session.cc
 
 vpath % $(REP_DIR)/src/rtcr_core
 vpath % $(REP_DIR)/src/rtcr_core/cpu
@@ -11,6 +12,7 @@ vpath % $(REP_DIR)/src/rtcr_core/pd
 vpath % $(REP_DIR)/src/rtcr_core/rm
 vpath % $(REP_DIR)/src/rtcr_core/rom
 vpath % $(REP_DIR)/src/rtcr_core/ram
+vpath % $(REP_DIR)/src/rtcr_core/log
 
 CC_OPT += -DVERBOSE
 CC_OPT += -DDEBUG

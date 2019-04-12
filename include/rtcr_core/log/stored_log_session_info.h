@@ -11,7 +11,7 @@
 #include <util/list.h>
 
 /* Rtcr includes */
-#include <rtcr_log/log_session.h>
+#include <rtcr_core/log/log_session.h>
 #include <rtcr/stored_info_structs.h>
 
 namespace Rtcr {

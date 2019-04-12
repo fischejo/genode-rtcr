@@ -24,6 +24,7 @@
 #include <rtcr_core/core_module_pd.h>
 #include <rtcr_core/core_module_rm.h>
 #include <rtcr_core/core_module_rom.h>
+#include <rtcr_core/core_module_log.h>
 
 
 namespace Rtcr {
@@ -40,8 +41,10 @@ class Rtcr::Core_module : public virtual Module,
 			  public Core_module_cpu,
 			  public Core_module_ram,
 			  public Core_module_rm,
-			  public Core_module_rom
+                          public Core_module_rom,
+			  public Core_module_log
 {
+
 public:
   
 

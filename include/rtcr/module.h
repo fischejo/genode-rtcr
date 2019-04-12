@@ -13,7 +13,6 @@
 #include <base/heap.h>
 #include <util/list.h>
 #include <base/service.h>
-
 #include <rtcr/target_state.h>
 
 namespace Rtcr {

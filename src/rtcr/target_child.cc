@@ -161,6 +161,7 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 	if(service)
 	    return service;
 
+	// ask all modules
 	Module *module = modules.first();
 	while (module) {
 	    service = module->resolve_session_request(service_name, args);
