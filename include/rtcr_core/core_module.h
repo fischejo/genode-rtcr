@@ -45,8 +45,8 @@ class Rtcr::Core_module : public virtual Module,
 			  public Core_module_log
 {
 
-public:
   
+public:  
 
   Core_module(Genode::Env &env,
 	      Genode::Allocator &md_alloc,
@@ -65,7 +65,8 @@ public:
     void restore(Target_state &state);
 
     Genode::Service *resolve_session_request(const char *service_name, const char *args);
-    
+
+
 };
 
 
@@ -78,7 +79,8 @@ public:
 		 Genode::Entrypoint &ep,
 		 const char* label,
 		 bool &bootstrap,
-		 Genode::Xml_node *config)
+		 Genode::Xml_node *config,
+		 Genode::List<Module> &modules)
   {
     return new (md_alloc) Core_module(env, md_alloc, ep, label, bootstrap, config);
   }

@@ -37,7 +37,8 @@ class Rtcr::Module_factory
 			 Genode::Entrypoint &ep,
 			 const char* label,
 			 bool &bootstrap,
-			 Genode::Xml_node *config) = 0;
+			 Genode::Xml_node *config,
+			 Genode::List<Module> &modules) = 0;
   
   virtual Module_name name() = 0;
   

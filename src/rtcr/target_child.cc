@@ -53,7 +53,8 @@ Target_child::Target_child(Genode::Env &env,
 						     _resources_ep,
 						     _name.string(),
 						     _in_bootstrap,
-						     &module_node);
+						     &module_node,
+						     modules);
 
 		    if (!Genode::strcmp(provides.string(), "core")) {
 			Genode::log("Found module which provides 'core'.");
