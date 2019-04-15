@@ -25,36 +25,35 @@ Target_child::Target_child(Genode::Env &env,
 {
 	Genode::log("\033[33m", __func__, "\033[0m(child=", _name.string(), ")");
 	
-	// print all registered session handlers
+	/* print all registered session handlers */
 	Module_factory::print();
 
-	// parse module nodes of config
+	/* parse module nodes of config */
 	const Genode::Xml_node& config_node = Genode::config()->xml_node();
 
-	// load modules
+	/* load modules */
 	try {
 	    Genode::Xml_node module_node = config_node.sub_node("module");
 	    while(true) {
-		// ignore modules which are manually disabled
+	      /* ignore modules which are manually disabled */
 		if (!module_node.attribute_value("disabled", false)) {
-		    // parse module name and provide string
+		  /* parse module name and provide string */
 		    Module_name const name = module_node.attribute_value("name", Module_name());
 		    Module_name const provides = module_node.attribute_value("provides", name);
 		    Genode::log("config::module name=", name, " provides=", provides);
 
-		    // find factory for module
+		    /* find factory for module */
 		    Module_factory *factory = Module_factory::get(name);
 		    if(!factory)
 			Genode::error("Module '", name, "' configured but no Module_factory found!");
 
-		    // create module 
+		    /* create module */
 		    Module *module = factory->create(env,
 						     md_alloc,
 						     _resources_ep,
 						     _name.string(),
 						     _in_bootstrap,
-						     &module_node,
-						     modules);
+						     &module_node);
 
 		    if (!Genode::strcmp(provides.string(), "core")) {
 			Genode::log("Found module which provides 'core'.");
@@ -70,10 +69,17 @@ Target_child::Target_child(Genode::Env &env,
 	    Genode::log("Module loading finished");
 	}
 
-	// make sure that there is a module which provides `core`.
+	/* make sure that there is a module which provides `core`. */
 	if(!core)
 	    Genode::error("No module found which provides `core`!");
 
+
+	/* inform every module about each other */
+	Module *module = modules.first();
+	while (module) {
+	  module->initialize(modules);
+	  module = module->next();
+	}
 
         // Donate ram quota to child
 	// TODO Replace static quota donation with the amount of quota, the child needs
@@ -150,8 +156,7 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
         Genode::log("Target_child::\033[33m", __func__, "\033[0m(", service_name, " ", args, ")");
 
 
-	if(!Genode::strcmp(service_name, "LOG") && _in_bootstrap)
-	{
+	if(!Genode::strcmp(service_name, "LOG") && _in_bootstrap) {
 		Genode::log("  Unsetting bootstrap_phase");
 		_in_bootstrap = false;
 	}
@@ -172,8 +177,7 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 	}
 
 	// Service not known, cannot intercept it
-	if(!service)
-	{
+	if(!service) {
 		service = new (_md_alloc) Genode::Parent_service(service_name);
 		_parent_services.insert(service);
 		Genode::warning("Unknown service: ", service_name);

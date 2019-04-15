@@ -19,6 +19,7 @@
 #include <rtcr_core/ram/ram_session.h>
 #include <rtcr/target_state.h>
 #include <base/service.h>
+#include <rtcr_ds/dataspace_module.h>
 
 namespace Rtcr {
     class Core_module_base;
@@ -50,6 +51,8 @@ public:
     virtual Ram_root &ram_root() = 0;
     virtual Cpu_root &cpu_root() = 0;
     virtual Rm_root &rm_root() = 0;
+
+    virtual Dataspace_module &ds_module() = 0;  
   
     virtual Genode::Local_service &pd_service() = 0;
     virtual Genode::Local_service &rm_service() = 0;

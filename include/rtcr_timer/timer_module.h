@@ -19,6 +19,7 @@
 #include <rtcr/module_factory.h>
 #include <rtcr/target_state.h>
 #include <rtcr_core/core_module.h>
+
 /* Timer Module includes */
 #include <rtcr_timer/timer_module.h>
 
@@ -41,7 +42,7 @@ private:
     Timer_root *_timer_root;
     Genode::Local_service *_timer_service;
     bool &_bootstrap;
-    Core_module &_core;
+    Core_module *_core_module;
   
 
   void _destroy_stored_timer_session(Target_state &state,
@@ -52,12 +53,10 @@ public:
   Timer_module(Genode::Env &env,
 	      Genode::Allocator &md_alloc,
 	      Genode::Entrypoint &ep,
-	      const char* label,
-	      bool &bootstrap,
-	      Core_module &core);
+	      bool &bootstrap);
 
   ~Timer_module();
-
+    void initialize(Genode::List<Module> &modules);
     void checkpoint(Target_state &state);
     void restore(Target_state &state);
     Genode::Service *resolve_session_request(const char *service_name, const char *args);
@@ -73,20 +72,9 @@ public:
 		 Genode::Entrypoint &ep,
 		 const char* label,
 		 bool &bootstrap,
-		 Genode::Xml_node *config,
-		 Genode::List<Module> &modules)
-  {
-    Module *module = modules.first();
-    Core_module *core = NULL;
-    while (!core && module) {
-      core = dynamic_cast<Core_module*>(module);
-      module = module->next();
-    }
-
-    if(!core)
-      Genode::error("No Core_module loaded! ");
-    
-    return new (md_alloc) Timer_module(env, md_alloc, ep, label, bootstrap, *core);
+		 Genode::Xml_node *config)
+  {    
+    return new (md_alloc) Timer_module(env, md_alloc, ep,  bootstrap);
   }
     
   Module_name name()

@@ -33,10 +33,11 @@ install_config {
 	<start name="rtcr_test">
     		<resource name="RAM" quantum="1G"/>
                 <config>
-                    <module name="core" enable="true">
+                    <module name="core">
                        <granularity>5</granularity>
                     </module>
                     <module name="timer" />
+                    <module name="dataspace" />    
                 </config>
 	</start>
 </config>}

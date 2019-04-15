@@ -25,7 +25,7 @@
 #include <rtcr_core/core_module_rm.h>
 #include <rtcr_core/core_module_rom.h>
 #include <rtcr_core/core_module_log.h>
-
+#include <rtcr_ds/dataspace_module.h>
 
 namespace Rtcr {
     class Core_module;
@@ -36,7 +36,8 @@ namespace Rtcr {
 using namespace Rtcr;
 
 
-class Rtcr::Core_module : public virtual Module,
+class Rtcr::Core_module : public virtual Core_module_base,
+			  public virtual Module,
 			  public Core_module_pd,
 			  public Core_module_cpu,
 			  public Core_module_ram,
@@ -44,8 +45,10 @@ class Rtcr::Core_module : public virtual Module,
                           public Core_module_rom,
 			  public Core_module_log
 {
-
+private:
+  Dataspace_module *_ds_module;
   
+    
 public:  
 
   Core_module(Genode::Env &env,
@@ -55,8 +58,10 @@ public:
 	      bool &bootstrap,
 	      Genode::Xml_node *config);
 
+
   ~Core_module();
 
+    void initialize(Genode::List<Module> &modules);
   
     /* These methods are implemented for the Target_child */
     void pause();
@@ -66,7 +71,11 @@ public:
 
     Genode::Service *resolve_session_request(const char *service_name, const char *args);
 
-
+  virtual Dataspace_module &ds_module()
+  {
+    return *_ds_module;
+  }
+  
 };
 
 
@@ -79,9 +88,8 @@ public:
 		 Genode::Entrypoint &ep,
 		 const char* label,
 		 bool &bootstrap,
-		 Genode::Xml_node *config,
-		 Genode::List<Module> &modules)
-  {
+		 Genode::Xml_node *config)
+  {   
     return new (md_alloc) Core_module(env, md_alloc, ep, label, bootstrap, config);
   }
     

@@ -17,18 +17,28 @@ Rtcr::Timer_module_factory _timer_module_factory_instance;
 Timer_module::Timer_module(Genode::Env &env,
 			   Genode::Allocator &md_alloc,
 			   Genode::Entrypoint &ep,
-			   const char* label,
-			   bool &bootstrap,
-			   Core_module &core)
+			   bool &bootstrap)
   :
     _env(env),
     _md_alloc(md_alloc),
     _ep(ep),
-    _bootstrap(bootstrap),
-    _core(core)
-{
+    _bootstrap(bootstrap)
+{}
 
+
+
+void Timer_module::initialize(Genode::List<Module> &modules)
+{
+  Module *module = modules.first();
+  while (!_core_module && module) {
+    _core_module = dynamic_cast<Core_module*>(module);
+    module = module->next();
+  }
+
+  if(!_core_module)
+    Genode::error("No Core_module loaded! ");
 }
+
 
 
 
@@ -54,7 +64,7 @@ void Timer_module::checkpoint(Target_state &state)
 
 		/* No corresponding stored_info => create it */
 		if(!stored_info) {
-			Genode::addr_t childs_kcap = _core.find_kcap_by_badge(child_info->cap().local_name());
+			Genode::addr_t childs_kcap = _core_module->find_kcap_by_badge(child_info->cap().local_name());
 			stored_info = new (state._alloc) Stored_timer_session_info(*child_info, childs_kcap);
 			stored_infos.insert(stored_info);
 		}

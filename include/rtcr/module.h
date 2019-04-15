@@ -22,6 +22,7 @@ namespace Rtcr {
 class Rtcr::Module : public Genode::List<Module>::Element
 {
 public:
+    virtual void initialize(Genode::List<Module> &modules) {};
     virtual void checkpoint(Target_state &state) = 0;
     virtual void restore(Target_state &state) = 0;
   //    virtual const char * name() = 0;

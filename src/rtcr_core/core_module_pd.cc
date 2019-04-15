@@ -518,8 +518,6 @@ void Core_module_pd::_destroy_stored_signal_source(Target_state &state,
 }
 
 
-//  _find_kcap_by_badge?
-
 void Core_module_pd::_prepare_signal_contexts(Target_state &state,
 					      Genode::List<Stored_signal_context_info> &stored_infos,
 					      Genode::List<Signal_context_info> &child_infos)

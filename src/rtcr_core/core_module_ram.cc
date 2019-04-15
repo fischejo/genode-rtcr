@@ -12,17 +12,15 @@ using namespace Rtcr;
 Core_module_ram::Core_module_ram(Genode::Env &env,
 				 Genode::Allocator &md_alloc,
 				 Genode::Entrypoint &ep)
-    :
+  :
     _env(env),
     _md_alloc(md_alloc),
     _ep(ep)
- {
- 
-}  
+ {}  
 
 void Core_module_ram::_init(const char* label,
-			    Genode::size_t granularity,
-			    bool &bootstrap)
+				  Genode::size_t granularity,
+				  bool &bootstrap)
 {
   _ram_root = new (_md_alloc) Ram_root(_env, _md_alloc, _ep, granularity, bootstrap);
   _ram_service = new (_md_alloc) Genode::Local_service("RAM", _ram_root);
@@ -155,17 +153,10 @@ void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
 	    stored_infos.insert(stored_info);
 	}
 
-	/* Nothing to update in stored_info */
-
-	/* Remeber this dataspace for checkpoint, if not already in list */
-	Dataspace_translation_info *trans_info = _dataspace_translations.first();
-	if(trans_info) trans_info = trans_info->find_by_resto_badge(child_info->cap.local_name());
-	if(!trans_info) {
-	    trans_info = new (_md_alloc) Dataspace_translation_info(stored_info->memory_content,
-								 child_info->cap,
-								 child_info->size);
-	    _dataspace_translations.insert(trans_info);
-	}
+	/* register dataspace for checkpointing */
+	ds_module().register_dataspace(stored_info->memory_content,
+				       child_info->cap,
+				       child_info->size);
 
 	child_info = child_info->next();
     }
@@ -249,184 +240,5 @@ void Core_module_ram::_destroy_stored_ram_dataspace(Target_state &state,
 }
 
 
-
-
-void Core_module_ram::_checkpoint_temp_wrapper(Target_state &state)
-{
-#ifdef DEBUG
-    Genode::log("Dataspaces to checkpoint:");
-    Dataspace_translation_info *info = _dataspace_translations.first();
-    while(info) {
-	Genode::log(" ", *info);
-	info = info->next();
-    }
-
-#endif
-
-    /* Create a list of managed dataspaces */
-    _create_managed_dataspace_list();
-
-#ifdef DEBUG
-    Genode::log("Managed dataspaces:");
-    Simplified_managed_dataspace_info const *smd_info = _managed_dataspaces.first();
-    if(!smd_info) Genode::log(" <empty>\n");
-    while(smd_info) {
-	Genode::log(" ", *smd_info);
-
-	Simplified_managed_dataspace_info::Simplified_designated_ds_info const *sdd_info =
-	    smd_info->designated_dataspaces.first();
-	if(!sdd_info) Genode::log("  <empty>\n");
-	while(sdd_info) {
-	    Genode::log("  ", *sdd_info);
-	    sdd_info = sdd_info->next();
-	}
-
-	smd_info = smd_info->next();
-    }
-#endif
-
-    /* Detach all designated dataspaces */
-    _detach_designated_dataspaces();
-
-    /* Copy child dataspaces' content and to stored dataspaces' content */
-    _checkpoint_dataspaces(state);
-}
-
-
-
-void Core_module_ram::_create_managed_dataspace_list()
-{
-#ifdef DEBUG
-    Genode::log("Resto::\033[33m", __func__, "\033[0m(...)");
-#endif
-
-    Genode::List<Ram_session_component> &ram_sessions = _ram_root->session_infos();
-    typedef Simplified_managed_dataspace_info::Simplified_designated_ds_info Sim_dd_info;
-
-    Ram_session_component *ram_session = ram_sessions.first();
-    while(ram_session) {
-	Ram_dataspace_info *ramds_info = ram_session->parent_state().ram_dataspaces.first();
-	while(ramds_info) {
-	    // RAM dataspace is managed
-	    if(ramds_info->mrm_info) {
-		Genode::List<Sim_dd_info> sim_dd_infos;
-		Designated_dataspace_info *dd_info = ramds_info->mrm_info->dd_infos.first();
-		while(dd_info) {
-		    Genode::Ram_dataspace_capability dd_info_cap =
-			Genode::reinterpret_cap_cast<Genode::Ram_dataspace>(dd_info->cap);
-
-		    sim_dd_infos.insert(new (_md_alloc) Sim_dd_info(dd_info_cap,
-								 dd_info->rel_addr,
-								 dd_info->size,
-								 dd_info->attached));
-
-		    dd_info = dd_info->next();
-		}
-
-		_managed_dataspaces.insert(new (_md_alloc) Simplified_managed_dataspace_info(ramds_info->cap,
-											  sim_dd_infos));
-	    }
-
-	    ramds_info = ramds_info->next();
-	}
-
-	ram_session = ram_session->next();
-    }
-}
-
-
-void Core_module_ram::_detach_designated_dataspaces()
-{
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
-#endif
-
-    Genode::List<Ram_session_component> &ram_sessions = _ram_root->session_infos();
-    Ram_session_component *ram_session = ram_sessions.first();
-    while(ram_session) {
-	Ram_dataspace_info *ramds_info = ram_session->parent_state().ram_dataspaces.first();
-	while(ramds_info) {
-	    if(ramds_info->mrm_info) {
-		Designated_dataspace_info *dd_info = ramds_info->mrm_info->dd_infos.first();
-		while(dd_info) {
-		    if(dd_info->attached) dd_info->detach();
-		    dd_info = dd_info->next();
-		}
-	    }
-	    ramds_info = ramds_info->next();
-	}
-	ram_session = ram_session->next();
-    }
-}
-
-
-
-
-void Core_module_ram::_checkpoint_dataspaces(Target_state &state)
-{
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif    
-
-    Dataspace_translation_info *memory_info = _dataspace_translations.first();
-    while(memory_info) {
-	if(!memory_info->processed) {
-	    /* Resolve managed dataspace of the incremental checkpointing mechanism */
-	    Simplified_managed_dataspace_info *smd_info = _managed_dataspaces.first();
-	    if(smd_info) smd_info = smd_info->find_by_badge(memory_info->resto_ds_cap.local_name());
-
-	    if(smd_info) {
-		/* Dataspace is managed */			
-		Simplified_managed_dataspace_info::Simplified_designated_ds_info *sdd_info =
-		    smd_info->designated_dataspaces.first();
-		while(sdd_info) {
-		    if(sdd_info->modified) {
-			_checkpoint_dataspace_content(state,
-						      memory_info->ckpt_ds_cap,
-						      sdd_info->dataspace_cap,
-						      sdd_info->addr,
-						      sdd_info->size);
-		    }
-
-		    sdd_info = sdd_info->next();
-		}
-
-	    } else {
-		/* Dataspace is not managed */
-		_checkpoint_dataspace_content(state,
-					      memory_info->ckpt_ds_cap,
-					      memory_info->resto_ds_cap,
-					      0,
-					      memory_info->size);
-	    }
-
-	    memory_info->processed = true;
-	}
-
-	memory_info = memory_info->next();
-    }
-}
-
-
-void Core_module_ram::_checkpoint_dataspace_content(Target_state &state,
-						    Genode::Dataspace_capability dst_ds_cap,
-						    Genode::Dataspace_capability src_ds_cap,
-						    Genode::addr_t dst_offset,
-						    Genode::size_t size)
-{
-#ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(dst ", dst_ds_cap,
-		", src ", src_ds_cap, ", dst_offset=", Genode::Hex(dst_offset),
-		", copy_size=", Genode::Hex(size), ")");
-#endif
-    
-    char *dst_addr_start = state._env.rm().attach(dst_ds_cap);
-    char *src_addr_start = state._env.rm().attach(src_ds_cap);
-
-    Genode::memcpy(dst_addr_start + dst_offset, src_addr_start, size);
-
-    state._env.rm().detach(src_addr_start);
-    state._env.rm().detach(dst_addr_start);
-}
 
 

@@ -45,12 +45,6 @@ private:
     Genode::Local_service *_ram_service;
     Ram_session_component *_ram_session;
 
-    /**
-     * Mapping to find a copy dataspace for a given original dataspace badge
-     */
-    Genode::List<Dataspace_translation_info> _dataspace_translations;
-    Genode::List<Simplified_managed_dataspace_info> _managed_dataspaces;
-
     Ram_session_component *_find_session(const char *label, Ram_root &ram_root);  
 
     // level: 1.1
@@ -69,29 +63,11 @@ private:
     void _destroy_stored_ram_dataspace(Target_state &state,
 				       Stored_ram_dataspace_info &stored_info);    
 
-    // level 2.1
-    void _create_managed_dataspace_list();
-
-    // level 2.2
-    void _detach_designated_dataspaces();
-
-    // level: 2.3
-    void _checkpoint_dataspaces(Target_state &state);
-
-    // level 2.3.1
-    void _checkpoint_dataspace_content(Target_state &state,
-				       Genode::Dataspace_capability dst_ds_cap,
-				       Genode::Dataspace_capability src_ds_cap,
-				       Genode::addr_t dst_offset,
-				       Genode::size_t size);
 
 protected:
     // level: 1    
     void _checkpoint(Target_state &state);
-  void _init(const char* label, Genode::size_t granularity, bool &bootstrap);
-    // level 2
-    void _checkpoint_temp_wrapper(Target_state &state);
-
+    void _init(const char* label, Genode::size_t granularity, bool &bootstrap);
     
     /* implement virtual methods of Core_module_base */
     Ram_root &ram_root() {
@@ -109,12 +85,11 @@ public:
   
 
     Core_module_ram(Genode::Env &env,
-			Genode::Allocator &md_alloc,
+		    Genode::Allocator &md_alloc,
 		    Genode::Entrypoint &ep);
 
 	
     ~Core_module_ram();
-
   	
 };
 
