@@ -29,7 +29,7 @@
 #include <rtcr/target_child.h>
 
 
-Genode::size_t Component::stack_size() { return 64*1024; }
+Genode::size_t Component::stack_size() { return 512*1024; }
 
 using namespace Rtcr;
 
@@ -39,7 +39,7 @@ namespace Rtcr {
 
 struct Rtcr::Main
 {
-	enum { ROOT_STACK_SIZE = 16*1024 };
+	enum { ROOT_STACK_SIZE = 512*1024 };
 	Genode::Env              &env;
 	Genode::Heap              heap            { env.ram(), env.rm() };
 	Genode::Service_registry  parent_services { };
@@ -54,7 +54,8 @@ struct Rtcr::Main
 			      "sheep_counter");
 
 	  child.start();
-	  timer.msleep(2000);	  
+	  Genode::sleep_forever();
+	  Genode::log("main finished");	  
 	}
 };
 

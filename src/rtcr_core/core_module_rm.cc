@@ -24,7 +24,7 @@ Core_module_rm::Core_module_rm(Genode::Env &env,
 void Core_module_rm::_init(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     _rm_root = new (_md_alloc) Rm_root(_env, _md_alloc, _ep, bootstrap);
     _rm_service = new (_md_alloc) Genode::Local_service("RM", _rm_root);    
@@ -48,10 +48,9 @@ void Core_module_rm::_create_region_map_dataspaces_list()
      * For new intercepted sessions which trade managed dataspaces between child and themselves,
      * the region map dataspace capability has to be inserted into this list
      */
-    
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif  
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
     Genode::List<Rm_session_component> &rm_sessions = rm_root().session_infos();
     Genode::List<Pd_session_component> &pd_sessions = pd_root().session_infos();
@@ -111,8 +110,8 @@ void Core_module_rm::_create_region_map_dataspaces_list()
 void Core_module_rm::_checkpoint(Target_state &state)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     Genode::List<Stored_rm_session_info> &stored_infos = state._stored_rm_sessions;
     Genode::List<Rm_session_component> &child_infos = _rm_root->session_infos();    
     Rm_session_component *child_info = nullptr;
@@ -167,10 +166,8 @@ void Core_module_rm::_prepare_region_maps(Target_state &state,
 					  Genode::List<Region_map_component> &child_infos)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
-
-
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     Region_map_component *child_info = nullptr;
     Stored_region_map_info *stored_info = nullptr;
 
@@ -229,9 +226,8 @@ void Core_module_rm::_prepare_attached_regions(Target_state &state,
 					       Genode::List<Attached_region_info> &child_infos)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
-
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     Attached_region_info *child_info = nullptr;
     Stored_attached_region_info *stored_info = nullptr;
 
@@ -296,8 +292,8 @@ Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(
     Target_state &state, Attached_region_info &child_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
     /* The dataspace with the memory content of the ram dataspace will be
      * referenced by the stored ram dataspace */
@@ -343,9 +339,8 @@ Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(
 void Core_module_rm::_destroy_stored_rm_session(Target_state &state, Stored_rm_session_info &stored_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
-
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     while(Stored_region_map_info *info = stored_info.stored_region_map_infos.first()) {
 	stored_info.stored_region_map_infos.remove(info);
 	_destroy_stored_region_map(state, *info);
@@ -357,10 +352,9 @@ void Core_module_rm::_destroy_stored_rm_session(Target_state &state, Stored_rm_s
 void Core_module_rm::_destroy_stored_region_map(Target_state &state, Stored_region_map_info &stored_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
-
-
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     while(Stored_attached_region_info *info = stored_info.stored_attached_region_infos.first()) {
 	stored_info.stored_attached_region_infos.remove(info);
 	_destroy_stored_attached_region(state, *info);
@@ -374,9 +368,9 @@ void Core_module_rm::_destroy_stored_attached_region(Target_state &state,
 						     Stored_attached_region_info &stored_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
-
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     /* Pre-condition: This stored object is removed from its list, thus, a
      * search for a stored dataspace will not return its memory content
      * dataspace */

@@ -75,7 +75,10 @@ public:
   {
     return *_ds_module;
   }
-  
+
+  Module_name name(){
+    return "core";
+  }
 };
 
 

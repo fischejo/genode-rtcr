@@ -116,17 +116,13 @@ void Timer_module::restore(Target_state &state)
 Genode::Service *Timer_module::resolve_session_request(const char *service_name,
 						       const char *args)
 {
-  if(!_timer_root) {
-    _timer_root = new (_md_alloc) Timer_root(_env,
-					     _md_alloc,
-					     _ep,
-					     _bootstrap);
-
-    _timer_service = new (_md_alloc) Genode::Local_service("Timer",
-							   _timer_root);
+  if(!Genode::strcmp(service_name, "Timer")) {
+    if(!_timer_root) {
+      _timer_root = new (_md_alloc) Timer_root(_env, _md_alloc, _ep, _bootstrap);
+      _timer_service = new (_md_alloc) Genode::Local_service("Timer",_timer_root);
+    }
+    return _timer_service;
   }
-
-  return _timer_service;
+  return 0;
 }
-
 

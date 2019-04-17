@@ -23,9 +23,8 @@ Core_module_cpu::Core_module_cpu(Genode::Env &env,
 void Core_module_cpu::_init(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-
     _cpu_root = new (_md_alloc) Cpu_root(_env, _md_alloc, _ep, pd_root(), bootstrap);
     _cpu_service = new (_md_alloc) Genode::Local_service("CPU", _cpu_root);
     _cpu_session = _find_session(label, cpu_root());  
@@ -36,6 +35,10 @@ void Core_module_cpu::_init(const char* label, bool &bootstrap)
 
 Cpu_session_component *Core_module_cpu::_find_session(const char *label, Cpu_root &cpu_root)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     /* Preparing argument string */
     char args_buf[160];
     Genode::snprintf(args_buf, sizeof(args_buf),
@@ -68,7 +71,7 @@ Core_module_cpu::~Core_module_cpu() {
 void Core_module_cpu::_checkpoint(Target_state &state)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     Genode::List<Cpu_session_component> &child_infos =  cpu_root().session_infos();
 	Genode::List<Stored_cpu_session_info> &stored_infos = state._stored_cpu_sessions;
@@ -124,9 +127,8 @@ void Core_module_cpu::_destroy_stored_cpu_session(Target_state &state,
 						  Stored_cpu_session_info &stored_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-
     while(Stored_cpu_thread_info *info = stored_info.stored_cpu_thread_infos.first()) {
 	stored_info.stored_cpu_thread_infos.remove(info);
 	_destroy_stored_cpu_thread(state, *info);
@@ -140,9 +142,8 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 					   Genode::List<Cpu_thread_component> &child_infos)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-
     Cpu_thread_component *child_info = nullptr;
     Stored_cpu_thread_info *stored_info = nullptr;
 
@@ -177,8 +178,7 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 
     /* Delete old stored_infos, if the child misses corresponding infos in its list */
     stored_info = stored_infos.first();
-    while(stored_info)
-	{
+    while(stored_info) {
 	    Stored_cpu_thread_info *next_info = stored_info->next();
 
 	    /* Find corresponding child_info */
@@ -198,10 +198,6 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 
 void Core_module_cpu::_destroy_stored_cpu_thread(Target_state &state, Stored_cpu_thread_info &stored_info)
 {
-#ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
-#endif
-
     Genode::destroy(state._alloc, &stored_info);
 }
 
@@ -209,11 +205,8 @@ void Core_module_cpu::_destroy_stored_cpu_thread(Target_state &state, Stored_cpu
 void Core_module_cpu::_pause()
 {
 #ifdef DEBUG
-    Genode::log("Target_child::\033[33m", __func__, "\033[0m()");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-
-    /* Pause all threads of all sessions */
-
     /* Iterate through every session */
     Cpu_session_component *cpu_session = _cpu_root->session_infos().first();
     while(cpu_session) {
@@ -235,10 +228,8 @@ void Core_module_cpu::_pause()
 void Core_module_cpu::_resume()
 {
 #ifdef DEBUG
-    Genode::log("Target_child::\033[33m", __func__, "\033[0m()");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-    /* Pause all threads of all sessions */
-
     /* Iterate through every session */
     Cpu_session_component *cpu_session = _cpu_root->session_infos().first();
     while(cpu_session) {

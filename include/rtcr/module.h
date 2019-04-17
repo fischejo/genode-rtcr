@@ -17,15 +17,18 @@
 
 namespace Rtcr {
     class Module;
+  typedef Genode::String<16> Module_name;  
 }
 
 class Rtcr::Module : public Genode::List<Module>::Element
 {
 public:
+  virtual Module_name name() = 0;
+  
     virtual void initialize(Genode::List<Module> &modules) {};
     virtual void checkpoint(Target_state &state) = 0;
     virtual void restore(Target_state &state) = 0;
-  //    virtual const char * name() = 0;
+
   virtual Genode::Service *resolve_session_request(const char *service_name, const char *args) = 0;
     /*
   Module *find_by_name(char const* name)

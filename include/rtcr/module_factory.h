@@ -20,7 +20,6 @@ using namespace Rtcr;
 
 namespace Rtcr {
   class Module_factory;
-  typedef Genode::String<16> Module_name;
 }
 
 class Rtcr::Module_factory

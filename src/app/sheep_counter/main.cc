@@ -16,10 +16,6 @@
 #include <rm_session/connection.h>
 #include <region_map/client.h>
 
-namespace Fiasco {
-#include <l4/sys/kdebug.h>
-}
-
 Genode::size_t Component::stack_size() { return 16*1024; }
 
 void Component::construct(Genode::Env &env)
@@ -29,15 +25,10 @@ void Component::construct(Genode::Env &env)
 	log("Creating Timer session.");
 	Timer::Connection timer(env);
 
-	log("Allocating and attaching memory and its dataspace.");
-	Dataspace_capability ds_cap = env.ram().alloc(4096);
-	unsigned int *addr = env.rm().attach(ds_cap);
-	addr[0] = 1;
-	unsigned int &n = addr[0];
 
-	//env.parent().upgrade(timer, "ram_quota=8K");
-	//env.parent().upgrade(env.ram_session_cap(), "ram_quota=24K");
-
+	//	env.parent().upgrade(timer, "ram_quota=8K");
+	//	env.parent().upgrade(env.ram_session_cap(), "ram_quota=24K");
+	int n  = 0;
 	while(1)
 	{
 		if(n == 1)

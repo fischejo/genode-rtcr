@@ -21,6 +21,10 @@ Core_module_log::Core_module_log(Genode::Env &env,
 
 void Core_module_log::_init(const char* label, bool &bootstrap)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
   _log_root = new (_md_alloc) Log_root(_env, _md_alloc, _ep, bootstrap);
   _log_service = new (_md_alloc) Genode::Local_service("LOG", _log_root);
 }
@@ -35,8 +39,8 @@ Core_module_log::~Core_module_log()
 
 void Core_module_log::_checkpoint(Target_state &state)
 {
-#ifdef VERBOSE
-  Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
   Genode::List<Stored_log_session_info> &stored_infos = state._stored_log_sessions;

@@ -93,6 +93,9 @@ void Core_module::resume()
 Genode::Service *Core_module::resolve_session_request(const char *service_name,
 						       const char *args)
 {
+
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+  
     if(!Genode::strcmp(service_name, "PD")) {
 	return &pd_service();
     } else if(!Genode::strcmp(service_name, "CPU")) {
@@ -100,7 +103,11 @@ Genode::Service *Core_module::resolve_session_request(const char *service_name,
     } else if(!Genode::strcmp(service_name, "RAM")) {
 	return &ram_service();
     } else if(!Genode::strcmp(service_name, "LOG")) {
-	return &log_service();	
+	return &log_service(); 
+    } else if(!Genode::strcmp(service_name, "RM")) {
+	return &rm_service();	
+    } else if(!Genode::strcmp(service_name, "ROM")) {
+	return &rom_service();	
     } else {
 	Genode::Service *service = 0;	
 	return service;

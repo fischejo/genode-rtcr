@@ -21,6 +21,10 @@ Core_module_rom::Core_module_rom(Genode::Env &env,
 
 void Core_module_rom::_init(const char* label, bool &bootstrap)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
   _rom_root = new (_md_alloc) Rom_root(_env, _md_alloc, _ep, bootstrap);
   _rom_service = new (_md_alloc) Genode::Local_service("ROM", _rom_root);
   _rom_connection = new(_md_alloc) Genode::Rom_connection(_env, label);

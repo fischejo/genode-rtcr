@@ -59,6 +59,13 @@ public:
     void checkpoint(Target_state &state);
     void restore(Target_state &state);
     Genode::Service *resolve_session_request(const char *service_name, const char *args);
+
+    
+  Module_name name()
+  {
+    return "dataspace";
+  }
+  
 };
 
 

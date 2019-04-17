@@ -28,11 +28,11 @@ void Core_module_ram::_init(const char* label,
 }
 
 Ram_session_component *Core_module_ram::_find_session(const char *label, Ram_root &ram_root)
-{
+{ 
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-    
+   
     /* Preparing argument string */
     char args_buf[160];
     Genode::snprintf(args_buf, sizeof(args_buf),
@@ -61,15 +61,14 @@ Core_module_ram::~Core_module_ram()
 
 
 void Core_module_ram::_checkpoint(Target_state &state)
-{
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif    
+{ 
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     Genode::List<Ram_session_component> &child_infos =  _ram_root->session_infos();
     Genode::List<Stored_ram_session_info> &stored_infos = state._stored_ram_sessions;    
     Ram_session_component *child_info = nullptr;
     Stored_ram_session_info *stored_info = nullptr;
-
     /* Update state_info from child_info */
     /* If a child_info has no corresponding state_info, create it */
     child_info = child_infos.first();
@@ -116,10 +115,6 @@ void Core_module_ram::_checkpoint(Target_state &state)
 void Core_module_ram::_destroy_stored_ram_session(Target_state &state,
 						  Stored_ram_session_info &stored_info)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif    
-
     while(Stored_ram_dataspace_info *info = stored_info.stored_ramds_infos.first()) {
 	stored_info.stored_ramds_infos.remove(info);
 	_destroy_stored_ram_dataspace(state, *info);
@@ -132,9 +127,9 @@ void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
 					      Genode::List<Stored_ram_dataspace_info> &stored_infos,
 					      Genode::List<Ram_dataspace_info> &child_infos)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif    
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
     Ram_dataspace_info *child_info = nullptr;
     Stored_ram_dataspace_info *stored_info = nullptr;
@@ -184,11 +179,9 @@ void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
 Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Target_state &state,
 									 Ram_dataspace_info &child_info)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif    
-
-
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     /* The dataspace with the memory content of the ram dataspace will be
      * referenced by the stored ram dataspace */
     Genode::Ram_dataspace_capability ramds_cap;
@@ -224,10 +217,9 @@ Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Target_
 void Core_module_ram::_destroy_stored_ram_dataspace(Target_state &state,
 						    Stored_ram_dataspace_info &stored_info)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif    
-    
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     /* Pre-condition: This stored object is removed from its list, thus, a
      * search for a stored dataspace will not return its memory content
      * dataspace */

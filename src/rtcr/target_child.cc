@@ -23,10 +23,16 @@ Target_child::Target_child(Genode::Env &env,
 	_in_bootstrap    (true),
 	_parent_services (parent_services)
 {
-	Genode::log("\033[33m", __func__, "\033[0m(child=", _name.string(), ")");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 	
 	/* print all registered session handlers */
-	Module_factory::print();
+        Module_factory* factory = Module_factory::first();
+	while(factory) {
+	      Genode::log("\e[38;5;214m", "Register Module: ", factory->name(), "\033[0m");
+	      factory = factory->next();
+	}    
 
 	/* parse module nodes of config */
 	const Genode::Xml_node& config_node = Genode::config()->xml_node();
@@ -40,7 +46,7 @@ Target_child::Target_child(Genode::Env &env,
 		  /* parse module name and provide string */
 		    Module_name const name = module_node.attribute_value("name", Module_name());
 		    Module_name const provides = module_node.attribute_value("provides", name);
-		    Genode::log("config::module name=", name, " provides=", provides);
+		    Genode::log("\e[38;5;214m", "config::module name=", name, " provides=", provides, "\033[0m");
 
 		    /* find factory for module */
 		    Module_factory *factory = Module_factory::get(name);
@@ -56,17 +62,17 @@ Target_child::Target_child(Genode::Env &env,
 						     &module_node);
 
 		    if (!Genode::strcmp(provides.string(), "core")) {
-			Genode::log("Found module which provides 'core'.");
+		      Genode::log("\e[38;5;214m", "Found module which provides 'core'.", "\033[0m");
 			core = dynamic_cast<Core_module*>(module);
 		    }
 
 		    modules.insert(module);
-		    Genode::log("Module '", name, "' loaded");
+		    Genode::log("\e[38;5;214m", "Module '", name, "' loaded", "\033[0m");
 		    module_node = module_node.next("module");		
 		}
 	    }
 	} catch (Genode::Xml_node::Nonexistent_sub_node n) {
-	    Genode::log("Module loading finished");
+	  Genode::log("\e[1m\e[38;5;214m", "Module loading finished", "\033[0m");
 	}
 
 	/* make sure that there is a module which provides `core`. */
@@ -81,21 +87,29 @@ Target_child::Target_child(Genode::Env &env,
 	  module = module->next();
 	}
 
+
+	Genode::log("\e[1m\e[38;5;199m", "After module->initilize", "\033[0m");
+
+
+
+	  
         // Donate ram quota to child
 	// TODO Replace static quota donation with the amount of quota, the child needs
-	Genode::size_t donate_quota = 1024*1024;
+	Genode::size_t donate_quota = 512*1024;
 	core->ram_session().ref_account(env.ram_session_cap());
 	// Note: transfer goes directly to parent's ram session
 	env.ram().transfer_quota(core->ram_session().parent_cap(), donate_quota);
-	
+	Genode::log("\e[1m\e[38;5;199m", "After transfer_quota", "\033[0m");	
+
 	// do some magic
 	_address_space = new(md_alloc) Genode::Region_map_client(core->pd_session().address_space());
-
+	Genode::log("\e[1m\e[38;5;199m", "After Region_map_client", "\033[0m");	
 
 	_initial_thread = new(md_alloc) Genode::Child::Initial_thread(
 								      core->cpu_session(),
 								      core->pd_session().cap(),
 								      _name.string());
+Genode::log("\e[1m\e[38;5;199m", "After Initial_thread", "\033[0m");	
 }
 
 
@@ -110,7 +124,9 @@ Target_child::~Target_child()
 
 void Target_child::start()
 {
-        Genode::log("Target_child::\033[33m", __func__, "\033[0m()");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
 	_child = new (_md_alloc) Genode::Child ( core->rom_connection().dataspace(),
 						 Genode::Dataspace_capability(),
@@ -132,6 +148,10 @@ void Target_child::start()
 
 void Target_child::checkpoint(Target_state &state)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     Module *module = modules.first();
     while (module) {
 	module->checkpoint(state);
@@ -142,10 +162,14 @@ void Target_child::checkpoint(Target_state &state)
 
 void Target_child::restore(Target_state &state)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     Module *module = modules.first();
     while (module) {
 	module->restore(state);
-	module->next();
+	module = module->next();
     }    
 }
 
@@ -153,7 +177,9 @@ void Target_child::restore(Target_state &state)
 Genode::Service *Target_child::resolve_session_request(const char *service_name,
 						       const char *args)
 {
-        Genode::log("Target_child::\033[33m", __func__, "\033[0m(", service_name, " ", args, ")");
+#ifdef DEBUG
+	Genode::log("\033[36m", __func__,"(",service_name, ", ", args, ")", "\033[0m");
+#endif
 
 
 	if(!Genode::strcmp(service_name, "LOG") && _in_bootstrap) {
@@ -164,16 +190,22 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 	
 	// Service known from parent?
 	Genode::Service *service = _parent_services.find(service_name);
-	if(service)
+	if(service) {
 	    return service;
+	    Genode::log("parent service");
+	}
+
 
 	// ask all modules
 	Module *module = modules.first();
 	while (module) {
 	    service = module->resolve_session_request(service_name, args);
-	    if(service)
-		return service;
-	    module->next();
+	    if(service) {
+	      Genode::log("module service: ", module->name());
+	      return service;	    
+	    }
+
+	    module = module->next();
 	}
 
 	// Service not known, cannot intercept it

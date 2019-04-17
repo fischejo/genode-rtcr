@@ -23,10 +23,9 @@ Core_module_pd::Core_module_pd(Genode::Env &env,
 
 void Core_module_pd::_init(const char* label, bool &bootstrap)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-
     _pd_root = new (_md_alloc) Pd_root(_env, _md_alloc, _ep, bootstrap);
     _pd_service = new (_md_alloc) Genode::Local_service("PD", _pd_root);
     _pd_session = _find_session(label, pd_root());
@@ -34,6 +33,10 @@ void Core_module_pd::_init(const char* label, bool &bootstrap)
 
 Pd_session_component *Core_module_pd::_find_session(const char *label, Pd_root &pd_root)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     /* Preparing argument string */
     char args_buf[160];
     Genode::snprintf(args_buf, sizeof(args_buf), "ram_quota=%u, label=\"%s\"", 20*1024*sizeof(long), label);
@@ -71,15 +74,15 @@ Pd_root &Core_module_pd::pd_root() {
 
 void Core_module_pd::_create_kcap_mappings(Target_state &state)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     using Genode::log;
     using Genode::Hex;
     using Genode::addr_t;
     using Genode::size_t;
     using Genode::uint16_t;
-
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif
 	
     Genode::List<Kcap_badge_info> result;
 
@@ -200,7 +203,7 @@ void Core_module_pd::_create_kcap_mappings(Target_state &state)
 Genode::List<Ref_badge_info> Core_module_pd::_mark_and_attach_designated_dataspaces(Attached_region_info &ar_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     
     Genode::List<Ref_badge_info> result_infos;
@@ -228,7 +231,7 @@ void Core_module_pd::_detach_and_unmark_designated_dataspaces(Genode::List<Ref_b
 							      Attached_region_info &ar_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
   
     Managed_region_map_info *mrm_info = ar_info.managed_dataspace(ram_session().parent_state().ram_dataspaces);
@@ -251,6 +254,10 @@ void Core_module_pd::_detach_and_unmark_designated_dataspaces(Genode::List<Ref_b
 
 void Core_module_pd::_checkpoint(Target_state &state)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
     Genode::List<Stored_pd_session_info> &stored_infos = state._stored_pd_sessions;
     Genode::List<Pd_session_component> &child_infos = pd_root().session_infos();
 
@@ -333,8 +340,8 @@ void Core_module_pd::_checkpoint(Target_state &state)
 void Core_module_pd::_destroy_stored_pd_session(Target_state &state,
 						Stored_pd_session_info &stored_info)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
     while(Stored_signal_context_info *info = stored_info.stored_context_infos.first()) {
@@ -363,9 +370,8 @@ void Core_module_pd::_destroy_stored_pd_session(Target_state &state,
 void Core_module_pd::_destroy_stored_region_map(Target_state &state, Stored_region_map_info &stored_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
-
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
     while(Stored_attached_region_info *info = stored_info.stored_attached_region_infos.first()) {
 	stored_info.stored_attached_region_infos.remove(info);
@@ -379,9 +385,8 @@ void Core_module_pd::_destroy_stored_attached_region(Target_state &state,
 						     Stored_attached_region_info &stored_info)
 {
 #ifdef DEBUG
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif      
-
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
     /* Pre-condition: This stored object is removed from its list, thus, a
      * search for a stored dataspace will not return its memory content
      * dataspace */
@@ -401,8 +406,8 @@ void Core_module_pd::_prepare_native_caps(Target_state &state,
 					  Genode::List<Stored_native_capability_info> &stored_infos,
 					  Genode::List<Native_capability_info> &child_infos)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     
     Native_capability_info *child_info = nullptr;
@@ -450,8 +455,8 @@ void Core_module_pd::_prepare_native_caps(Target_state &state,
 
 void Core_module_pd::_destroy_stored_native_cap(Target_state &state, Stored_native_capability_info &stored_info)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
     Genode::destroy(state._alloc, &stored_info);
@@ -462,9 +467,10 @@ void Core_module_pd::_prepare_signal_sources(Target_state &state,
 					     Genode::List<Stored_signal_source_info> &stored_infos,
 					     Genode::List<Signal_source_info> &child_infos)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
+
     Signal_source_info *child_info = nullptr;
     Stored_signal_source_info *stored_info = nullptr;
 
@@ -511,8 +517,8 @@ void Core_module_pd::_prepare_signal_sources(Target_state &state,
 void Core_module_pd::_destroy_stored_signal_source(Target_state &state,
 						   Stored_signal_source_info &stored_info)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     Genode::destroy(state._alloc, &stored_info);
 }
@@ -522,8 +528,8 @@ void Core_module_pd::_prepare_signal_contexts(Target_state &state,
 					      Genode::List<Stored_signal_context_info> &stored_infos,
 					      Genode::List<Signal_context_info> &child_infos)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     Signal_context_info *child_info = nullptr;
     Stored_signal_context_info *stored_info = nullptr;
@@ -571,21 +577,13 @@ void Core_module_pd::_prepare_signal_contexts(Target_state &state,
 
 void Core_module_pd::_destroy_stored_signal_context(Target_state &state,
 						    Stored_signal_context_info &stored_info)
-{
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
-#endif
-
+{  
     Genode::destroy(state._alloc, &stored_info);
 }
 
 
 Genode::addr_t Core_module_pd::find_kcap_by_badge(Genode::uint16_t badge)
 {
-#ifdef VERBOSE
-    Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
-#endif
-
     Genode::addr_t kcap = 0;
 
     Kcap_badge_info *info = _kcap_mappings.first();
