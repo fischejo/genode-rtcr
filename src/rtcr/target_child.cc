@@ -5,7 +5,7 @@
  */
 
 #include <rtcr/target_child.h>
-
+#include <rtcr/core_module_abstract.h>
 
 using namespace Rtcr;
 
@@ -21,7 +21,8 @@ Target_child::Target_child(Genode::Env &env,
 	_resources_ep    (_env, 16*1024, "resources ep"),
 	_child_ep        (_env, 16*1024, "child ep"),
 	_in_bootstrap    (true),
-	_parent_services (parent_services)
+	_parent_services (parent_services),
+	core(nullptr)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -30,7 +31,7 @@ Target_child::Target_child(Genode::Env &env,
 	/* print all registered session handlers */
         Module_factory* factory = Module_factory::first();
 	while(factory) {
-	      Genode::log("\e[38;5;214m", "Register Module: ", factory->name(), "\033[0m");
+	      Genode::log("\e[38;5;214m", "Found Linked Module: \e[1m", factory->name(), "\033[0m");
 	      factory = factory->next();
 	}    
 
@@ -44,14 +45,12 @@ Target_child::Target_child(Genode::Env &env,
 	      /* ignore modules which are manually disabled */
 		if (!module_node.attribute_value("disabled", false)) {
 		  /* parse module name and provide string */
-		    Module_name const name = module_node.attribute_value("name", Module_name());
-		    Module_name const provides = module_node.attribute_value("provides", name);
-		    Genode::log("\e[38;5;214m", "config::module name=", name, " provides=", provides, "\033[0m");
+		  Module_name const name = module_node.attribute_value("name", Module_name());
 
 		    /* find factory for module */
 		    Module_factory *factory = Module_factory::get(name);
 		    if(!factory)
-			Genode::error("Module '", name, "' configured but no Module_factory found!");
+			Genode::error("Module '", name, "' is not linked!");
 
 		    /* create module */
 		    Module *module = factory->create(env,
@@ -61,18 +60,20 @@ Target_child::Target_child(Genode::Env &env,
 						     _in_bootstrap,
 						     &module_node);
 
-		    if (!Genode::strcmp(provides.string(), "core")) {
-		      Genode::log("\e[38;5;214m", "Found module which provides 'core'.", "\033[0m");
-			core = dynamic_cast<Core_module*>(module);
-		    }
-
 		    modules.insert(module);
-		    Genode::log("\e[38;5;214m", "Module '", name, "' loaded", "\033[0m");
+		    Genode::log("\e[38;5;214m", "Module loaded: \e[1m", name, "\033[0m");
+
+		    Core_module_abstract *core_module = dynamic_cast<Core_module_abstract*>(module);
+		    if (!core && core_module) {
+		        core = core_module;
+			Genode::log("\e[38;5;214m", "Module \e[1m" , name, "\e[0m\e[38;5;214m chosen as core module", "\033[0m");
+		    }
+		    
 		    module_node = module_node.next("module");		
 		}
 	    }
 	} catch (Genode::Xml_node::Nonexistent_sub_node n) {
-	  Genode::log("\e[1m\e[38;5;214m", "Module loading finished", "\033[0m");
+	  Genode::log("\e[38;5;214m", "Module loading finished", "\033[0m");
 	}
 
 	/* make sure that there is a module which provides `core`. */
@@ -88,22 +89,8 @@ Target_child::Target_child(Genode::Env &env,
 	}
 
 
-	Genode::log("\e[1m\e[38;5;199m", "After module->initilize", "\033[0m");
-
-
-
-	  
-        // Donate ram quota to child
-	// TODO Replace static quota donation with the amount of quota, the child needs
-	Genode::size_t donate_quota = 512*1024;
-	core->ram_session().ref_account(env.ram_session_cap());
-	// Note: transfer goes directly to parent's ram session
-	env.ram().transfer_quota(core->ram_session().parent_cap(), donate_quota);
-	Genode::log("\e[1m\e[38;5;199m", "After transfer_quota", "\033[0m");	
-
-	// do some magic
 	_address_space = new(md_alloc) Genode::Region_map_client(core->pd_session().address_space());
-	Genode::log("\e[1m\e[38;5;199m", "After Region_map_client", "\033[0m");	
+	//	Genode::log("\e[1m\e[38;5;199m", "After Region_map_client", "\033[0m");	
 
 	_initial_thread = new(md_alloc) Genode::Child::Initial_thread(
 								      core->cpu_session(),
@@ -151,12 +138,13 @@ void Target_child::checkpoint(Target_state &state)
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-  
+    core->pause();
     Module *module = modules.first();
     while (module) {
 	module->checkpoint(state);
 	module = module->next();
     }
+    core->resume();
 }
 
 
@@ -186,7 +174,6 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 		Genode::log("  Unsetting bootstrap_phase");
 		_in_bootstrap = false;
 	}
-
 	
 	// Service known from parent?
 	Genode::Service *service = _parent_services.find(service_name);
@@ -194,7 +181,6 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 	    return service;
 	    Genode::log("parent service");
 	}
-
 
 	// ask all modules
 	Module *module = modules.first();

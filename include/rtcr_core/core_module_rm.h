@@ -37,6 +37,7 @@ private:
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;
 
+protected:
     Rm_root *_rm_root;
     Genode::Local_service *_rm_service;
 
@@ -72,14 +73,12 @@ private:
     void _destroy_stored_attached_region(Target_state &state,
 					 Stored_attached_region_info &stored_info);
 
-
- protected:    
     // level 1
     void _create_region_map_dataspaces_list();
 
     // level 2
     void _checkpoint(Target_state &state);
-    void _init(const char* label, bool &bootstrap);
+    void _initialize_rm_session(const char* label, bool &bootstrap);
     Ref_badge_info *find_region_map_by_badge(Genode::uint16_t badge);
     
 
@@ -90,7 +89,7 @@ private:
 
 public:    
     
-    Genode::Local_service &rm_service() {
+    virtual Genode::Local_service &rm_service() {
 	return *_rm_service;
     }
 

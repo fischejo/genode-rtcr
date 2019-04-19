@@ -28,12 +28,12 @@ Core_module::Core_module(Genode::Env &env,
     Core_module_rom(env, md_alloc, ep),
     Core_module_log(env, md_alloc, ep)    
 {
-    Core_module_pd::_init(label, bootstrap);
-    Core_module_cpu::_init(label, bootstrap);
-    Core_module_rm::_init(label, bootstrap);
-    Core_module_ram::_init(label, 0, bootstrap);
-    Core_module_rom::_init(label, bootstrap);
-    Core_module_log::_init(label, bootstrap);      
+    _initialize_pd_session(label, bootstrap);
+    _initialize_cpu_session(label, bootstrap);
+    _initialize_rm_session(label, bootstrap);
+    _initialize_ram_session(label, bootstrap);
+    _initialize_rom_session(label, bootstrap);
+    Core_module_log::_init(label, bootstrap);
 }
 
 
@@ -75,18 +75,6 @@ void Core_module::checkpoint(Target_state &state)
 void Core_module::restore(Target_state &state)
 {
 
-}
-
-
-void Core_module::pause()
-{
-    Core_module_cpu::_pause();
-}
-
-
-void Core_module::resume()
-{
-    Core_module_cpu::_resume();
 }
 
 

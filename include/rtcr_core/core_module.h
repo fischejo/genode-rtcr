@@ -37,7 +37,6 @@ using namespace Rtcr;
 
 
 class Rtcr::Core_module : public virtual Core_module_base,
-			  public virtual Module,
 			  public Core_module_pd,
 			  public Core_module_cpu,
 			  public Core_module_ram,
@@ -63,9 +62,7 @@ public:
 
     void initialize(Genode::List<Module> &modules);
   
-    /* These methods are implemented for the Target_child */
-    void pause();
-    void resume();
+  
     void checkpoint(Target_state &state);
     void restore(Target_state &state);
 

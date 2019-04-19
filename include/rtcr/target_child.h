@@ -19,7 +19,7 @@
 
 
 /* Local includes */
-#include <rtcr_core/core_module.h>
+#include <rtcr/core_module_abstract.h>
 #include <rtcr/module.h>
 #include <rtcr/module_factory.h>
 #include <rtcr/target_state.h>
@@ -77,7 +77,7 @@ private:
 	 */
 	Genode::Child                 *_child;
 
-	Core_module *core;
+	Core_module_abstract *core;
   	Genode::List<Module> modules;
 	
 public:

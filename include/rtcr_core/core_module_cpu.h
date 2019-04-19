@@ -37,16 +37,17 @@ class Rtcr::Core_module_cpu : public virtual Core_module_base
 {
 
  private:
-
     Genode::Env        &_env;
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;	
-    
+
+ protected:  
     Cpu_root *_cpu_root = nullptr;
     Genode::Local_service *_cpu_service = nullptr;
     Cpu_session_component *_cpu_session = nullptr;
 
-    Cpu_session_component *_find_session(const char *label, Cpu_root &cpu_root);      
+    Cpu_session_component *_find_cpu_session(const char *label, Cpu_root &cpu_root);      
+    void _initialize_cpu_session(const char* label, bool &bootstrap);
 
 
     // level 1.1
@@ -64,19 +65,9 @@ class Rtcr::Core_module_cpu : public virtual Core_module_base
 				    Stored_cpu_thread_info &stored_info);
 
 
- protected:    
+
     // level 1
     void _checkpoint(Target_state &state);
-  void _init(const char* label, bool &bootstrap);
-    /**
-     * Pause all child's threads
-     */
-    void _pause();
-    /**
-     * Resume all child's threads
-     */
-    void _resume();
-
     
     /* implement virtual methods of Core_module_base */
     Cpu_root &cpu_root() {
@@ -84,11 +75,22 @@ class Rtcr::Core_module_cpu : public virtual Core_module_base
     };
   
 
- public:
-    Genode::Local_service &cpu_service() {
+public:
+    /**
+     * Pause all child's threads
+     */
+    virtual void pause();
+    /**
+     * Resume all child's threads
+     */
+    virtual void resume();  
+
+    
+    virtual Genode::Local_service &cpu_service() {
 	return *_cpu_service;
     };
-    Cpu_session_component &cpu_session() {
+  
+    virtual Genode::Rpc_object<Genode::Cpu_session> &cpu_session() {
 	return *_cpu_session;
     };
 

@@ -34,7 +34,8 @@ private:
     Genode::Env        &_env;
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;
-  
+
+protected:
     Rom_root *_rom_root;
     Genode::Local_service *_rom_service;
     Genode::Rom_connection *_rom_connection;
@@ -59,7 +60,7 @@ public:
 			Genode::Allocator &md_alloc,
 		    Genode::Entrypoint &ep);
 
-    void _init(const char* label, bool &bootstrap);	
+    void _initialize_rom_session(const char* label, bool &bootstrap);
     ~Core_module_rom();
   
 };

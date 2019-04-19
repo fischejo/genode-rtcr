@@ -40,6 +40,7 @@ private:
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;
 
+protected:
     Pd_root *_pd_root;
     Genode::Local_service *_pd_service;
     Pd_session_component *_pd_session;
@@ -53,8 +54,8 @@ private:
     /**
      * Refactored from `target.child.h`. Previously `Target_child::Resources::_init_pd()`
      */
-    Pd_session_component *_find_session(const char *label, Pd_root &pd_root);
-
+    Pd_session_component *_find_pd_session(const char *label, Pd_root &pd_root);
+    void _initialize_pd_session(const char* label, bool &bootstrap);
 
     /**
      * \brief Destroys the _kcap_mappings list.
@@ -110,13 +111,11 @@ private:
     void _destroy_stored_attached_region(Target_state &state,
 					 Stored_attached_region_info &stored_info);
 
-protected:
-
     // level: 1
     void _create_kcap_mappings(Target_state &state);
     
     void _checkpoint(Target_state &state);
-  void _init(const char* label, bool &bootstrap);
+
 public:    
 
   /* implement virtual methods of Core_module_base */
@@ -131,7 +130,8 @@ public:
   virtual Genode::Local_service &pd_service() {
     return *_pd_service;
   };
-  virtual Pd_session_component &pd_session() {
+  
+  virtual Genode::Rpc_object<Genode::Pd_session> &pd_session() {
     return *_pd_session;
   };
   

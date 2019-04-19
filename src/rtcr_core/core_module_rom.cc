@@ -19,7 +19,7 @@ Core_module_rom::Core_module_rom(Genode::Env &env,
 {
 }
 
-void Core_module_rom::_init(const char* label, bool &bootstrap)
+void Core_module_rom::_initialize_rom_session(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");

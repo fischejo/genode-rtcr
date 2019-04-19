@@ -20,20 +20,17 @@ Core_module_cpu::Core_module_cpu(Genode::Env &env,
 
 }
 
-void Core_module_cpu::_init(const char* label, bool &bootstrap)
+void Core_module_cpu::_initialize_cpu_session(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     _cpu_root = new (_md_alloc) Cpu_root(_env, _md_alloc, _ep, pd_root(), bootstrap);
     _cpu_service = new (_md_alloc) Genode::Local_service("CPU", _cpu_root);
-    _cpu_session = _find_session(label, cpu_root());  
+    _cpu_session = _find_cpu_session(label, cpu_root());  
 }
 
-
-
-
-Cpu_session_component *Core_module_cpu::_find_session(const char *label, Cpu_root &cpu_root)
+Cpu_session_component *Core_module_cpu::_find_cpu_session(const char *label, Cpu_root &cpu_root)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -202,7 +199,7 @@ void Core_module_cpu::_destroy_stored_cpu_thread(Target_state &state, Stored_cpu
 }
 
 
-void Core_module_cpu::_pause()
+void Core_module_cpu::pause()
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -225,7 +222,7 @@ void Core_module_cpu::_pause()
 }
 
 
-void Core_module_cpu::_resume()
+void Core_module_cpu::resume()
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");

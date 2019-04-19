@@ -24,7 +24,6 @@
 #include <rtcr_core/ram/ram_session.h>
 #include <rtcr/dataspace_translation_info.h>
 #include <rtcr/ref_badge_info.h>
-#include <rtcr_core/ram/simplified_managed_dataspace_info.h>
 
 
 namespace Rtcr {
@@ -41,12 +40,14 @@ private:
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;	
 
+protected:  
     Ram_root *_ram_root;
     Genode::Local_service *_ram_service;
     Ram_session_component *_ram_session;
 
-    Ram_session_component *_find_session(const char *label, Ram_root &ram_root);  
-
+    void _initialize_ram_session(const char* label, bool &bootstrap);
+    Ram_session_component *_find_ram_session(const char *label, Ram_root &ram_root);
+  
     // level: 1.1
     void _prepare_ram_dataspaces(Target_state &state,
 				 Genode::List<Stored_ram_dataspace_info> &stored_infos,
@@ -64,10 +65,9 @@ private:
 				       Stored_ram_dataspace_info &stored_info);    
 
 
-protected:
+
     // level: 1    
     void _checkpoint(Target_state &state);
-    void _init(const char* label, Genode::size_t granularity, bool &bootstrap);
     
     /* implement virtual methods of Core_module_base */
     Ram_root &ram_root() {
@@ -76,10 +76,10 @@ protected:
 
 public:
     
-    Genode::Local_service &ram_service() {
+    virtual Genode::Local_service &ram_service() {
 	return *_ram_service;
     }
-    Ram_session_component &ram_session() {
+    virtual Genode::Rpc_object<Genode::Ram_session> &ram_session() {
 	return *_ram_session;
     }
   

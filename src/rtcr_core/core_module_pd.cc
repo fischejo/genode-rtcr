@@ -21,17 +21,17 @@ Core_module_pd::Core_module_pd(Genode::Env &env,
 {
 }
 
-void Core_module_pd::_init(const char* label, bool &bootstrap)
+void Core_module_pd::_initialize_pd_session(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     _pd_root = new (_md_alloc) Pd_root(_env, _md_alloc, _ep, bootstrap);
     _pd_service = new (_md_alloc) Genode::Local_service("PD", _pd_root);
-    _pd_session = _find_session(label, pd_root());
+    _pd_session = _find_pd_session(label, pd_root());
 }
 
-Pd_session_component *Core_module_pd::_find_session(const char *label, Pd_root &pd_root)
+Pd_session_component *Core_module_pd::_find_pd_session(const char *label, Pd_root &pd_root)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -87,7 +87,7 @@ void Core_module_pd::_create_kcap_mappings(Target_state &state)
     Genode::List<Kcap_badge_info> result;
 
     /* Retrieve cap_idx_alloc_addr */
-    Genode::Pd_session_client pd_client(pd_session().parent_cap());
+    Genode::Pd_session_client pd_client(_pd_session->parent_cap());
     addr_t const cap_idx_alloc_addr = Genode::Foc_native_pd_client(
 	pd_client.native_pd()).cap_map_info();
     state._cap_idx_alloc_addr = cap_idx_alloc_addr;
@@ -98,8 +98,7 @@ void Core_module_pd::_create_kcap_mappings(Target_state &state)
 	
     /* Find child's dataspace containing the capability map
      * It is found via cap_idx_alloc_addr */
-    Attached_region_info *ar_info = pd_session()
-      .address_space_component()
+    Attached_region_info *ar_info = _pd_session->address_space_component()
       .parent_state()
       .attached_regions
       .first();
@@ -205,9 +204,9 @@ Genode::List<Ref_badge_info> Core_module_pd::_mark_and_attach_designated_dataspa
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-    
-    Genode::List<Ref_badge_info> result_infos;
 
+    Genode::List<Ref_badge_info> result_infos;
+    /*    
     Managed_region_map_info *mrm_info = ar_info.managed_dataspace(ram_session().parent_state().ram_dataspaces);
     if(mrm_info) {
 	Designated_dataspace_info *dd_info = mrm_info->dd_infos.first();
@@ -222,7 +221,7 @@ Genode::List<Ref_badge_info> Core_module_pd::_mark_and_attach_designated_dataspa
 	    dd_info = dd_info->next();
 	}
     }
-
+    */
     return result_infos;
 }
 
@@ -233,7 +232,7 @@ void Core_module_pd::_detach_and_unmark_designated_dataspaces(Genode::List<Ref_b
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-  
+    /*
     Managed_region_map_info *mrm_info = ar_info.managed_dataspace(ram_session().parent_state().ram_dataspaces);
     if(mrm_info && badge_infos.first()) {
 	Designated_dataspace_info *dd_info = mrm_info->dd_infos.first();
@@ -245,7 +244,7 @@ void Core_module_pd::_detach_and_unmark_designated_dataspaces(Genode::List<Ref_b
 	    dd_info = dd_info->next();
 	}
     }
-
+    *
     /* Delete list elements from badge_infos */
     _destroy_list(badge_infos);
 }

@@ -21,13 +21,13 @@ Core_module_rm::Core_module_rm(Genode::Env &env,
     
 }  
 
-void Core_module_rm::_init(const char* label, bool &bootstrap)
+void Core_module_rm::_initialize_rm_session(const char* label, bool &bootstrap)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     _rm_root = new (_md_alloc) Rm_root(_env, _md_alloc, _ep, bootstrap);
-    _rm_service = new (_md_alloc) Genode::Local_service("RM", _rm_root);    
+    _rm_service = new (_md_alloc) Genode::Local_service("RM", _rm_root);
 }
 
 

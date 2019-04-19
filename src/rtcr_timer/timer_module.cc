@@ -31,7 +31,7 @@ void Timer_module::initialize(Genode::List<Module> &modules)
 {
   Module *module = modules.first();
   while (!_core_module && module) {
-    _core_module = dynamic_cast<Core_module*>(module);
+    _core_module = dynamic_cast<Core_module_abstract*>(module);
     module = module->next();
   }
 

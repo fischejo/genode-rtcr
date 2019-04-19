@@ -18,16 +18,23 @@ Core_module_ram::Core_module_ram(Genode::Env &env,
     _ep(ep)
  {}  
 
-void Core_module_ram::_init(const char* label,
-				  Genode::size_t granularity,
-				  bool &bootstrap)
+
+void Core_module_ram::_initialize_ram_session(const char* label, bool &bootstrap)
 {
-  _ram_root = new (_md_alloc) Ram_root(_env, _md_alloc, _ep, granularity, bootstrap);
+  _ram_root = new (_md_alloc) Ram_root(_env, _md_alloc, _ep, bootstrap);
   _ram_service = new (_md_alloc) Genode::Local_service("RAM", _ram_root);
-  _ram_session = _find_session(label, ram_root());
+  _ram_session = _find_ram_session(label, ram_root());
+
+  // Donate ram quota to child
+  // TODO Replace static quota donation with the amount of quota, the child needs
+  Genode::size_t donate_quota = 512*1024;
+  _ram_session->ref_account(_env.ram_session_cap());
+  // Note: transfer goes directly to parent's ram session
+  _env.ram().transfer_quota(_ram_session->parent_cap(), donate_quota);
 }
 
-Ram_session_component *Core_module_ram::_find_session(const char *label, Ram_root &ram_root)
+
+Ram_session_component *Core_module_ram::_find_ram_session(const char *label, Ram_root &ram_root)
 { 
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");

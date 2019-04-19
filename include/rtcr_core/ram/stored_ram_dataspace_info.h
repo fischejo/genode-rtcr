@@ -25,7 +25,7 @@ struct Rtcr::Stored_ram_dataspace_info : Stored_normal_info, Genode::List<Stored
 	Genode::Ram_dataspace_capability const memory_content;
 	Genode::size_t                   const size;
 	Genode::Cache_attribute          const cached;
-	bool                             const managed;
+
 	Genode::size_t                   const timestamp;
 
 	Stored_ram_dataspace_info(Ram_dataspace_info &info, Genode::addr_t targets_kcap, Genode::Ram_dataspace_capability copy_ds_cap)
@@ -34,7 +34,7 @@ struct Rtcr::Stored_ram_dataspace_info : Stored_normal_info, Genode::List<Stored
 				info.cap.local_name(),
 				info.bootstrapped),
 		memory_content(copy_ds_cap),
-		size(info.size), cached(info.cached), managed(info.mrm_info),
+		size(info.size), cached(info.cached), 
 		timestamp(info.timestamp())
 	{ }
 
@@ -44,12 +44,11 @@ struct Rtcr::Stored_ram_dataspace_info : Stored_normal_info, Genode::List<Stored
 					Genode::Ram_dataspace_capability _memory_content,
         				Genode::size_t _size,
         				Genode::Cache_attribute _cached,
-        				bool _managed,
         				Genode::size_t _timestamp)
 	:
 		Stored_normal_info(kcap,local_name,bootstrapped),
 		memory_content(_memory_content),
-                size(_size), cached(_cached), managed(_managed),
+                size(_size), cached(_cached), 
                 timestamp(_timestamp)
 	{ }
 
@@ -75,7 +74,7 @@ struct Rtcr::Stored_ram_dataspace_info : Stored_normal_info, Genode::List<Stored
 
 		Stored_normal_info::print(output);
 		Genode::print(output, ", size=", Hex(size), ", cached=", static_cast<unsigned>(cached),
-				", managed=", managed, ", copy_ds ", memory_content, ", timestamp=", timestamp);
+			      ", copy_ds ", memory_content, ", timestamp=", timestamp);
 	}
 };
 

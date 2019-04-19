@@ -57,15 +57,6 @@ struct Rtcr::Attached_region_info : Normal_obj_info, Genode::List<Attached_regio
 		executable (executable)
 	{ }
 
-	/**
-	 * If this attached dataspace is managed, return its Managed_region_map_info, else return nullptr
-	 */
-	Managed_region_map_info *managed_dataspace(Genode::List<Ram_dataspace_info> &rds_infos)
-	{
-		Ram_dataspace_info *rds_info = rds_infos.first();
-		if(rds_info) rds_info = rds_info->find_by_badge(attached_ds_cap.local_name());
-		return rds_info ? rds_info->mrm_info : 0;
-	}
 	Attached_region_info *find_by_addr(Genode::addr_t addr)
 	{
 		if((addr >= rel_addr) && (addr <= rel_addr + size))

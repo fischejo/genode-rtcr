@@ -18,7 +18,7 @@
 #include <rtcr/module.h>
 #include <rtcr/module_factory.h>
 #include <rtcr/target_state.h>
-#include <rtcr_core/core_module.h>
+#include <rtcr/core_module_abstract.h>
 
 /* Timer Module includes */
 #include <rtcr_timer/timer_module.h>
@@ -42,7 +42,7 @@ private:
     Timer_root *_timer_root;
     Genode::Local_service *_timer_service;
     bool &_bootstrap;
-    Core_module *_core_module;
+    Core_module_abstract *_core_module;
   
 
   void _destroy_stored_timer_session(Target_state &state,
