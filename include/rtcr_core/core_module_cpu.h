@@ -69,10 +69,6 @@ class Rtcr::Core_module_cpu : public virtual Core_module_base
     // level 1
     void _checkpoint(Target_state &state);
     
-    /* implement virtual methods of Core_module_base */
-    Cpu_root &cpu_root() {
-	return *_cpu_root;
-    };
   
 
 public:
@@ -100,6 +96,12 @@ public:
 		    Genode::Entrypoint &ep);
 
     ~Core_module_cpu();
+
+    /* implement virtual methods of Core_module_base */
+    Cpu_root &cpu_root() {
+	return *_cpu_root;
+    };
+    
 };
 
 

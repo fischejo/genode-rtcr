@@ -21,6 +21,8 @@
 
 #include <rtcr/dataspace_translation_info.h>
 
+#include <rtcr_core_inc/ram/simplified_managed_dataspace_info.h>
+
 namespace Rtcr {
     class Dataspace_module;
     class Dataspace_module_factory;
@@ -31,7 +33,7 @@ using namespace Rtcr;
 
 class Rtcr::Dataspace_module : public virtual Module
 {
-private:  
+ protected:
     Genode::Env        &_env;
     Genode::Allocator  &_md_alloc;
     Genode::Entrypoint &_ep;
@@ -63,7 +65,7 @@ public:
     
   Module_name name()
   {
-    return "dataspace";
+    return "ds";
   }
   
 };
@@ -85,7 +87,7 @@ public:
     
   Module_name name()
   {
-    return "dataspace";
+    return "ds";
   }
   
 };

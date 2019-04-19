@@ -35,9 +35,11 @@ install_config {
 	<start name="rtcr_test">
     		<resource name="RAM" quantum="256M"/>
                 <config>
-                    <module name="core_inc" />
+                    <module name="core_inc">
+                       <granularity>2</granularity>
+                    </module>
                     <module name="timer" />
-                    <module name="dataspace" />
+                    <module name="ds_inc" />
                 </config>
 	</start>
 </config>}

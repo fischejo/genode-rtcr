@@ -82,10 +82,6 @@ protected:
     Ref_badge_info *find_region_map_by_badge(Genode::uint16_t badge);
     
 
-    /* implement virtual methods of Core_module_base */
-    Rm_root &rm_root() {
-	return *_rm_root;
-    }
 
 public:    
     
@@ -102,7 +98,13 @@ public:
 
 	
     ~Core_module_rm();
-  
+
+    /* implement virtual methods of Core_module_base */
+    Rm_root &rm_root() {
+	return *_rm_root;
+    }
+
+    
 };
 
 

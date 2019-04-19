@@ -68,11 +68,8 @@ protected:
 
     // level: 1    
     void _checkpoint(Target_state &state);
+
     
-    /* implement virtual methods of Core_module_base */
-    Ram_root &ram_root() {
-	return *_ram_root;
-    }
 
 public:
     
@@ -90,7 +87,13 @@ public:
 
 	
     ~Core_module_ram();
-  	
+
+    /* implement virtual methods of Core_module_base */
+    Ram_root &ram_root() {
+	return *_ram_root;
+    }
+
+    
 };
 
 
