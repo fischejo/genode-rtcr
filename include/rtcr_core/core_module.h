@@ -24,7 +24,6 @@
 #include <rtcr_core/core_module_pd.h>
 #include <rtcr_core/core_module_rm.h>
 #include <rtcr_core/core_module_rom.h>
-#include <rtcr_core/core_module_log.h>
 #include <rtcr_ds/dataspace_module.h>
 
 namespace Rtcr {
@@ -41,8 +40,7 @@ class Rtcr::Core_module : public virtual Core_module_base,
 			  public Core_module_cpu,
 			  public Core_module_ram,
 			  public Core_module_rm,
-                          public Core_module_rom,
-			  public Core_module_log
+                          public Core_module_rom
 {
 private:
   Dataspace_module *_ds_module;

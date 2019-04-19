@@ -25,15 +25,13 @@ Core_module::Core_module(Genode::Env &env,
     Core_module_cpu(env, md_alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
     Core_module_rm(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
     Core_module_ram(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
-    Core_module_rom(env, md_alloc, ep),
-    Core_module_log(env, md_alloc, ep)    
+    Core_module_rom(env, md_alloc, ep)
 {
     _initialize_pd_session(label, bootstrap);
     _initialize_cpu_session(label, bootstrap);
     _initialize_rm_session(label, bootstrap);
     _initialize_ram_session(label, bootstrap);
     _initialize_rom_session(label, bootstrap);
-    Core_module_log::_init(label, bootstrap);
 }
 
 
@@ -66,9 +64,6 @@ void Core_module::checkpoint(Target_state &state)
     /* depends on Core_module_pd::_create_kcap_mappings */
     /* depends on Core_module_rm::_create_region_map_dataspace_list */    
     Core_module_ram::_checkpoint(state);
-
-    //    Core_module_ram::_checkpoint_temp_wrapper(state);
-    Core_module_log::_checkpoint(state);
 }
 
 
@@ -90,8 +85,6 @@ Genode::Service *Core_module::resolve_session_request(const char *service_name,
 	return &cpu_service();
     } else if(!Genode::strcmp(service_name, "RAM")) {
 	return &ram_service();
-    } else if(!Genode::strcmp(service_name, "LOG")) {
-	return &log_service(); 
     } else if(!Genode::strcmp(service_name, "RM")) {
 	return &rm_service();	
     } else if(!Genode::strcmp(service_name, "ROM")) {

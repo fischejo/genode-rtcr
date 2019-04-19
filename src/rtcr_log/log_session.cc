@@ -4,7 +4,7 @@
  * \date   2016-10-02
  */
 
-#include <rtcr_core/log/log_session.h>
+#include <rtcr_log/log_session.h>
 
 using namespace Rtcr;
 

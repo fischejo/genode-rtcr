@@ -39,6 +39,7 @@ install_config {
                        <granularity>2</granularity>
                     </module>
                     <module name="timer" />
+                    <module name="log" />
                     <module name="ds_inc" />
                 </config>
 	</start>

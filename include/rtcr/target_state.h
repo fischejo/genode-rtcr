@@ -13,14 +13,13 @@
 
 /* Rtcr includes */
 #include <rtcr_core/cpu/stored_cpu_session_info.h>
-#include <rtcr_core/log/stored_log_session_info.h>
 #include <rtcr_core/pd/stored_pd_session_info.h>
 #include <rtcr_core/ram/stored_ram_session_info.h>
 #include <rtcr_core/rm/stored_rm_session_info.h>
 #include <rtcr_core/rom/stored_rom_session_info.h>
 
 #include <rtcr_timer/stored_timer_session_info.h>
-
+#include <rtcr_log/stored_log_session_info.h>
 
 namespace Rtcr {
     class Target_state;
