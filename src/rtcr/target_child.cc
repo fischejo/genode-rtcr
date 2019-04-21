@@ -84,6 +84,7 @@ Target_child::Target_child(Genode::Env &env,
 	/* inform every module about each other */
 	Module *module = modules.first();
 	while (module) {
+	  Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),  "\e[0m\e[38;5;214m","]->initialize()", "\033[0m");      	  
 	  module->initialize(modules);
 	  module = module->next();
 	}
@@ -139,11 +140,12 @@ void Target_child::checkpoint(Target_state &state)
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     core->pause();
-    Module *module = modules.first();
-    while (module) {
-	module->checkpoint(state);
-	module = module->next();
-    }
+    // Module *module = modules.first();
+    // while (module) {
+    //   Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),  "\e[0m\e[38;5;214m","]->checkpoint()", "\033[0m");      
+    // 	module->checkpoint(state);
+    // 	module = module->next();
+    // }
     core->resume();
 }
 

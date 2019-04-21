@@ -4,6 +4,14 @@ vpath % $(REP_DIR)/src/rtcr
 CC_OPT += -DVERBOSE
 CC_OPT += -DDEBUG
 
-LIBS   = config rtcr_core rtcr_timer rtcr_log rtcr_ds rtcr_inc
+# minimum rtcr
+LIBS   = config rtcr_core rtcr_ds
 
-#LIBS += rtcr_core_kcap rtcr_ds_cdma
+# optional
+LIBS += rtcr_timer rtcr_log
+
+# optional incremental extension
+#LIBS += rtcr_inc
+
+# optional fpga extension
+#LIBS += rtcr_fpga

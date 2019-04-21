@@ -77,10 +77,6 @@ protected:
      * kcap for each RPC object.
      */
 
-    // level: 1.1
-    Genode::List<Ref_badge_info> _mark_and_attach_designated_dataspaces(Attached_region_info &ar_info);
-    // level: 1.2
-    void _detach_and_unmark_designated_dataspaces(Genode::List<Ref_badge_info> &badge_infos, Attached_region_info &ar_info);
 
    
     void _destroy_stored_pd_session(Target_state &state, Stored_pd_session_info &stored_info);

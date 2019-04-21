@@ -238,10 +238,13 @@ void Core_module_cpu::resume()
 	    client.resume();
 
 	    cpu_thread = cpu_thread->next();
+	    Genode::log("\033[36m", __PRETTY_FUNCTION__, " cpu_thread=",cpu_thread, "\033[0m");    	    
 	}
 
 	cpu_session = cpu_session->next();
+	    Genode::log("\033[36m", __PRETTY_FUNCTION__, " cpu_session=",cpu_session, "\033[0m");    	    	
     }
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, " finished", "\033[0m");    
 }
 
 

@@ -28,9 +28,9 @@ Dataspace_module::Dataspace_module(Genode::Env &env,
 
 void Dataspace_module::checkpoint(Target_state &state)
 {
-#ifdef VERBOSE
-  Genode::log("Ckpt::\033[33m", __func__, "\033[0m()");
-#endif    
+#ifdef DEBUG
+    Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
   
   Dataspace_translation_info *memory_info = _dataspace_translations.first();
 
@@ -41,7 +41,7 @@ void Dataspace_module::checkpoint(Target_state &state)
 	memory_info = memory_info->next();
     }
 #endif
-   
+
   while(memory_info) {
     /* Dataspace is not managed */
     _checkpoint_dataspace(state,
@@ -51,7 +51,9 @@ void Dataspace_module::checkpoint(Target_state &state)
 			  memory_info->size);
 
     memory_info = memory_info->next();
+
   }
+
 }
 
 
@@ -62,9 +64,7 @@ void Dataspace_module::_checkpoint_dataspace(Target_state &state,
 					     Genode::size_t size)
 {
 #ifdef DEBUG
-  Genode::log("Ckpt::\033[33m", __func__, "\033[0m(dst ", dst_ds_cap,
-	      ", src ", src_ds_cap, ", dst_offset=", Genode::Hex(dst_offset),
-	      ", copy_size=", Genode::Hex(size), ")");
+    Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     
   char *dst_addr_start = state._env.rm().attach(dst_ds_cap);
@@ -81,6 +81,9 @@ void Dataspace_module::register_dataspace(Genode::Ram_dataspace_capability ckpt_
 					  Genode::Dataspace_capability resto_ds_cap,
 					  Genode::size_t size)
 {
+#ifdef DEBUG
+    Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
   Dataspace_translation_info *trans_info = _dataspace_translations.first();
   if(trans_info)

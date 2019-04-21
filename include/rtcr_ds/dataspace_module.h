@@ -52,7 +52,7 @@ public:
 		   Genode::Allocator &md_alloc,
 		   Genode::Entrypoint &ep);
 
-  ~Dataspace_module();
+  //  ~Dataspace_module();
 
     void register_dataspace(Genode::Ram_dataspace_capability ckpt_ds_cap,
 			    Genode::Dataspace_capability resto_ds_cap,

@@ -49,7 +49,8 @@ void Core_module::initialize(Genode::List<Module> &modules)
 
 
 void Core_module::checkpoint(Target_state &state)
-{  
+{
+  
     /* initialize `kcap_mappings` variable. This step depends on Core_module_ram::Core_module_ram() */
     Core_module_pd::_create_kcap_mappings(state);
 

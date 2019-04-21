@@ -110,12 +110,6 @@ void Core_module_pd::_create_kcap_mappings(Target_state &state)
 	throw Genode::Exception();
     }
 
-    /* If ar_info is a managed Ram_dataspace_info, mark detached
-     * Designated_dataspace_infos and attach them, thus, the Checkpointer does
-     * not trigger page faults which mark accessed regions */
-    Genode::List<Ref_badge_info> marked_badge_infos =
-	_mark_and_attach_designated_dataspaces(*ar_info);
-
     /* Create new badge_kcap list */
     size_t const struct_size    = sizeof(Genode::Cap_index_allocator_tpl<Genode::Cap_index,4096>);
     size_t const array_ele_size = sizeof(Genode::Cap_index);
@@ -178,9 +172,6 @@ void Core_module_pd::_create_kcap_mappings(Target_state &state)
 
     state._env.rm().detach(local_ds_start);
 
-    /* Detach the previously attached Designated_dataspace_infos and delete the
-     * list containing marked Designated_dataspace_infos */
-    _detach_and_unmark_designated_dataspaces(marked_badge_infos, *ar_info);
 
 #ifdef DEBUG
     Genode::log("Capability map:");
@@ -197,57 +188,6 @@ void Core_module_pd::_create_kcap_mappings(Target_state &state)
     _kcap_mappings = result;
 }
 
-
-
-Genode::List<Ref_badge_info> Core_module_pd::_mark_and_attach_designated_dataspaces(Attached_region_info &ar_info)
-{
-#ifdef DEBUG
-    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
-    Genode::List<Ref_badge_info> result_infos;
-    /*    
-    Managed_region_map_info *mrm_info = ar_info.managed_dataspace(ram_session().parent_state().ram_dataspaces);
-    if(mrm_info) {
-	Designated_dataspace_info *dd_info = mrm_info->dd_infos.first();
-	while(dd_info) {
-	    if(!dd_info->attached) {
-		dd_info->attach();
-
-		Ref_badge_info *new_info = new (_md_alloc) Ref_badge_info(dd_info->cap.local_name());
-		result_infos.insert(new_info);
-	    }
-
-	    dd_info = dd_info->next();
-	}
-    }
-    */
-    return result_infos;
-}
-
-
-void Core_module_pd::_detach_and_unmark_designated_dataspaces(Genode::List<Ref_badge_info> &badge_infos,
-							      Attached_region_info &ar_info)
-{
-#ifdef DEBUG
-    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-    /*
-    Managed_region_map_info *mrm_info = ar_info.managed_dataspace(ram_session().parent_state().ram_dataspaces);
-    if(mrm_info && badge_infos.first()) {
-	Designated_dataspace_info *dd_info = mrm_info->dd_infos.first();
-	while(dd_info) {
-	    if(badge_infos.first()->find_by_badge(dd_info->cap.local_name())) {
-		dd_info->detach();
-	    }
-
-	    dd_info = dd_info->next();
-	}
-    }
-    *
-    /* Delete list elements from badge_infos */
-    _destroy_list(badge_infos);
-}
 
 
 
