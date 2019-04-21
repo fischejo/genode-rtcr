@@ -43,6 +43,10 @@ struct Rtcr::Ram_dataspace_info : Normal_obj_info, private Simple_counter<Ram_da
 		cached   (cached)
 	{ }
 
+	/* one method should be virtual, otherwise this class is not polymorphic
+	 * and therefore dynamic_cast can't be applied. */
+	virtual ~Ram_dataspace_info() {};
+		
 	Ram_dataspace_info *find_by_badge(Genode::uint16_t badge)
 	{
 		if(badge == cap.local_name())
