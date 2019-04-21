@@ -247,23 +247,21 @@ void Core_module_rm::_prepare_attached_regions(Target_state &state,
 
 	/* No need to update stored_info */
 
-	/* Remeber this dataspace for checkpoint, if not already in list */
+	/* try to find dataspace in the region map list */
+	Ref_badge_info *badge_info = _region_maps.first();
+	if(badge_info) {
+	    badge_info = badge_info->find_by_badge(child_info->attached_ds_cap
+						   .local_name());
+	}
 
-	/* FJO: shared memory dataspaces are currently ignored in order to
-	 * prevent accesses to _dataspace_translations from core_module_rm */
-
-	// Dataspace_translation_info *trans_info = _dataspace_translations.first();
-	// if(trans_info) trans_info = trans_info->find_by_resto_badge(child_info->attached_ds_cap.local_name());
-	// if(!trans_info) {
-	//     Ref_badge_info *badge_info = _region_maps.first();
-	//     if(badge_info) badge_info = badge_info->find_by_badge(child_info->attached_ds_cap.local_name());
-	//     if(!badge_info) {
-	// 	trans_info = new (_alloc) Dataspace_translation_info(stored_info->memory_content,
-	// 							     child_info->attached_ds_cap,
-	// 							     child_info->size);
-	// 	_dataspace_translations.insert(trans_info);
-	//     }
-	// }
+	/* dataspace should not be part of the region map list */	
+	if(!badge_info) {
+	    /* then remeber this dataspace for checkpoint. if the dataspace is
+	       already in list, the ds_module does not add it again. */
+	    ds_module().register_dataspace(stored_info->memory_content,
+					   child_info->attached_ds_cap,
+					   child_info->size);
+	}
 
 	child_info = child_info->next();
     }
