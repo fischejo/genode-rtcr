@@ -32,18 +32,17 @@ void Dataspace_module::checkpoint(Target_state &state)
     Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
   
-  Dataspace_translation_info *memory_info = _dataspace_translations.first();
-
 #ifdef DEBUG
-   Genode::log("Dataspaces to checkpoint:");  
-    while(memory_info) {
-	Genode::log(" ", *memory_info);
-	memory_info = memory_info->next();
+  Dataspace_translation_info *memory_info_d = _dataspace_translations.first();  
+  Genode::log("Dataspaces to checkpoint:");  
+    while(memory_info_d) {
+	Genode::log(" ", *memory_info_d);
+	memory_info_d = memory_info_d->next();
     }
 #endif
 
+    Dataspace_translation_info *memory_info = _dataspace_translations.first();
   while(memory_info) {
-    /* Dataspace is not managed */
     _checkpoint_dataspace(state,
 			  memory_info->ckpt_ds_cap,
 			  memory_info->resto_ds_cap,
@@ -88,6 +87,7 @@ void Dataspace_module::register_dataspace(Genode::Ram_dataspace_capability ckpt_
   Dataspace_translation_info *trans_info = _dataspace_translations.first();
   if(trans_info)
     trans_info = trans_info->find_by_resto_badge(resto_ds_cap.local_name());
+
   if(!trans_info) {
     trans_info = new (_md_alloc) Dataspace_translation_info(ckpt_ds_cap,
 							    resto_ds_cap,
