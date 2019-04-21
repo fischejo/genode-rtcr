@@ -25,10 +25,19 @@ Timer_module::Timer_module(Genode::Env &env,
     _bootstrap(bootstrap)
 {}
 
+Timer_module::~Timer_module()
+{
+  if(_timer_root) Genode::destroy(_md_alloc, _timer_root);
+  if(_timer_service) Genode::destroy(_md_alloc, _timer_service);
+}
 
 
 void Timer_module::initialize(Genode::List<Module> &modules)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
   Module *module = modules.first();
   while (!_core_module && module) {
     _core_module = dynamic_cast<Core_module_abstract*>(module);
@@ -44,9 +53,9 @@ void Timer_module::initialize(Genode::List<Module> &modules)
 
 void Timer_module::checkpoint(Target_state &state)
 {
-  #ifdef VERBOSE
-  Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
-  #endif
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
   Genode::List<Stored_timer_session_info> &stored_infos = state._stored_timer_sessions;
   Genode::List<Timer_session_component> &child_infos = _timer_root->session_infos();
@@ -98,10 +107,9 @@ void Timer_module::checkpoint(Target_state &state)
 void Timer_module::_destroy_stored_timer_session(Target_state &state,
 						 Stored_timer_session_info &stored_info)
 {
-  #ifdef VERBOSE
-  Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
-  #endif
-  
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif  
 	Genode::destroy(state._alloc, &stored_info);
 }
 
@@ -109,6 +117,9 @@ void Timer_module::_destroy_stored_timer_session(Target_state &state,
 
 void Timer_module::restore(Target_state &state)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
 }
 
@@ -116,6 +127,10 @@ void Timer_module::restore(Target_state &state)
 Genode::Service *Timer_module::resolve_session_request(const char *service_name,
 						       const char *args)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
   if(!Genode::strcmp(service_name, "Timer")) {
     if(!_timer_root) {
       _timer_root = new (_md_alloc) Timer_root(_env, _md_alloc, _ep, _bootstrap);
