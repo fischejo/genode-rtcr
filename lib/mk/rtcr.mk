@@ -14,4 +14,4 @@ LIBS += rtcr_timer rtcr_log
 #LIBS += rtcr_inc
 
 # optional fpga extension
-#LIBS += rtcr_fpga
+LIBS += rtcr_fpga
