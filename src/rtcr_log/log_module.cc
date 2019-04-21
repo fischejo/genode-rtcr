@@ -28,13 +28,17 @@ Log_module::Log_module(Genode::Env &env,
 
 Log_module::~Log_module()
 {
-    Genode::destroy(_md_alloc, _log_root);
-    Genode::destroy(_md_alloc, _log_service);
+  if(_log_root) Genode::destroy(_md_alloc, _log_root);
+  if(_log_service) Genode::destroy(_md_alloc, _log_service);
 }
 
 
 void Log_module::initialize(Genode::List<Module> &modules)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
   Module *module = modules.first();
   while (!_core_module && module) {
     _core_module = dynamic_cast<Core_module_abstract*>(module);
@@ -102,10 +106,9 @@ void Log_module::checkpoint(Target_state &state)
 void Log_module::_destroy_stored_log_session(Target_state &state,
 						  Stored_log_session_info &stored_info)
 {
-  #ifdef VERBOSE
-  Genode::log("Ckpt::\033[33m", __func__, "\033[0m(...)");
-  #endif
-
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
   Genode::destroy(state._alloc, &stored_info);
 }
 
@@ -113,6 +116,9 @@ void Log_module::_destroy_stored_log_session(Target_state &state,
 
 void Log_module::restore(Target_state &state)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
 
 }
 
@@ -120,6 +126,10 @@ void Log_module::restore(Target_state &state)
 Genode::Service *Log_module::resolve_session_request(const char *service_name,
 						       const char *args)
 {
+#ifdef DEBUG
+    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+  
   if(!Genode::strcmp(service_name, "LOG")) {
     if(!_log_root) {
       _log_root = new (_md_alloc) Log_root(_env, _md_alloc, _ep, _bootstrap);
