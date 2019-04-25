@@ -57,7 +57,7 @@ public:
   
 
     Core_module_rom(Genode::Env &env,
-			Genode::Allocator &md_alloc,
+		    Genode::Allocator &md_alloc,
 		    Genode::Entrypoint &ep);
 
     void _initialize_rom_session(const char* label, bool &bootstrap);

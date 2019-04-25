@@ -65,13 +65,13 @@ Core_module_cpu::~Core_module_cpu() {
 
 
 
-void Core_module_cpu::_checkpoint(Target_state &state)
+void Core_module_cpu::_checkpoint()
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     Genode::List<Cpu_session_component> &child_infos =  cpu_root().session_infos();
-	Genode::List<Stored_cpu_session_info> &stored_infos = state._stored_cpu_sessions;
+    Genode::List<Stored_cpu_session_info> &stored_infos = state()._stored_cpu_sessions;
     Cpu_session_component *child_info = nullptr;
     Stored_cpu_session_info *stored_info = nullptr;
 
@@ -87,14 +87,13 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (state._alloc) Stored_cpu_session_info(*child_info, childs_kcap);
+	    stored_info = new (_md_alloc) Stored_cpu_session_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
 	/* Update stored_info */
 	stored_info->sigh_badge = child_info->parent_state().sigh.local_name();
-	_prepare_cpu_threads(state,
-			     stored_info->stored_cpu_thread_infos,
+	_prepare_cpu_threads(stored_info->stored_cpu_thread_infos,
 			     child_info->parent_state().cpu_threads);
 
 	child_info = child_info->next();
@@ -112,7 +111,7 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 	/* No corresponding child_info => delete it */
 	if(!child_info) {
 	    stored_infos.remove(stored_info);
-	    _destroy_stored_cpu_session(state, *stored_info);
+	    _destroy_stored_cpu_session(*stored_info);
 	}
 
 	stored_info = next_info;
@@ -120,22 +119,20 @@ void Core_module_cpu::_checkpoint(Target_state &state)
 }
 
 
-void Core_module_cpu::_destroy_stored_cpu_session(Target_state &state,
-						  Stored_cpu_session_info &stored_info)
+void Core_module_cpu::_destroy_stored_cpu_session(Stored_cpu_session_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     while(Stored_cpu_thread_info *info = stored_info.stored_cpu_thread_infos.first()) {
 	stored_info.stored_cpu_thread_infos.remove(info);
-	_destroy_stored_cpu_thread(state, *info);
+	_destroy_stored_cpu_thread(*info);
     }
-    Genode::destroy(state._alloc, &stored_info);
+    Genode::destroy(_md_alloc, &stored_info);
 }
 
 
-void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
-					   Genode::List<Stored_cpu_thread_info> &stored_infos,
+void Core_module_cpu::_prepare_cpu_threads(Genode::List<Stored_cpu_thread_info> &stored_infos,
 					   Genode::List<Cpu_thread_component> &child_infos)
 {
 #ifdef DEBUG
@@ -157,7 +154,7 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (state._alloc) Stored_cpu_thread_info(*child_info, childs_kcap);
+	    stored_info = new (_md_alloc) Stored_cpu_thread_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -185,7 +182,7 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 	    /* No corresponding child_info => delete it */
 	    if(!child_info) {
 		stored_infos.remove(stored_info);
-		_destroy_stored_cpu_thread(state, *stored_info);
+		_destroy_stored_cpu_thread(*stored_info);
 	    }
 
 	    stored_info = next_info;
@@ -193,9 +190,9 @@ void Core_module_cpu::_prepare_cpu_threads(Target_state &state,
 }
 
 
-void Core_module_cpu::_destroy_stored_cpu_thread(Target_state &state, Stored_cpu_thread_info &stored_info)
+void Core_module_cpu::_destroy_stored_cpu_thread(Stored_cpu_thread_info &stored_info)
 {
-    Genode::destroy(state._alloc, &stored_info);
+    Genode::destroy(_md_alloc, &stored_info);
 }
 
 

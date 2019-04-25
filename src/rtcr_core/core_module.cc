@@ -21,6 +21,7 @@ Core_module::Core_module(Genode::Env &env,
 			 bool &bootstrap,
 			 Genode::Xml_node *config)
     :
+    _state(_initialize_state(md_alloc)),
     Core_module_pd(env, md_alloc, ep),
     Core_module_cpu(env, md_alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
     Core_module_rm(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
@@ -32,6 +33,12 @@ Core_module::Core_module(Genode::Env &env,
     _initialize_rm_session(label, bootstrap);
     _initialize_ram_session(label, bootstrap);
     _initialize_rom_session(label, bootstrap);
+}
+
+
+Core_state &Core_module::_initialize_state(Genode::Allocator &md_alloc)
+{
+  return *new(md_alloc) Core_state();
 }
 
 
@@ -48,27 +55,29 @@ void Core_module::initialize(Genode::List<Module> &modules)
 }
 
 
-void Core_module::checkpoint(Target_state &state)
+Module_state *Core_module::checkpoint()
 {
   
     /* initialize `kcap_mappings` variable. This step depends on Core_module_ram::Core_module_ram() */
-    Core_module_pd::_create_kcap_mappings(state);
+    Core_module_pd::_create_kcap_mappings();
 
     /* initialize `region_map` variable. This step depends on Core_module_pd::Core_module_pd() */
     Core_module_rm::_create_region_map_dataspaces_list();
 
     /* Checkpointing */
-    Core_module_pd::_checkpoint(state);  /* depends on Core_module_pd::_create_kcap_mappings */
-    Core_module_cpu::_checkpoint(state);  /* depends on Core_module_pd::_create_kcap_mappings */
-    Core_module_rm::_checkpoint(state);  /* depends on Core_module_pd::_create_kcap_mappings */
+    Core_module_pd::_checkpoint();  /* depends on Core_module_pd::_create_kcap_mappings */
+    Core_module_cpu::_checkpoint();  /* depends on Core_module_pd::_create_kcap_mappings */
+    Core_module_rm::_checkpoint();  /* depends on Core_module_pd::_create_kcap_mappings */
 
     /* depends on Core_module_pd::_create_kcap_mappings */
     /* depends on Core_module_rm::_create_region_map_dataspace_list */    
-    Core_module_ram::_checkpoint(state);
+    Core_module_ram::_checkpoint();
+
+    return &_state;
 }
 
 
-void Core_module::restore(Target_state &state)
+void Core_module::restore(Module_state *state)
 {
 
 }
@@ -97,3 +106,4 @@ Genode::Service *Core_module::resolve_session_request(const char *service_name,
 }
 
 
+ 

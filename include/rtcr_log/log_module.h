@@ -16,10 +16,11 @@
 
 /* Rtcr includes */
 #include <rtcr/module.h>
+#include <rtcr/module_state.h>
 #include <rtcr/module_factory.h>
-#include <rtcr/target_state.h>
 #include <rtcr/core_module_abstract.h>
 
+#include <rtcr_log/log_state.h>
 
 namespace Rtcr {
     class Log_module;
@@ -40,10 +41,10 @@ private:
     Genode::Local_service *_log_service;
     bool &_bootstrap;
     Core_module_abstract *_core_module;
+    Log_state &_log_state;
   
-    void _destroy_stored_log_session(Target_state &state,
-				   Stored_log_session_info &stored_info);
-
+    void _destroy_stored_log_session(Stored_log_session_info &stored_info);
+    Log_state &_initialize_state(Genode::Allocator &md_alloc);
   
 public:
   
@@ -52,10 +53,11 @@ public:
 	      Genode::Entrypoint &ep,
 	      bool &bootstrap);
 
-  ~Log_module();
+    ~Log_module();
     void initialize(Genode::List<Module> &modules);
-    void checkpoint(Target_state &state);
-    void restore(Target_state &state);
+    Module_state *checkpoint();
+    void restore(Module_state *state);
+  
     Genode::Service *resolve_session_request(const char *service_name, const char *args);
 
   Module_name name(){

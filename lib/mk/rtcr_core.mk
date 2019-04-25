@@ -1,4 +1,4 @@
-SRC_CC = core_module.cc
+SRC_CC = core_module.cc core_state.cc
 SRC_CC += core_module_cpu.cc cpu_session.cc cpu_thread_component.cc
 SRC_CC += core_module_pd.cc pd_session.cc
 SRC_CC += core_module_rm.cc rm_session.cc region_map_component.cc

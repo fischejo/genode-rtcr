@@ -19,9 +19,9 @@
 #include <util/list.h>
 
 /* Local includes */
-#include <rtcr/target_state.h>
+#include <rtcr/module_state.h>
+#include <rtcr_core/core_state.h>
 #include <rtcr_core/cpu/cpu_session.h>
-
 #include <rtcr_core/core_module_base.h>
 #include <rtcr_core/core_module_pd.h>
 
@@ -51,28 +51,25 @@ class Rtcr::Core_module_cpu : public virtual Core_module_base
 
 
     // level 1.1
-    void _prepare_cpu_threads(Target_state &state,
-			      Genode::List<Stored_cpu_thread_info> &stored_infos,			      
+    void _prepare_cpu_threads(Genode::List<Stored_cpu_thread_info> &stored_infos,			      
 			      Genode::List<Cpu_thread_component> &child_infos);
 
     
     // level 1.2
-    void _destroy_stored_cpu_session(Target_state &state,
-				     Stored_cpu_session_info &stored_info);
+    void _destroy_stored_cpu_session(Stored_cpu_session_info &stored_info);
 
     // level 1.2.1
-    void _destroy_stored_cpu_thread(Target_state &state,
-				    Stored_cpu_thread_info &stored_info);
+    void _destroy_stored_cpu_thread(Stored_cpu_thread_info &stored_info);
 
 
 
     // level 1
-    void _checkpoint(Target_state &state);
+    void _checkpoint();
     
   
 
 public:
-    /**
+    /**n
      * Pause all child's threads
      */
     virtual void pause();

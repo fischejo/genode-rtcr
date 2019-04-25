@@ -17,7 +17,7 @@
 #include <rtcr_core/pd/pd_session.h>
 #include <rtcr_core/rom/rom_session.h>
 #include <rtcr_core/ram/ram_session.h>
-#include <rtcr/target_state.h>
+#include <rtcr_core/core_state.h>
 #include <base/service.h>
 #include <rtcr_ds/dataspace_module.h>
 
@@ -36,11 +36,11 @@ class Rtcr::Core_module_base : public virtual Core_module_abstract
 
   // implemented in core_module_rm
   // used by core_module_pd
-    virtual void _prepare_region_maps(Target_state &state,
-				      Genode::List<Stored_region_map_info> &stored_infos,
+    virtual void _prepare_region_maps(Genode::List<Stored_region_map_info> &stored_infos,
 				      Genode::List<Region_map_component> &child_infos) = 0;
 
   virtual Dataspace_module &ds_module() = 0;
+  virtual Core_state &state() = 0;
   
 public:
     /* Methods required by Target_child */

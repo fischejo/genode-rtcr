@@ -29,8 +29,6 @@ class Rtcr::Module_factory
   Module_factory* _next;
   
  public:
-
-  
   virtual Module* create(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &ep,

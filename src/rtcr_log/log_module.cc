@@ -22,7 +22,8 @@ Log_module::Log_module(Genode::Env &env,
     _env(env),
     _md_alloc(md_alloc),
     _ep(ep),
-    _bootstrap(bootstrap)
+    _bootstrap(bootstrap),
+    _log_state(_initialize_state(md_alloc))
 {}
 
 
@@ -30,6 +31,12 @@ Log_module::~Log_module()
 {
   if(_log_root) Genode::destroy(_md_alloc, _log_root);
   if(_log_service) Genode::destroy(_md_alloc, _log_service);
+}
+
+
+Log_state &Log_module::_initialize_state(Genode::Allocator &md_alloc)
+{
+  return *new(md_alloc) Log_state();
 }
 
 
@@ -49,13 +56,14 @@ void Log_module::initialize(Genode::List<Module> &modules)
     Genode::error("No Core_module loaded! ");
 }
 
-void Log_module::checkpoint(Target_state &state)
+
+Module_state *Log_module::checkpoint()
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
-  Genode::List<Stored_log_session_info> &stored_infos = state._stored_log_sessions;
+  Genode::List<Stored_log_session_info> &stored_infos = _log_state._stored_log_sessions;
   Genode::List<Log_session_component> &child_infos = _log_root->session_infos();
   Log_session_component *child_info = nullptr;
   Stored_log_session_info *stored_info = nullptr;
@@ -72,7 +80,7 @@ void Log_module::checkpoint(Target_state &state)
       /* No corresponding stored_info => create it */
       if(!stored_info) {
 	  Genode::addr_t childs_kcap = _core_module->find_kcap_by_badge(child_info->cap().local_name());
-	  stored_info = new (state._alloc) Stored_log_session_info(*child_info, childs_kcap);
+	  stored_info = new (_md_alloc) Stored_log_session_info(*child_info, childs_kcap);
 	  stored_infos.insert(stored_info);
 	}
 
@@ -95,26 +103,26 @@ void Log_module::checkpoint(Target_state &state)
       /* No corresponding child_info => delete it */
       if(!child_info) {
 	  stored_infos.remove(stored_info);
-	  _destroy_stored_log_session(state, *stored_info);
+	  _destroy_stored_log_session(*stored_info);
 	}
 
       stored_info = next_info;
     }
+  return &_log_state;
 }
 
 
-void Log_module::_destroy_stored_log_session(Target_state &state,
-						  Stored_log_session_info &stored_info)
+void Log_module::_destroy_stored_log_session(Stored_log_session_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-  Genode::destroy(state._alloc, &stored_info);
+  Genode::destroy(_md_alloc, &stored_info);
 }
 
 
 
-void Log_module::restore(Target_state &state)
+void Log_module::restore(Module_state *state)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");

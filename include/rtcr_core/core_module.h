@@ -17,7 +17,7 @@
 /* Local includes */
 #include <rtcr/module.h>
 #include <rtcr/module_factory.h>
-#include <rtcr/target_state.h>
+#include <rtcr/module_state.h>
 #include <rtcr_core/core_module_base.h>
 #include <rtcr_core/core_module_cpu.h>
 #include <rtcr_core/core_module_ram.h>
@@ -29,7 +29,6 @@
 namespace Rtcr {
     class Core_module;
     class Core_module_factory;
-
 }
 
 using namespace Rtcr;
@@ -44,8 +43,12 @@ class Rtcr::Core_module : public virtual Core_module_base,
 {
 private:
   Dataspace_module *_ds_module;
+  Core_state &_state;
+
+
+protected:
+  Core_state &_initialize_state(Genode::Allocator &md_alloc);
   
-    
 public:  
 
   Core_module(Genode::Env &env,
@@ -55,20 +58,23 @@ public:
 	      bool &bootstrap,
 	      Genode::Xml_node *config);
 
-
   ~Core_module();
 
     void initialize(Genode::List<Module> &modules);
   
-  
-    void checkpoint(Target_state &state);
-    void restore(Target_state &state);
+    Module_state *checkpoint();
+    void restore(Module_state *state);
 
     Genode::Service *resolve_session_request(const char *service_name, const char *args);
 
   virtual Dataspace_module &ds_module()
   {
     return *_ds_module;
+  }
+
+  virtual Core_state &state()
+  {
+    return _state;
   }
 
   Module_name name(){

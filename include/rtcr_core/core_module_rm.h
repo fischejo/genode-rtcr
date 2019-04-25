@@ -20,7 +20,7 @@
 
 /* Local includes */
 #include <rtcr_core/core_module_base.h>
-#include <rtcr/target_state.h>
+#include <rtcr/module_state.h>
 #include <rtcr_core/rm/rm_session.h>
 
 
@@ -48,36 +48,30 @@ protected:
     Genode::List<Ref_badge_info> _region_maps;
 
     // level 2.1
-    void _prepare_region_maps(Target_state &state,
-			      Genode::List<Stored_region_map_info> &stored_infos,
+    void _prepare_region_maps(Genode::List<Stored_region_map_info> &stored_infos,
 			      Genode::List<Region_map_component> &child_infos);
 
     // level 2.1.1
-    void _prepare_attached_regions(Target_state &state,
-				   Genode::List<Stored_attached_region_info> &stored_infos,
+    void _prepare_attached_regions(Genode::List<Stored_attached_region_info> &stored_infos,
 				   Genode::List<Attached_region_info> &child_infos);
 
     // level 2.1.1.1
-    Stored_attached_region_info &_create_stored_attached_region(Target_state &state,
-								Attached_region_info &child_info);
+    Stored_attached_region_info &_create_stored_attached_region(Attached_region_info &child_info);
     
     // level 2.2
-    void _destroy_stored_rm_session(Target_state &state,
-				    Stored_rm_session_info &stored_info);
+    void _destroy_stored_rm_session(Stored_rm_session_info &stored_info);
 
     // level 2.2.1
-    void _destroy_stored_region_map(Target_state &state,
-				    Stored_region_map_info &stored_info);
+    void _destroy_stored_region_map(Stored_region_map_info &stored_info);
 
     // level 2.2.1.1
-    void _destroy_stored_attached_region(Target_state &state,
-					 Stored_attached_region_info &stored_info);
+    void _destroy_stored_attached_region(Stored_attached_region_info &stored_info);
 
     // level 1
     void _create_region_map_dataspaces_list();
 
     // level 2
-    void _checkpoint(Target_state &state);
+    void _checkpoint();
     void _initialize_rm_session(const char* label, bool &bootstrap);
     Ref_badge_info *find_region_map_by_badge(Genode::uint16_t badge);
     

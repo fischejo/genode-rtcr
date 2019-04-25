@@ -19,7 +19,7 @@
 
 
 #include <rtcr_core/core_module_base.h>
-#include <rtcr/target_state.h>
+#include <rtcr_core/core_state.h>
 #include <rtcr_core/pd/pd_session.h>
 #include <rtcr_core/pd/ref_badge_info.h>
 #include <rtcr/kcap_badge_info.h>
@@ -79,38 +79,35 @@ protected:
 
 
    
-    void _destroy_stored_pd_session(Target_state &state, Stored_pd_session_info &stored_info);
+    void _destroy_stored_pd_session(Stored_pd_session_info &stored_info);
 
-    void _prepare_native_caps(Target_state &state,
-			      Genode::List<Stored_native_capability_info> &stored_infos,
+    void _prepare_native_caps(Genode::List<Stored_native_capability_info> &stored_infos,
 			      Genode::List<Native_capability_info> &child_infos);
   
-    void _destroy_stored_native_cap(Target_state &state, Stored_native_capability_info &stored_info);
+    void _destroy_stored_native_cap(Stored_native_capability_info &stored_info);
 
-    void _prepare_signal_sources(Target_state &state,
-				 Genode::List<Stored_signal_source_info> &stored_infos,
+    void _prepare_signal_sources(Genode::List<Stored_signal_source_info> &stored_infos,
 				 Genode::List<Signal_source_info> &child_infos);
-    void _destroy_stored_signal_source(Target_state &state, Stored_signal_source_info &stored_info);
 
-    void _prepare_signal_contexts(Target_state &state,
-				  Genode::List<Stored_signal_context_info> &stored_infos,
+    void _destroy_stored_signal_source(Stored_signal_source_info &stored_info);
+
+    void _prepare_signal_contexts(Genode::List<Stored_signal_context_info> &stored_infos,
 				  Genode::List<Signal_context_info> &child_infos);
-    void _destroy_stored_signal_context(Target_state &state, Stored_signal_context_info &stored_info);
+
+    void _destroy_stored_signal_context(Stored_signal_context_info &stored_info);
 
   /* This method is an exact copy from core_module_rm. It is copied in order to
      minimize the dependencies between both classes. */
-    void _destroy_stored_region_map(Target_state &state,
-				    Stored_region_map_info &stored_info);
+    void _destroy_stored_region_map(Stored_region_map_info &stored_info);
 
   /* This method is an exact copy from core_module_rm. It is copied in order to
      minimize the dependencies between both classes. */
-    void _destroy_stored_attached_region(Target_state &state,
-					 Stored_attached_region_info &stored_info);
+    void _destroy_stored_attached_region(Stored_attached_region_info &stored_info);
 
     // level: 1
-    void _create_kcap_mappings(Target_state &state);
+    void _create_kcap_mappings();
     
-    void _checkpoint(Target_state &state);
+    void _checkpoint();
 
 public:    
 
@@ -131,10 +128,7 @@ public:
     return *_pd_session;
   };
   
-    Core_module_pd(Genode::Env &env,
-	      Genode::Allocator &md_alloc,
-		   Genode::Entrypoint &ep);
-
+    Core_module_pd(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep);
     ~Core_module_pd();
 
 };

@@ -19,7 +19,7 @@
 
 /* Local includes */
 #include <rtcr_core/core_module_base.h>
-#include <rtcr/target_state.h>
+#include <rtcr/module_state.h>
 
 #include <rtcr_core/ram/ram_session.h>
 #include <rtcr/dataspace_translation_info.h>
@@ -49,25 +49,21 @@ protected:
     Ram_session_component *_find_ram_session(const char *label, Ram_root &ram_root);
   
     // level: 1.1
-    void _prepare_ram_dataspaces(Target_state &state,
-				 Genode::List<Stored_ram_dataspace_info> &stored_infos,
+    void _prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_info> &stored_infos,
 				 Genode::List<Ram_dataspace_info> &child_infos);
     // level 1.1.1
-    Stored_ram_dataspace_info &_create_stored_ram_dataspace(Target_state &state,
-							    Ram_dataspace_info &child_info);
+    Stored_ram_dataspace_info &_create_stored_ram_dataspace(Ram_dataspace_info &child_info);
     
     // level: 1.2
-    void _destroy_stored_ram_session(Target_state & state,
-				     Stored_ram_session_info &stored_info);
+    void _destroy_stored_ram_session(Stored_ram_session_info &stored_info);
 
     // level: 1.2.1
-    void _destroy_stored_ram_dataspace(Target_state &state,
-				       Stored_ram_dataspace_info &stored_info);    
+    void _destroy_stored_ram_dataspace(Stored_ram_dataspace_info &stored_info);    
 
 
 
     // level: 1    
-    void _checkpoint(Target_state &state);
+    void _checkpoint();
 
     
 

@@ -61,9 +61,9 @@ struct Rtcr::Main
 	  Target_state state(env, heap);
 
 	  child.checkpoint(state);
-	  
-	  Genode::sleep_forever();
+	  Genode::log(state);
 
+	  Genode::sleep_forever();
 	}
 };
 

@@ -17,7 +17,7 @@
 /* Rtcr includes */
 #include <rtcr/module.h>
 #include <rtcr/module_factory.h>
-#include <rtcr/target_state.h>
+#include <rtcr/module_state.h>
 
 #include <rtcr/dataspace_translation_info.h>
 
@@ -40,11 +40,10 @@ class Rtcr::Dataspace_module : public virtual Module
 
     Genode::List<Dataspace_translation_info> _dataspace_translations;
 
-    void _checkpoint_dataspace(Target_state &state,
-		      Genode::Dataspace_capability dst_ds_cap,
-		      Genode::Dataspace_capability src_ds_cap,
-		      Genode::addr_t dst_offset,
-		      Genode::size_t size);
+    void _checkpoint_dataspace(Genode::Dataspace_capability dst_ds_cap,
+			       Genode::Dataspace_capability src_ds_cap,
+			       Genode::addr_t dst_offset,
+			       Genode::size_t size);
   
 public:
 
@@ -58,8 +57,8 @@ public:
 			    Genode::Dataspace_capability resto_ds_cap,
 			    Genode::size_t size);
 
-    void checkpoint(Target_state &state);
-    void restore(Target_state &state);
+    Module_state *checkpoint();
+    void restore(Module_state *state);
     Genode::Service *resolve_session_request(const char *service_name, const char *args);
 
     

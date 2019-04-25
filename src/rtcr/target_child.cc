@@ -134,7 +134,7 @@ void Target_child::start()
 }
 
 
-void Target_child::checkpoint(Target_state &state)
+void Target_child::checkpoint(Target_state &target_state)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -143,7 +143,11 @@ void Target_child::checkpoint(Target_state &state)
     Module *module = modules.first();
     while (module) {
       Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),  "\e[0m\e[38;5;214m","]->checkpoint()", "\033[0m");      
-    	module->checkpoint(state);
+        Module_state *module_state = module->checkpoint();
+
+	/* store current module state in the target state */
+	if(module_state)
+	  target_state.store(module->name(), *module_state);
     	module = module->next();
     }
     // Unknown Bug. Child can not be resumed.
@@ -151,7 +155,7 @@ void Target_child::checkpoint(Target_state &state)
 }
 
 
-void Target_child::restore(Target_state &state)
+void Target_child::restore(Target_state &target_state)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -159,7 +163,12 @@ void Target_child::restore(Target_state &state)
   
     Module *module = modules.first();
     while (module) {
-	module->restore(state);
+        /* lookup if target_state stores a state of the module */
+        Module_state *module_state = target_state.state(module->name());
+
+        /* restore module with this state */
+	module->restore(module_state);
+
 	module = module->next();
     }    
 }

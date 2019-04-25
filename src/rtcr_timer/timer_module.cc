@@ -22,7 +22,8 @@ Timer_module::Timer_module(Genode::Env &env,
     _env(env),
     _md_alloc(md_alloc),
     _ep(ep),
-    _bootstrap(bootstrap)
+    _bootstrap(bootstrap),
+    _timer_state(_initialize_state(md_alloc))
 {}
 
 Timer_module::~Timer_module()
@@ -49,15 +50,19 @@ void Timer_module::initialize(Genode::List<Module> &modules)
 }
 
 
+Timer_state &Timer_module::_initialize_state(Genode::Allocator &_md_alloc)
+{
+  return *new(_md_alloc) Timer_state();
+}
 
 
-void Timer_module::checkpoint(Target_state &state)
+Module_state *Timer_module::checkpoint()
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
-  Genode::List<Stored_timer_session_info> &stored_infos = state._stored_timer_sessions;
+  Genode::List<Stored_timer_session_info> &stored_infos = _timer_state._stored_timer_sessions;
   Genode::List<Timer_session_component> &child_infos = _timer_root->session_infos();
   Timer_session_component *child_info = nullptr;
   Stored_timer_session_info *stored_info=  nullptr;
@@ -74,7 +79,7 @@ void Timer_module::checkpoint(Target_state &state)
 		/* No corresponding stored_info => create it */
 		if(!stored_info) {
 			Genode::addr_t childs_kcap = _core_module->find_kcap_by_badge(child_info->cap().local_name());
-			stored_info = new (state._alloc) Stored_timer_session_info(*child_info, childs_kcap);
+			stored_info = new (_md_alloc) Stored_timer_session_info(*child_info, childs_kcap);
 			stored_infos.insert(stored_info);
 		}
 
@@ -98,24 +103,26 @@ void Timer_module::checkpoint(Target_state &state)
 		/* No corresponding child_info => delete it */
 		if(!child_info) {
 		  stored_infos.remove(stored_info);
-		  _destroy_stored_timer_session(state, *stored_info);
+		  _destroy_stored_timer_session(*stored_info);
 		}
 
 		stored_info = next_info;
 	}
+    return &_timer_state;
 }
-void Timer_module::_destroy_stored_timer_session(Target_state &state,
-						 Stored_timer_session_info &stored_info)
+
+
+void Timer_module::_destroy_stored_timer_session(Stored_timer_session_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif  
-	Genode::destroy(state._alloc, &stored_info);
+	Genode::destroy(_md_alloc, &stored_info);
 }
 
 
 
-void Timer_module::restore(Target_state &state)
+void Timer_module::restore(Module_state *state)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");

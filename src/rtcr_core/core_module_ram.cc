@@ -67,13 +67,13 @@ Core_module_ram::~Core_module_ram()
 }
 
 
-void Core_module_ram::_checkpoint(Target_state &state)
+void Core_module_ram::_checkpoint()
 { 
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     Genode::List<Ram_session_component> &child_infos =  _ram_root->session_infos();
-    Genode::List<Stored_ram_session_info> &stored_infos = state._stored_ram_sessions;    
+    Genode::List<Stored_ram_session_info> &stored_infos = state()._stored_ram_sessions;    
     Ram_session_component *child_info = nullptr;
     Stored_ram_session_info *stored_info = nullptr;
     /* Update state_info from child_info */
@@ -87,13 +87,12 @@ void Core_module_ram::_checkpoint(Target_state &state)
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (state._alloc) Stored_ram_session_info(*child_info, childs_kcap);
+	    stored_info = new (_md_alloc) Stored_ram_session_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
 	/* Update stored_info */
-	_prepare_ram_dataspaces(state,
-				stored_info->stored_ramds_infos,
+	_prepare_ram_dataspaces(stored_info->stored_ramds_infos,
 				child_info->parent_state().ram_dataspaces);
 
 	child_info = child_info->next();
@@ -111,7 +110,7 @@ void Core_module_ram::_checkpoint(Target_state &state)
 	/* No corresponding child_info => delete it */
 	if(!child_info) {
 	    stored_infos.remove(stored_info);
-	    _destroy_stored_ram_session(state, *stored_info);
+	    _destroy_stored_ram_session(*stored_info);
 	}
 
 	stored_info = next_info;
@@ -119,19 +118,17 @@ void Core_module_ram::_checkpoint(Target_state &state)
 }
 
 
-void Core_module_ram::_destroy_stored_ram_session(Target_state &state,
-						  Stored_ram_session_info &stored_info)
+void Core_module_ram::_destroy_stored_ram_session(Stored_ram_session_info &stored_info)
 {
     while(Stored_ram_dataspace_info *info = stored_info.stored_ramds_infos.first()) {
 	stored_info.stored_ramds_infos.remove(info);
-	_destroy_stored_ram_dataspace(state, *info);
+	_destroy_stored_ram_dataspace(*info);
     }
-    Genode::destroy(state._alloc, &stored_info);
+    Genode::destroy(_md_alloc, &stored_info);
 }
 
 
-void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
-					      Genode::List<Stored_ram_dataspace_info> &stored_infos,
+void Core_module_ram::_prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_info> &stored_infos,
 					      Genode::List<Ram_dataspace_info> &child_infos)
 {
 #ifdef DEBUG
@@ -151,7 +148,7 @@ void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	    stored_info = &_create_stored_ram_dataspace(state, *child_info);
+	    stored_info = &_create_stored_ram_dataspace(*child_info);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -175,7 +172,7 @@ void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
 	/* No corresponding child_info => delete it */
 	if(!child_info) {
 	    stored_infos.remove(stored_info);
-	    _destroy_stored_ram_dataspace(state, *stored_info);
+	    _destroy_stored_ram_dataspace(*stored_info);
 	}
 
 	stored_info = next_info;
@@ -183,8 +180,7 @@ void Core_module_ram::_prepare_ram_dataspaces(Target_state &state,
 }
 
 
-Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Target_state &state,
-									 Ram_dataspace_info &child_info)
+Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Ram_dataspace_info &child_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -204,25 +200,24 @@ Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Target_
 	Genode::log("Dataspace ", child_info.cap, " is a region map.");
     } else {
 	/* Check whether the dataspace is somewhere in the stored session RPC objects */
-	ramds_cap = Genode::reinterpret_cap_cast<Genode::Ram_dataspace>(state.find_stored_dataspace(
+      ramds_cap = Genode::reinterpret_cap_cast<Genode::Ram_dataspace>(state().find_stored_dataspace(
 									    child_info.cap.local_name()));
 
 	if(!ramds_cap.valid()) {
 	    Genode::log("Dataspace ", child_info.cap, " is not known. "
 			"Creating dataspace with size ", Genode::Hex(child_info.size));
-	    ramds_cap = state._env.ram().alloc(child_info.size);
+	    ramds_cap = _env.ram().alloc(child_info.size);
 	} else {
 	    Genode::log("Dataspace ", child_info.cap, " is known from last checkpoint.");
 	}
     }
 
     Genode::addr_t childs_kcap = find_kcap_by_badge(child_info.cap.local_name());
-    return *new (state._alloc) Stored_ram_dataspace_info(child_info, childs_kcap, ramds_cap);
+    return *new (_md_alloc) Stored_ram_dataspace_info(child_info, childs_kcap, ramds_cap);
 }
 
 
-void Core_module_ram::_destroy_stored_ram_dataspace(Target_state &state,
-						    Stored_ram_dataspace_info &stored_info)
+void Core_module_ram::_destroy_stored_ram_dataspace(Stored_ram_dataspace_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -230,12 +225,12 @@ void Core_module_ram::_destroy_stored_ram_dataspace(Target_state &state,
     /* Pre-condition: This stored object is removed from its list, thus, a
      * search for a stored dataspace will not return its memory content
      * dataspace */
-    Genode::Dataspace_capability stored_ds_cap = state.find_stored_dataspace(stored_info.badge);
+    Genode::Dataspace_capability stored_ds_cap = state().find_stored_dataspace(stored_info.badge);
     if(!stored_ds_cap.valid()) {
-	state._env.ram().free(stored_info.memory_content);
+	_env.ram().free(stored_info.memory_content);
     }
 
-    Genode::destroy(state._alloc, &stored_info);
+    Genode::destroy(_md_alloc, &stored_info);
 }
 
 

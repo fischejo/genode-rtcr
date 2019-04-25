@@ -107,12 +107,12 @@ void Core_module_rm::_create_region_map_dataspaces_list()
 }
 
 
-void Core_module_rm::_checkpoint(Target_state &state)
+void Core_module_rm::_checkpoint()
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-    Genode::List<Stored_rm_session_info> &stored_infos = state._stored_rm_sessions;
+    Genode::List<Stored_rm_session_info> &stored_infos = state()._stored_rm_sessions;
     Genode::List<Rm_session_component> &child_infos = _rm_root->session_infos();    
     Rm_session_component *child_info = nullptr;
     Stored_rm_session_info *stored_info = nullptr;
@@ -129,13 +129,12 @@ void Core_module_rm::_checkpoint(Target_state &state)
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (state._alloc) Stored_rm_session_info(*child_info, childs_kcap);
+	    stored_info = new (_md_alloc) Stored_rm_session_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
 	/* Update stored_info */
-	_prepare_region_maps(state,
-			     stored_info->stored_region_map_infos,
+	_prepare_region_maps(stored_info->stored_region_map_infos,
 			     child_info->parent_state().region_maps);
 
 	child_info = child_info->next();
@@ -153,7 +152,7 @@ void Core_module_rm::_checkpoint(Target_state &state)
 	/* No corresponding child_info => delete it */
 	if(!child_info) {
 	    stored_infos.remove(stored_info);
-	    _destroy_stored_rm_session(state, *stored_info);
+	    _destroy_stored_rm_session(*stored_info);
 	}
 
 	stored_info = next_info;
@@ -161,8 +160,7 @@ void Core_module_rm::_checkpoint(Target_state &state)
 }
 
 
-void Core_module_rm::_prepare_region_maps(Target_state &state,
-					  Genode::List<Stored_region_map_info> &stored_infos,
+void Core_module_rm::_prepare_region_maps(Genode::List<Stored_region_map_info> &stored_infos,
 					  Genode::List<Region_map_component> &child_infos)
 {
 #ifdef DEBUG
@@ -182,15 +180,14 @@ void Core_module_rm::_prepare_region_maps(Target_state &state,
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (state._alloc) Stored_region_map_info(*child_info, childs_kcap);
+	    stored_info = new (_md_alloc) Stored_region_map_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
 	/* Update stored_info */
 	stored_info->sigh_badge = child_info->parent_state().sigh.local_name();
 
-	_prepare_attached_regions(state,
-				  stored_info->stored_attached_region_infos,
+	_prepare_attached_regions(stored_info->stored_attached_region_infos,
 				  child_info->parent_state().attached_regions);
 
 	/* Remeber region map's dataspace badge to remove the dataspace from _memory_to_checkpoint later */
@@ -212,7 +209,7 @@ void Core_module_rm::_prepare_region_maps(Target_state &state,
 	/* No corresponding child_info => delete it */
 	if(!child_info) {
 	    stored_infos.remove(stored_info);
-	    _destroy_stored_region_map(state, *stored_info);
+	    _destroy_stored_region_map(*stored_info);
 	}
 
 	stored_info = next_info;
@@ -221,8 +218,7 @@ void Core_module_rm::_prepare_region_maps(Target_state &state,
 
 
 
-void Core_module_rm::_prepare_attached_regions(Target_state &state,
-					       Genode::List<Stored_attached_region_info> &stored_infos,
+void Core_module_rm::_prepare_attached_regions(Genode::List<Stored_attached_region_info> &stored_infos,
 					       Genode::List<Attached_region_info> &child_infos)
 {
 #ifdef DEBUG
@@ -241,7 +237,7 @@ void Core_module_rm::_prepare_attached_regions(Target_state &state,
 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
-	    stored_info = &_create_stored_attached_region(state, *child_info);
+	    stored_info = &_create_stored_attached_region(*child_info);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -278,7 +274,7 @@ void Core_module_rm::_prepare_attached_regions(Target_state &state,
 	/* No corresponding child_info => delete it */
 	if(!child_info) {
 	    stored_infos.remove(stored_info);
-	    _destroy_stored_attached_region(state, *stored_info);
+	    _destroy_stored_attached_region(*stored_info);
 	}
 
 	stored_info = next_info;
@@ -287,7 +283,7 @@ void Core_module_rm::_prepare_attached_regions(Target_state &state,
 
 
 Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(
-    Target_state &state, Attached_region_info &child_info)
+    Attached_region_info &child_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -308,10 +304,10 @@ Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(
     } else {
 	/* Check whether the dataspace is somewhere in the stored session RPC objects */
 	ramds_cap = Genode::reinterpret_cap_cast<Genode::Ram_dataspace>(
-	    state.find_stored_dataspace(child_info.attached_ds_cap.local_name()));
+	    state().find_stored_dataspace(child_info.attached_ds_cap.local_name()));
 
 	if(!ramds_cap.valid()) {
-	    ramds_cap = state._env.ram().alloc(child_info.size);
+	    ramds_cap = _env.ram().alloc(child_info.size);
 	} 
 
 #ifdef DEBUG
@@ -325,7 +321,7 @@ Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(
     }
 
     Genode::addr_t childs_kcap = find_kcap_by_badge(child_info.attached_ds_cap.local_name());
-    return *new (state._alloc) Stored_attached_region_info(child_info, childs_kcap, ramds_cap);
+    return *new (_md_alloc) Stored_attached_region_info(child_info, childs_kcap, ramds_cap);
 }
 
 
@@ -334,20 +330,20 @@ Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(
 
 
 
-void Core_module_rm::_destroy_stored_rm_session(Target_state &state, Stored_rm_session_info &stored_info)
+void Core_module_rm::_destroy_stored_rm_session(Stored_rm_session_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     while(Stored_region_map_info *info = stored_info.stored_region_map_infos.first()) {
 	stored_info.stored_region_map_infos.remove(info);
-	_destroy_stored_region_map(state, *info);
+	_destroy_stored_region_map(*info);
     }
-    Genode::destroy(state._alloc, &stored_info);
+    Genode::destroy(_md_alloc, &stored_info);
 }
 
 
-void Core_module_rm::_destroy_stored_region_map(Target_state &state, Stored_region_map_info &stored_info)
+void Core_module_rm::_destroy_stored_region_map(Stored_region_map_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -355,15 +351,14 @@ void Core_module_rm::_destroy_stored_region_map(Target_state &state, Stored_regi
   
     while(Stored_attached_region_info *info = stored_info.stored_attached_region_infos.first()) {
 	stored_info.stored_attached_region_infos.remove(info);
-	_destroy_stored_attached_region(state, *info);
+	_destroy_stored_attached_region(*info);
     }
-    Genode::destroy(state._alloc, &stored_info);
+    Genode::destroy(_md_alloc, &stored_info);
 }
 
 
 
-void Core_module_rm::_destroy_stored_attached_region(Target_state &state,
-						     Stored_attached_region_info &stored_info)
+void Core_module_rm::_destroy_stored_attached_region(Stored_attached_region_info &stored_info)
 {
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
@@ -372,14 +367,14 @@ void Core_module_rm::_destroy_stored_attached_region(Target_state &state,
     /* Pre-condition: This stored object is removed from its list, thus, a
      * search for a stored dataspace will not return its memory content
      * dataspace */
-    Genode::Dataspace_capability stored_ds_cap = state.find_stored_dataspace(
+    Genode::Dataspace_capability stored_ds_cap = state().find_stored_dataspace(
 	stored_info.attached_ds_badge);
 
     if(!stored_ds_cap.valid()) {
-	state._env.ram().free(stored_info.memory_content);
+	_env.ram().free(stored_info.memory_content);
     }
 
-    Genode::destroy(state._alloc, &stored_info);
+    Genode::destroy(_md_alloc, &stored_info);
 }
 
 
