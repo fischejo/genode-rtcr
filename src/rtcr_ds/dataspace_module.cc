@@ -14,12 +14,12 @@ Rtcr::Dataspace_module_factory _dataspace_module_factory_instance;
 
 
 Dataspace_module::Dataspace_module(Genode::Env &env,
-				   Genode::Allocator &md_alloc,
+				   Genode::Allocator &alloc,
 				   Genode::Entrypoint &ep)
 
   :
   _env(env),
-  _md_alloc(md_alloc),
+  _alloc(alloc),
   _ep(ep)
 {
 
@@ -89,7 +89,7 @@ void Dataspace_module::register_dataspace(Genode::Ram_dataspace_capability ckpt_
     trans_info = trans_info->find_by_resto_badge(resto_ds_cap.local_name());
 
   if(!trans_info) {
-    trans_info = new (_md_alloc) Dataspace_translation_info(ckpt_ds_cap,
+    trans_info = new (_alloc) Dataspace_translation_info(ckpt_ds_cap,
 							    resto_ds_cap,
 							    size);
     _dataspace_translations.insert(trans_info);

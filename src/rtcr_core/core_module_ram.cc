@@ -10,19 +10,19 @@ using namespace Rtcr;
 
 
 Core_module_ram::Core_module_ram(Genode::Env &env,
-				 Genode::Allocator &md_alloc,
+				 Genode::Allocator &alloc,
 				 Genode::Entrypoint &ep)
   :
     _env(env),
-    _md_alloc(md_alloc),
+    _alloc(alloc),
     _ep(ep)
  {}  
 
 
 void Core_module_ram::_initialize_ram_session(const char* label, bool &bootstrap)
 {
-  _ram_root = new (_md_alloc) Ram_root(_env, _md_alloc, _ep, bootstrap);
-  _ram_service = new (_md_alloc) Genode::Local_service("RAM", _ram_root);
+  _ram_root = new (_alloc) Ram_root(_env, _alloc, _ep, bootstrap);
+  _ram_service = new (_alloc) Genode::Local_service("RAM", _ram_root);
   _ram_session = _find_ram_session(label, ram_root());
 
   // Donate ram quota to child
@@ -87,7 +87,7 @@ void Core_module_ram::_checkpoint()
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (_md_alloc) Stored_ram_session_info(*child_info, childs_kcap);
+	    stored_info = new (_alloc) Stored_ram_session_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -124,7 +124,7 @@ void Core_module_ram::_destroy_stored_ram_session(Stored_ram_session_info &store
 	stored_info.stored_ramds_infos.remove(info);
 	_destroy_stored_ram_dataspace(*info);
     }
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -213,7 +213,7 @@ Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Ram_dat
     }
 
     Genode::addr_t childs_kcap = find_kcap_by_badge(child_info.cap.local_name());
-    return *new (_md_alloc) Stored_ram_dataspace_info(child_info, childs_kcap, ramds_cap);
+    return *new (_alloc) Stored_ram_dataspace_info(child_info, childs_kcap, ramds_cap);
 }
 
 
@@ -230,7 +230,7 @@ void Core_module_ram::_destroy_stored_ram_dataspace(Stored_ram_dataspace_info &s
 	_env.ram().free(stored_info.memory_content);
     }
 
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 

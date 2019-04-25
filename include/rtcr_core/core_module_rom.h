@@ -32,7 +32,7 @@ class Rtcr::Core_module_rom: public virtual Core_module_base
 {
 private:
     Genode::Env        &_env;
-    Genode::Allocator  &_md_alloc;
+    Genode::Allocator  &_alloc;
     Genode::Entrypoint &_ep;
 
 protected:
@@ -57,7 +57,7 @@ public:
   
 
     Core_module_rom(Genode::Env &env,
-		    Genode::Allocator &md_alloc,
+		    Genode::Allocator &alloc,
 		    Genode::Entrypoint &ep);
 
     void _initialize_rom_session(const char* label, bool &bootstrap);

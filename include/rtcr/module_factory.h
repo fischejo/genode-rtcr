@@ -30,7 +30,7 @@ class Rtcr::Module_factory
   
  public:
   virtual Module* create(Genode::Env &env,
-			 Genode::Allocator &md_alloc,
+			 Genode::Allocator &alloc,
 			 Genode::Entrypoint &ep,
 			 const char* label,
 			 bool &bootstrap,

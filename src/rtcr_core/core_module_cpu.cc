@@ -10,11 +10,11 @@ using namespace Rtcr;
 
 
 Core_module_cpu::Core_module_cpu(Genode::Env &env,
-				 Genode::Allocator &md_alloc,
+				 Genode::Allocator &alloc,
 				 Genode::Entrypoint &ep)
     :
     _env(env),
-    _md_alloc(md_alloc),
+    _alloc(alloc),
     _ep(ep)
 {
 
@@ -25,8 +25,8 @@ void Core_module_cpu::_initialize_cpu_session(const char* label, bool &bootstrap
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-    _cpu_root = new (_md_alloc) Cpu_root(_env, _md_alloc, _ep, pd_root(), bootstrap);
-    _cpu_service = new (_md_alloc) Genode::Local_service("CPU", _cpu_root);
+    _cpu_root = new (_alloc) Cpu_root(_env, _alloc, _ep, pd_root(), bootstrap);
+    _cpu_service = new (_alloc) Genode::Local_service("CPU", _cpu_root);
     _cpu_session = _find_cpu_session(label, cpu_root());  
 }
 
@@ -59,8 +59,8 @@ Cpu_session_component *Core_module_cpu::_find_cpu_session(const char *label, Cpu
 
 
 Core_module_cpu::~Core_module_cpu() {
-   Genode::destroy(_md_alloc, _cpu_root);
-   Genode::destroy(_md_alloc, _cpu_service);
+   Genode::destroy(_alloc, _cpu_root);
+   Genode::destroy(_alloc, _cpu_service);
 }
 
 
@@ -87,7 +87,7 @@ void Core_module_cpu::_checkpoint()
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (_md_alloc) Stored_cpu_session_info(*child_info, childs_kcap);
+	    stored_info = new (_alloc) Stored_cpu_session_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -128,7 +128,7 @@ void Core_module_cpu::_destroy_stored_cpu_session(Stored_cpu_session_info &store
 	stored_info.stored_cpu_thread_infos.remove(info);
 	_destroy_stored_cpu_thread(*info);
     }
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -154,7 +154,7 @@ void Core_module_cpu::_prepare_cpu_threads(Genode::List<Stored_cpu_thread_info> 
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap().local_name());
-	    stored_info = new (_md_alloc) Stored_cpu_thread_info(*child_info, childs_kcap);
+	    stored_info = new (_alloc) Stored_cpu_thread_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -192,7 +192,7 @@ void Core_module_cpu::_prepare_cpu_threads(Genode::List<Stored_cpu_thread_info> 
 
 void Core_module_cpu::_destroy_stored_cpu_thread(Stored_cpu_thread_info &stored_info)
 {
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 

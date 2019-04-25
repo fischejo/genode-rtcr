@@ -35,7 +35,7 @@ class Rtcr::Dataspace_module : public virtual Module
 {
  protected:
     Genode::Env        &_env;
-    Genode::Allocator  &_md_alloc;
+    Genode::Allocator  &_alloc;
     Genode::Entrypoint &_ep;
 
     Genode::List<Dataspace_translation_info> _dataspace_translations;
@@ -48,7 +48,7 @@ class Rtcr::Dataspace_module : public virtual Module
 public:
 
   Dataspace_module(Genode::Env &env,
-		   Genode::Allocator &md_alloc,
+		   Genode::Allocator &alloc,
 		   Genode::Entrypoint &ep);
 
   //  ~Dataspace_module();
@@ -75,13 +75,13 @@ class Rtcr::Dataspace_module_factory : public Module_factory
 {
 public:
   Module* create(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
+		 Genode::Allocator &alloc,
 		 Genode::Entrypoint &ep,
 		 const char* label,
 		 bool &bootstrap,
 		 Genode::Xml_node *config)  
   {
-    return new (md_alloc) Dataspace_module(env, md_alloc, ep);
+    return new (alloc) Dataspace_module(env, alloc, ep);
   }
     
   Module_name name()

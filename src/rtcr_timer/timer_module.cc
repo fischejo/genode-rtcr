@@ -15,21 +15,21 @@ Rtcr::Timer_module_factory _timer_module_factory_instance;
 
 
 Timer_module::Timer_module(Genode::Env &env,
-			   Genode::Allocator &md_alloc,
+			   Genode::Allocator &alloc,
 			   Genode::Entrypoint &ep,
 			   bool &bootstrap)
   :
     _env(env),
-    _md_alloc(md_alloc),
+    _alloc(alloc),
     _ep(ep),
     _bootstrap(bootstrap),
-    _timer_state(_initialize_state(md_alloc))
+    _timer_state(_initialize_state(alloc))
 {}
 
 Timer_module::~Timer_module()
 {
-  if(_timer_root) Genode::destroy(_md_alloc, _timer_root);
-  if(_timer_service) Genode::destroy(_md_alloc, _timer_service);
+  if(_timer_root) Genode::destroy(_alloc, _timer_root);
+  if(_timer_service) Genode::destroy(_alloc, _timer_service);
 }
 
 
@@ -50,9 +50,9 @@ void Timer_module::initialize(Genode::List<Module> &modules)
 }
 
 
-Timer_state &Timer_module::_initialize_state(Genode::Allocator &_md_alloc)
+Timer_state &Timer_module::_initialize_state(Genode::Allocator &_alloc)
 {
-  return *new(_md_alloc) Timer_state();
+  return *new(_alloc) Timer_state();
 }
 
 
@@ -79,7 +79,7 @@ Module_state *Timer_module::checkpoint()
 		/* No corresponding stored_info => create it */
 		if(!stored_info) {
 			Genode::addr_t childs_kcap = _core_module->find_kcap_by_badge(child_info->cap().local_name());
-			stored_info = new (_md_alloc) Stored_timer_session_info(*child_info, childs_kcap);
+			stored_info = new (_alloc) Stored_timer_session_info(*child_info, childs_kcap);
 			stored_infos.insert(stored_info);
 		}
 
@@ -117,7 +117,7 @@ void Timer_module::_destroy_stored_timer_session(Stored_timer_session_info &stor
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif  
-	Genode::destroy(_md_alloc, &stored_info);
+	Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -140,8 +140,8 @@ Genode::Service *Timer_module::resolve_session_request(const char *service_name,
   
   if(!Genode::strcmp(service_name, "Timer")) {
     if(!_timer_root) {
-      _timer_root = new (_md_alloc) Timer_root(_env, _md_alloc, _ep, _bootstrap);
-      _timer_service = new (_md_alloc) Genode::Local_service("Timer",_timer_root);
+      _timer_root = new (_alloc) Timer_root(_env, _alloc, _ep, _bootstrap);
+      _timer_service = new (_alloc) Genode::Local_service("Timer",_timer_root);
     }
     return _timer_service;
   }

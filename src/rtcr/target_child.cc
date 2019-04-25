@@ -11,13 +11,13 @@ using namespace Rtcr;
 
 
 Target_child::Target_child(Genode::Env &env,
-			   Genode::Allocator &md_alloc,
+			   Genode::Allocator &alloc,
 			   Genode::Service_registry &parent_services,
 			   const char *name)
 :
 	_name            (name),
 	_env             (env),
-	_md_alloc        (md_alloc),
+	_alloc        (alloc),
 	_resources_ep    (_env, 16*1024, "resources ep"),
 	_child_ep        (_env, 16*1024, "child ep"),
 	_in_bootstrap    (true),
@@ -54,7 +54,7 @@ Target_child::Target_child(Genode::Env &env,
 
 		    /* create module */
 		    Module *module = factory->create(env,
-						     md_alloc,
+						     alloc,
 						     _resources_ep,
 						     _name.string(),
 						     _in_bootstrap,
@@ -90,10 +90,10 @@ Target_child::Target_child(Genode::Env &env,
 	}
 
 
-	_address_space = new(md_alloc) Genode::Region_map_client(core->pd_session().address_space());
+	_address_space = new(alloc) Genode::Region_map_client(core->pd_session().address_space());
 	//	Genode::log("\e[1m\e[38;5;199m", "After Region_map_client", "\033[0m");	
 
-	_initial_thread = new(md_alloc) Genode::Child::Initial_thread(
+	_initial_thread = new(alloc) Genode::Child::Initial_thread(
 								      core->cpu_session(),
 								      core->pd_session().cap(),
 								      _name.string());
@@ -104,7 +104,7 @@ Genode::log("\e[1m\e[38;5;199m", "After Initial_thread", "\033[0m");
 Target_child::~Target_child()
 {
 	if(_child)
-		Genode::destroy(_md_alloc, _child);
+		Genode::destroy(_alloc, _child);
 
 	Genode::log("\033[33m", __func__, "\033[0m() ", _name.string());
 }
@@ -116,7 +116,7 @@ void Target_child::start()
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
-	_child = new (_md_alloc) Genode::Child ( core->rom_connection().dataspace(),
+	_child = new (_alloc) Genode::Child ( core->rom_connection().dataspace(),
 						 Genode::Dataspace_capability(),
 						 core->pd_session().cap(),
 						 core->pd_session(),
@@ -208,7 +208,7 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 
 	// Service not known, cannot intercept it
 	if(!service) {
-		service = new (_md_alloc) Genode::Parent_service(service_name);
+		service = new (_alloc) Genode::Parent_service(service_name);
 		_parent_services.insert(service);
 		Genode::warning("Unknown service: ", service_name);
 	}

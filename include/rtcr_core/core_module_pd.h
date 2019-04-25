@@ -37,7 +37,7 @@ class Rtcr::Core_module_pd : public virtual Rtcr::Core_module_base
 {
 private:
     Genode::Env        &_env;
-    Genode::Allocator  &_md_alloc;
+    Genode::Allocator  &_alloc;
     Genode::Entrypoint &_ep;
 
 protected:
@@ -128,7 +128,7 @@ public:
     return *_pd_session;
   };
   
-    Core_module_pd(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep);
+    Core_module_pd(Genode::Env &env, Genode::Allocator &alloc, Genode::Entrypoint &ep);
     ~Core_module_pd();
 
 };

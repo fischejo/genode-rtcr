@@ -12,11 +12,11 @@ using namespace Rtcr;
 
 
 Core_module_pd::Core_module_pd(Genode::Env &env,
-			       Genode::Allocator &md_alloc,
+			       Genode::Allocator &alloc,
 			       Genode::Entrypoint &ep)
   :
     _env(env),
-    _md_alloc(md_alloc),
+    _alloc(alloc),
     _ep(ep)
 {
 }
@@ -26,8 +26,8 @@ void Core_module_pd::_initialize_pd_session(const char* label, bool &bootstrap)
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-    _pd_root = new (_md_alloc) Pd_root(_env, _md_alloc, _ep, bootstrap);
-    _pd_service = new (_md_alloc) Genode::Local_service("PD", _pd_root);
+    _pd_root = new (_alloc) Pd_root(_env, _alloc, _ep, bootstrap);
+    _pd_service = new (_alloc) Genode::Local_service("PD", _pd_root);
     _pd_session = _find_pd_session(label, pd_root());
 }
 
@@ -60,8 +60,8 @@ Core_module_pd::~Core_module_pd()
 {
     // this should be cleaned right after a checkpoint.
     _destroy_list(_kcap_mappings);
-    Genode::destroy(_md_alloc, _pd_root);
-    Genode::destroy(_md_alloc, _pd_service);    
+    Genode::destroy(_alloc, _pd_root);
+    Genode::destroy(_alloc, _pd_service);    
 }  
 
 
@@ -161,7 +161,7 @@ void Core_module_pd::_create_kcap_mappings()
 	addr_t const kcap  = ((curr - local_array_start) / array_ele_size) << 12;
 
 	if(badge != UNUSED && badge != INVALID_ID) {
-	    Kcap_badge_info *state_info = new (_md_alloc) Kcap_badge_info(kcap, badge);
+	    Kcap_badge_info *state_info = new (_alloc) Kcap_badge_info(kcap, badge);
 	    result.insert(state_info);
 
 #ifdef DEBUG
@@ -217,7 +217,7 @@ void Core_module_pd::_checkpoint()
 	    Genode::addr_t childs_add_kcap = find_kcap_by_badge(child_info->address_space_component().cap().local_name());
 	    Genode::addr_t childs_sta_kcap = find_kcap_by_badge(child_info->stack_area_component().cap().local_name());
 	    Genode::addr_t childs_lin_kcap = find_kcap_by_badge(child_info->linker_area_component().cap().local_name());
-	    stored_info = new (_md_alloc) Stored_pd_session_info(*child_info,
+	    stored_info = new (_alloc) Stored_pd_session_info(*child_info,
 								    childs_pd_kcap,
 								    childs_add_kcap,
 								    childs_sta_kcap,
@@ -298,7 +298,7 @@ void Core_module_pd::_destroy_stored_pd_session(Stored_pd_session_info &stored_i
     _destroy_stored_region_map(stored_info.stored_stack_area);
     _destroy_stored_region_map(stored_info.stored_address_space);
 
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -312,7 +312,7 @@ void Core_module_pd::_destroy_stored_region_map(Stored_region_map_info &stored_i
 	stored_info.stored_attached_region_infos.remove(info);
 	_destroy_stored_attached_region(*info);
     }
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -331,7 +331,7 @@ void Core_module_pd::_destroy_stored_attached_region(Stored_attached_region_info
 	_env.ram().free(stored_info.memory_content);
     }
 
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -357,7 +357,7 @@ void Core_module_pd::_prepare_native_caps(Genode::List<Stored_native_capability_
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap.local_name());
-	    stored_info = new (_md_alloc) Stored_native_capability_info(*child_info, childs_kcap);
+	    stored_info = new (_alloc) Stored_native_capability_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -392,7 +392,7 @@ void Core_module_pd::_destroy_stored_native_cap(Stored_native_capability_info &s
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -417,7 +417,7 @@ void Core_module_pd::_prepare_signal_sources(Genode::List<Stored_signal_source_i
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap.local_name());
-	    stored_info = new (_md_alloc) Stored_signal_source_info(*child_info, childs_kcap);
+	    stored_info = new (_alloc) Stored_signal_source_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -451,7 +451,7 @@ void Core_module_pd::_destroy_stored_signal_source(Stored_signal_source_info &st
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -475,7 +475,7 @@ void Core_module_pd::_prepare_signal_contexts(Genode::List<Stored_signal_context
 	/* No corresponding stored_info => create it */
 	if(!stored_info) {
 	    Genode::addr_t childs_kcap = find_kcap_by_badge(child_info->cap.local_name());
-	    stored_info = new (_md_alloc) Stored_signal_context_info(*child_info, childs_kcap);
+	    stored_info = new (_alloc) Stored_signal_context_info(*child_info, childs_kcap);
 	    stored_infos.insert(stored_info);
 	}
 
@@ -507,7 +507,7 @@ void Core_module_pd::_prepare_signal_contexts(Genode::List<Stored_signal_context
 
 void Core_module_pd::_destroy_stored_signal_context(Stored_signal_context_info &stored_info)
 {  
-    Genode::destroy(_md_alloc, &stored_info);
+    Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -527,7 +527,7 @@ void Core_module_pd::_destroy_list(Genode::List<Kcap_badge_info> &list)
 {
     while(Kcap_badge_info *elem = list.first()) {
 	list.remove(elem);
-	Genode::destroy(_md_alloc, elem);
+	Genode::destroy(_alloc, elem);
     }
 }
 
@@ -536,6 +536,6 @@ void Core_module_pd::_destroy_list(Genode::List<Ref_badge_info> &list)
   while(Ref_badge_info *elem = list.first())
     {
       list.remove(elem);
-      Genode::destroy(_md_alloc, elem);
+      Genode::destroy(_alloc, elem);
     }
 }

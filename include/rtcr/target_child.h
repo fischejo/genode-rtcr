@@ -46,7 +46,7 @@ private:
 	/**
 	 * Local allocator
 	 */
-	Genode::Allocator  &_md_alloc;
+	Genode::Allocator  &_alloc;
 	/**
 	 * Entrypoint for managing child's resource-sessions (PD, CPU, RAM)
 	 */
@@ -88,7 +88,7 @@ public:
 	 * TODO Separate child's name and filename to support multiple child's with the same rom module
 	 */
 	Target_child(Genode::Env &env,
-		     Genode::Allocator &md_alloc,
+		     Genode::Allocator &alloc,
 		     Genode::Service_registry &parent_services,
 		     const char *name);
 

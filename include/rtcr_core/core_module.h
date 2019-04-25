@@ -47,12 +47,12 @@ private:
 
 
 protected:
-  Core_state &_initialize_state(Genode::Allocator &md_alloc);
+  Core_state &_initialize_state(Genode::Allocator &alloc);
   
 public:  
 
   Core_module(Genode::Env &env,
-	      Genode::Allocator &md_alloc,
+	      Genode::Allocator &alloc,
 	      Genode::Entrypoint &ep,
 	      const char* label,
 	      bool &bootstrap,
@@ -88,13 +88,13 @@ class Rtcr::Core_module_factory : public Module_factory
 {
 public:
   Module* create(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
+		 Genode::Allocator &alloc,
 		 Genode::Entrypoint &ep,
 		 const char* label,
 		 bool &bootstrap,
 		 Genode::Xml_node *config)
   {   
-    return new (md_alloc) Core_module(env, md_alloc, ep, label, bootstrap, config);
+    return new (alloc) Core_module(env, alloc, ep, label, bootstrap, config);
   }
     
   Module_name name()

@@ -34,7 +34,7 @@ class Rtcr::Log_module : public virtual Module
 {
 private:  
     Genode::Env        &_env;
-    Genode::Allocator  &_md_alloc;
+    Genode::Allocator  &_alloc;
     Genode::Entrypoint &_ep;
 
     Log_root *_log_root;
@@ -44,12 +44,12 @@ private:
     Log_state &_log_state;
   
     void _destroy_stored_log_session(Stored_log_session_info &stored_info);
-    Log_state &_initialize_state(Genode::Allocator &md_alloc);
+    Log_state &_initialize_state(Genode::Allocator &alloc);
   
 public:
   
   Log_module(Genode::Env &env,
-	      Genode::Allocator &md_alloc,
+	      Genode::Allocator &alloc,
 	      Genode::Entrypoint &ep,
 	      bool &bootstrap);
 
@@ -70,13 +70,13 @@ class Rtcr::Log_module_factory : public Module_factory
 {
 public:
   Module* create(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
+		 Genode::Allocator &alloc,
 		 Genode::Entrypoint &ep,
 		 const char* label,
 		 bool &bootstrap,
 		 Genode::Xml_node *config)
   {    
-    return new (md_alloc) Log_module(env, md_alloc, ep,  bootstrap);
+    return new (alloc) Log_module(env, alloc, ep,  bootstrap);
   }
     
   Module_name name()

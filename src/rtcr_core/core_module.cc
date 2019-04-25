@@ -15,18 +15,18 @@ Rtcr::Core_module_factory _core_module_factory_instance;
 
 
 Core_module::Core_module(Genode::Env &env,
-			 Genode::Allocator &md_alloc,
+			 Genode::Allocator &alloc,
 			 Genode::Entrypoint &ep,
 			 const char* label,
 			 bool &bootstrap,
 			 Genode::Xml_node *config)
     :
-    _state(_initialize_state(md_alloc)),
-    Core_module_pd(env, md_alloc, ep),
-    Core_module_cpu(env, md_alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
-    Core_module_rm(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
-    Core_module_ram(env, md_alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
-    Core_module_rom(env, md_alloc, ep)
+    _state(_initialize_state(alloc)),
+    Core_module_pd(env, alloc, ep),
+    Core_module_cpu(env, alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_rm(env, alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_ram(env, alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
+    Core_module_rom(env, alloc, ep)
 {
     _initialize_pd_session(label, bootstrap);
     _initialize_cpu_session(label, bootstrap);
@@ -36,9 +36,9 @@ Core_module::Core_module(Genode::Env &env,
 }
 
 
-Core_state &Core_module::_initialize_state(Genode::Allocator &md_alloc)
+Core_state &Core_module::_initialize_state(Genode::Allocator &alloc)
 {
-  return *new(md_alloc) Core_state();
+  return *new(alloc) Core_state();
 }
 
 

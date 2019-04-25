@@ -15,28 +15,28 @@ Rtcr::Log_module_factory _log_module_factory_instance;
 
 
 Log_module::Log_module(Genode::Env &env,
-		       Genode::Allocator &md_alloc,
+		       Genode::Allocator &alloc,
 		       Genode::Entrypoint &ep,
 		       bool &bootstrap)
   :
     _env(env),
-    _md_alloc(md_alloc),
+    _alloc(alloc),
     _ep(ep),
     _bootstrap(bootstrap),
-    _log_state(_initialize_state(md_alloc))
+    _log_state(_initialize_state(alloc))
 {}
 
 
 Log_module::~Log_module()
 {
-  if(_log_root) Genode::destroy(_md_alloc, _log_root);
-  if(_log_service) Genode::destroy(_md_alloc, _log_service);
+  if(_log_root) Genode::destroy(_alloc, _log_root);
+  if(_log_service) Genode::destroy(_alloc, _log_service);
 }
 
 
-Log_state &Log_module::_initialize_state(Genode::Allocator &md_alloc)
+Log_state &Log_module::_initialize_state(Genode::Allocator &alloc)
 {
-  return *new(md_alloc) Log_state();
+  return *new(alloc) Log_state();
 }
 
 
@@ -80,7 +80,7 @@ Module_state *Log_module::checkpoint()
       /* No corresponding stored_info => create it */
       if(!stored_info) {
 	  Genode::addr_t childs_kcap = _core_module->find_kcap_by_badge(child_info->cap().local_name());
-	  stored_info = new (_md_alloc) Stored_log_session_info(*child_info, childs_kcap);
+	  stored_info = new (_alloc) Stored_log_session_info(*child_info, childs_kcap);
 	  stored_infos.insert(stored_info);
 	}
 
@@ -117,7 +117,7 @@ void Log_module::_destroy_stored_log_session(Stored_log_session_info &stored_inf
 #ifdef DEBUG
     Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-  Genode::destroy(_md_alloc, &stored_info);
+  Genode::destroy(_alloc, &stored_info);
 }
 
 
@@ -140,8 +140,8 @@ Genode::Service *Log_module::resolve_session_request(const char *service_name,
   
   if(!Genode::strcmp(service_name, "LOG")) {
     if(!_log_root) {
-      _log_root = new (_md_alloc) Log_root(_env, _md_alloc, _ep, _bootstrap);
-      _log_service = new (_md_alloc) Genode::Local_service("LOG",_log_root);
+      _log_root = new (_alloc) Log_root(_env, _alloc, _ep, _bootstrap);
+      _log_service = new (_alloc) Genode::Local_service("LOG",_log_root);
     }
     return _log_service;
   }

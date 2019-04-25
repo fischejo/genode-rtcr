@@ -37,7 +37,7 @@ class Rtcr::Timer_module : public virtual Module
 {
 private:  
     Genode::Env        &_env;
-    Genode::Allocator  &_md_alloc;
+    Genode::Allocator  &_alloc;
     Genode::Entrypoint &_ep;
 
     Timer_root *_timer_root;
@@ -47,12 +47,12 @@ private:
     Timer_state &_timer_state;
 
     void _destroy_stored_timer_session(Stored_timer_session_info &stored_info);
-    Timer_state &_initialize_state(Genode::Allocator &_md_alloc);
+    Timer_state &_initialize_state(Genode::Allocator &_alloc);
     
 public:
   
     Timer_module(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
+		 Genode::Allocator &alloc,
 		 Genode::Entrypoint &ep,
 		 bool &bootstrap);
 
@@ -73,13 +73,13 @@ class Rtcr::Timer_module_factory : public Module_factory
 {
 public:
     Module* create(Genode::Env &env,
-		   Genode::Allocator &md_alloc,
+		   Genode::Allocator &alloc,
 		   Genode::Entrypoint &ep,
 		   const char* label,
 		   bool &bootstrap,
 		   Genode::Xml_node *config)
 	{    
-	    return new (md_alloc) Timer_module(env, md_alloc, ep,  bootstrap);
+	    return new (alloc) Timer_module(env, alloc, ep,  bootstrap);
 	}
     
     Module_name name()
