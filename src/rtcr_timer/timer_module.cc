@@ -52,7 +52,7 @@ void Timer_module::initialize(Genode::List<Module> &modules)
 
 Timer_state &Timer_module::_initialize_state(Genode::Allocator &_alloc)
 {
-	return *new(_alloc) Timer_state();
+	return *new(_alloc) Timer_state(_alloc);
 }
 
 

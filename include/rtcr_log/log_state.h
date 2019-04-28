@@ -22,8 +22,10 @@ namespace Rtcr {
 
 class Rtcr::Log_state : public Module_state
 {
+protected:
+	Genode::Allocator &_alloc;
 public:
-	Log_state();
+	Log_state(Genode::Allocator &alloc);
 	~Log_state();
 
 	Genode::List<Stored_log_session_info> _stored_log_sessions;

@@ -8,15 +8,16 @@
 
 using namespace Rtcr;
 
-Log_state::Log_state()
-{
-
-}
+Log_state::Log_state(Genode::Allocator &alloc)
+	: _alloc(alloc) {}
 
 
 Log_state::~Log_state()
 {
-	// TODO delete all list elements
+	while(Stored_log_session_info *log_info = _stored_log_sessions.first()) {
+		_stored_log_sessions.remove(log_info);
+		Genode::destroy(_alloc, log_info);
+	}
 }
 
 

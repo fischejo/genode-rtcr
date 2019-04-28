@@ -36,7 +36,7 @@ Log_module::~Log_module()
 
 Log_state &Log_module::_initialize_state(Genode::Allocator &alloc)
 {
-	return *new(alloc) Log_state();
+	return *new(alloc) Log_state(alloc);
 }
 
 

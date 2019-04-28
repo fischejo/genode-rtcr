@@ -9,24 +9,46 @@
 using namespace Rtcr;
 
 
-Core_state::Core_state()
+Core_state::Core_state(Genode::Allocator &alloc)
 	:
+	_alloc(alloc),
 	_cap_idx_alloc_addr(0)
 { }
 
 
 Core_state::~Core_state()
 {
-//	_destroy_pd();
-//	_destroy_cpu();
-//	_destroy_ram();
-//	_destroy_rom();
-//	_destroy_rm();	
+	/* destroy pd list */
+	while(Stored_pd_session_info *pd_info = _stored_pd_sessions.first()) {
+		_stored_pd_sessions.remove(pd_info);
+		Genode::destroy(_alloc, pd_info);
+	}
+	/* destroy cpu list */
+	while(Stored_cpu_session_info *cpu_info = _stored_cpu_sessions.first()) {
+		_stored_cpu_sessions.remove(cpu_info);
+		Genode::destroy(_alloc, cpu_info);
+	}
+	/* destroy ram list */
+	while(Stored_ram_session_info *ram_info = _stored_ram_sessions.first()) {
+		_stored_ram_sessions.remove(ram_info);
+		Genode::destroy(_alloc, ram_info);
+	}
+	/* destroy ram list */
+	while(Stored_rom_session_info *rom_info = _stored_rom_sessions.first()) {
+		_stored_rom_sessions.remove(rom_info);
+		Genode::destroy(_alloc, rom_info);
+	}
+	/* destroy rm list */
+	while(Stored_rm_session_info *rm_info = _stored_rm_sessions.first()) {
+		_stored_rm_sessions.remove(rm_info);
+		Genode::destroy(_alloc, rm_info);
+	}
 }
 
 
 void Core_state::print(Genode::Output &output) const
 {
+
 	_print_pd(output);
 	_print_cpu(output);
 	_print_ram(output);

@@ -21,10 +21,13 @@ namespace Rtcr {
 
 class Rtcr::Timer_state : public Module_state
 {
+protected:
+	Genode::Allocator &_alloc;
+	
 public:
 	Genode::List<Stored_timer_session_info> _stored_timer_sessions;
 
-	Timer_state();
+	Timer_state(Genode::Allocator &alloc);
 	~Timer_state();
     
 	void print(Genode::Output &output) const override;

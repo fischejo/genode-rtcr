@@ -37,7 +37,7 @@ Core_module::Core_module(Genode::Env &env,
 
 Core_state &Core_module::_initialize_state(Genode::Allocator &alloc)
 {
-	return *new(alloc) Core_state();
+	return *new(alloc) Core_state(alloc);
 }
 
 

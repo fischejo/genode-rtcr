@@ -30,6 +30,8 @@ class Rtcr::Core_state : public virtual Module_state
 {
 protected:
 
+	Genode::Allocator &_alloc;
+	
 	Genode::Dataspace_capability _find_stored_dataspace(Genode::uint16_t badge,
 							    Genode::List<Stored_ram_session_info> &state_infos);
 
@@ -49,7 +51,7 @@ protected:
 	void _print_rm(Genode::Output &output) const;
     
 public:
-	Core_state();
+	Core_state(Genode::Allocator &alloc);
 	~Core_state();
     
 	/**

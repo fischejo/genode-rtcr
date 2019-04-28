@@ -8,13 +8,17 @@
 
 using namespace Rtcr;
 
-Timer_state::Timer_state()
+Timer_state::Timer_state(Genode::Allocator &alloc)
+	: _alloc(alloc)
 {}
 
 
 Timer_state::~Timer_state()
 {
-	// TODO delete all list elements
+	while(Stored_timer_session_info *timer_info = _stored_timer_sessions.first()) {
+		_stored_timer_sessions.remove(timer_info);
+		Genode::destroy(_alloc, timer_info);
+	}	
 }
 
 
