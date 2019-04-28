@@ -78,7 +78,7 @@ protected:
 
 public:
 	Ram_session_component(Genode::Env &env, Genode::Allocator &md_alloc,
-			const char *label, const char *creation_args, bool &bootstrap_phase);
+			      const char *label, const char *creation_args, bool &bootstrap_phase);
 	~Ram_session_component();
 
 	Genode::Ram_session_capability parent_cap() { return _parent_ram.cap(); }
@@ -156,7 +156,7 @@ protected:
 
 public:
 	Ram_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep, bool &bootstrap_phase);
-    ~Ram_root();
+	~Ram_root();
 
 	Genode::List<Ram_session_component> &session_infos() { return _session_rpc_objs; }
 };

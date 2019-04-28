@@ -8,45 +8,47 @@
 
 using namespace Rtcr;
 
-// initialize List
-Module_factory* Module_factory::_head = NULL;
+Module_factory* Module_factory::_head = NULL;  /* initialize List */
+
 
 Module_factory::~Module_factory() {}
 
+
 Module_factory::Module_factory() {
-  _next = _head;
-  _head = this;  
+	_next = _head;
+	_head = this;  
 }
+
 
 void Module_factory::print()
 {
-  Module_factory* r = Module_factory::first();
-  while(r)
-    {
-      Genode::log("Register Module: ", r->name());
-      r = r->next();
-    }
+	Module_factory* r = Module_factory::first();
+	while(r) {
+		Genode::log("Register Module: ", r->name());
+		r = r->next();
+	}
 }
+
 
 Module_factory* Module_factory::get(const Module_name name)
 {
-  Module_factory* r = Module_factory::first();
-  while(r)
-    {
-      if(!Genode::strcmp(r->name().string(), name.string()))
-	return r;
-      r = r->next();
-    }
-  return NULL;
+	Module_factory* r = Module_factory::first();
+	while(r) {
+		if(!Genode::strcmp(r->name().string(), name.string()))
+			return r;
+		r = r->next();
+	}
+	return NULL;
 }
-
 
 
 Module_factory* Module_factory::first()
 {
-  return _head;
+	return _head;
 }
+
+
 Module_factory* Module_factory::next()
 {
-  return _next;
+	return _next;
 }

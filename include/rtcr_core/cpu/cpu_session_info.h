@@ -37,7 +37,7 @@ struct Rtcr::Cpu_session_info : Session_rpc_info
 	Genode::List<Cpu_thread_component> cpu_threads;
 
 	Cpu_session_info(const char* creation_args, bool bootstrapped)
-	:
+		:
 		Session_rpc_info(creation_args, "", bootstrapped),
 		cpu_threads_lock(), cpu_threads()
 	{ }

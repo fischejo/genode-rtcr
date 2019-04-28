@@ -27,9 +27,16 @@ struct Rtcr::Dataspace_translation_info : Genode::List<Dataspace_translation_inf
 	Genode::size_t                   size;
 	bool                             processed;
 
-	Dataspace_translation_info(Genode::Ram_dataspace_capability ckpt_ds_cap, Genode::Dataspace_capability resto_ds_cap, Genode::size_t size)
-	: ckpt_ds_cap(ckpt_ds_cap), resto_ds_cap(resto_ds_cap), size(size), processed(false) { }
-
+	Dataspace_translation_info(Genode::Ram_dataspace_capability ckpt_ds_cap,
+				   Genode::Dataspace_capability resto_ds_cap,
+				   Genode::size_t size)
+		:
+		ckpt_ds_cap(ckpt_ds_cap),
+		resto_ds_cap(resto_ds_cap),
+		size(size),
+		processed(false)
+	{ }
+    
 	Dataspace_translation_info *find_by_resto_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->resto_ds_cap.local_name())
@@ -37,7 +44,7 @@ struct Rtcr::Dataspace_translation_info : Genode::List<Dataspace_translation_inf
 		Dataspace_translation_info *info = next();
 		return info ? info->find_by_resto_badge(badge) : 0;
 	}
-
+    
 	Dataspace_translation_info *find_by_ckpt_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->ckpt_ds_cap.local_name())
@@ -45,13 +52,13 @@ struct Rtcr::Dataspace_translation_info : Genode::List<Dataspace_translation_inf
 		Dataspace_translation_info *info = next();
 		return info ? info->find_by_ckpt_badge(badge) : 0;
 	}
-
+    
 	void print(Genode::Output &output) const
 	{
 		using Genode::Hex;
 
 		Genode::print(output, "resto ds ", resto_ds_cap, ", dest ds ", ckpt_ds_cap,
-				", size=", Hex(size));
+			      ", size=", Hex(size));
 	}
 };
 

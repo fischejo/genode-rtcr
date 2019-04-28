@@ -25,7 +25,7 @@ namespace Rtcr {
  * Monitors allocated Ram dataspaces
  */
 struct Rtcr::Ram_dataspace_info : Normal_obj_info, private Simple_counter<Ram_dataspace_info>,
-                                  Genode::List<Ram_dataspace_info>::Element
+	    Genode::List<Ram_dataspace_info>::Element
 {
 	/**
 	 * Allocated Ram dataspace
@@ -35,8 +35,8 @@ struct Rtcr::Ram_dataspace_info : Normal_obj_info, private Simple_counter<Ram_da
 	Genode::Cache_attribute          const cached;
 
 	Ram_dataspace_info(Genode::Ram_dataspace_capability ds_cap, Genode::size_t size, Genode::Cache_attribute cached,
-			bool bootstrapped)
-	:
+			   bool bootstrapped)
+		:
 		Normal_obj_info (bootstrapped),
 		cap      (ds_cap),
 		size     (size),
@@ -73,7 +73,7 @@ struct Rtcr::Ram_dataspace_info : Normal_obj_info, private Simple_counter<Ram_da
 		using Genode::Hex;
 
 		Genode::print(output, cap, ", size=", Hex(size), ", cached=", static_cast<unsigned>(cached),
-				", timestamp=", timestamp(), ", ");
+			      ", timestamp=", timestamp(), ", ");
 		Normal_obj_info::print(output);
 	}
 };

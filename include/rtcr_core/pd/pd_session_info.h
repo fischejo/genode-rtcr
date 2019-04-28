@@ -51,7 +51,7 @@ struct Rtcr::Pd_session_info : Session_rpc_info
 	Genode::List<Native_capability_info> native_caps;
 
 	Pd_session_info(const char* creation_args, bool bootstrapped)
-	:
+		:
 		Session_rpc_info(creation_args, "", bootstrapped),
 		signal_sources_lock(), signal_sources(),
 		signal_contexts_lock(), signal_contexts(),

@@ -34,7 +34,7 @@ struct Rtcr::Ram_session_info : Session_rpc_info
 	Genode::List<Ram_dataspace_info> ram_dataspaces;
 
 	Ram_session_info(const char* creation_args, bool bootstrapped)
-	:
+		:
 		Session_rpc_info(creation_args, "", bootstrapped),
 		ref_account_cap(), ram_dataspaces_lock(), ram_dataspaces()
 	{ }

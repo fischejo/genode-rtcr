@@ -23,14 +23,14 @@ namespace Rtcr {
 struct Rtcr::Stored_signal_source_info : Stored_normal_info, Genode::List<Stored_signal_source_info>::Element
 {
 	Stored_signal_source_info(Signal_source_info &info, Genode::addr_t targets_kcap)
-	:
+		:
 		Stored_normal_info(targets_kcap, info.cap.local_name(), info.bootstrapped)
 	{ }
 
 	Stored_signal_source_info(Genode::addr_t kcap,
-                                        Genode::uint16_t local_name,
-                                        bool bootstrapped)
-	:
+				  Genode::uint16_t local_name,
+				  bool bootstrapped)
+		:
 		Stored_normal_info(kcap, local_name, bootstrapped)
 	{ }
 

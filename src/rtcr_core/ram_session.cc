@@ -14,22 +14,22 @@ void Ram_session_component::_destroy_ramds_info(Ram_dataspace_info &ramds_info)
 {
 
 	Genode::Ram_dataspace_capability ds_cap =
-			Genode::static_cap_cast<Genode::Ram_dataspace>(ramds_info.cap);
+		Genode::static_cap_cast<Genode::Ram_dataspace>(ramds_info.cap);
 
-	// Remove the Ram_dataspace_info from the list
+	/* Remove the Ram_dataspace_info from the list */
 	_parent_state.ram_dataspaces.remove(&ramds_info);
 
-	// Destroy Ram_dataspace_info
+	/* Destroy Ram_dataspace_info */
 	Genode::destroy(_md_alloc, &ramds_info);
 
-	// Free from parent
+	/* Free from parent */
 	_parent_ram.free(ds_cap);
 }
 
 
 Ram_session_component::Ram_session_component(Genode::Env &env, Genode::Allocator &md_alloc,
-		const char *label, const char *creation_args, bool &bootstrap_phase)
-:
+					     const char *label, const char *creation_args, bool &bootstrap_phase)
+	:
 	_env                (env),
 	_md_alloc           (md_alloc),
 	_bootstrap_phase    (bootstrap_phase),
@@ -43,9 +43,8 @@ Ram_session_component::Ram_session_component(Genode::Env &env, Genode::Allocator
 
 Ram_session_component::~Ram_session_component()
 {
-	// Destroy all Ram_dataspace_infos
-	while(Ram_dataspace_info *rds_info = _parent_state.ram_dataspaces.first())
-	{
+	/* Destroy all Ram_dataspace_infos */
+	while(Ram_dataspace_info *rds_info = _parent_state.ram_dataspaces.first()) {
 		_destroy_ramds_info(*rds_info);
 	}
 
@@ -66,17 +65,16 @@ Genode::Ram_dataspace_capability Ram_session_component::alloc(Genode::size_t siz
 {
 	if(verbose_debug) Genode::log("Ram::\033[33m", __func__, "\033[0m(size=", Genode::Hex(size),")");
 
+	auto result_cap = _parent_ram.alloc(size, cached);
 
-		auto result_cap = _parent_ram.alloc(size, cached);
+	/* Create a Ram_dataspace_info to monitor the newly created Ram_dataspace */
+	Ram_dataspace_info *new_rds_info = new (_md_alloc) Ram_dataspace_info(result_cap, size, cached, _bootstrap_phase);
+	Genode::Lock::Guard guard(_parent_state.ram_dataspaces_lock);
+	_parent_state.ram_dataspaces.insert(new_rds_info);
 
-		// Create a Ram_dataspace_info to monitor the newly created Ram_dataspace
-		Ram_dataspace_info *new_rds_info = new (_md_alloc) Ram_dataspace_info(result_cap, size, cached, _bootstrap_phase);
-		Genode::Lock::Guard guard(_parent_state.ram_dataspaces_lock);
-		_parent_state.ram_dataspaces.insert(new_rds_info);
+	if(verbose_debug) Genode::log("  result: ", result_cap);
 
-		if(verbose_debug) Genode::log("  result: ", result_cap);
-
-		return result_cap;
+	return result_cap;
 
 }
 
@@ -87,22 +85,19 @@ void Ram_session_component::free(Genode::Ram_dataspace_capability ds_cap)
 
 	Genode::Lock::Guard lock_guard(_parent_state.ram_dataspaces_lock);
 
-	// Find the Ram_dataspace_info which monitors the given Ram_dataspace
+	/* Find the Ram_dataspace_info which monitors the given Ram_dataspace */
 	Ram_dataspace_info *rds_info = _parent_state.ram_dataspaces.first();
 	if(rds_info) rds_info = rds_info->find_by_badge(ds_cap.local_name());
 
-	// Ram_dataspace_info found?
-	if(rds_info)
-	{
+	/* Ram_dataspace_info found? */
+	if(rds_info) {
 		_destroy_ramds_info(*rds_info);
-	}
-	else
-	{
+	} else {
 		Genode::warning(__func__, " Ram_dataspace_info not found for ", ds_cap);
 		return;
 	}
-
 }
+
 
 int Ram_session_component::ref_account(Genode::Ram_session_capability ram_session)
 {
@@ -116,6 +111,7 @@ int Ram_session_component::ref_account(Genode::Ram_session_capability ram_sessio
 	return result;
 }
 
+
 int Ram_session_component::transfer_quota(Genode::Ram_session_capability ram_session, Genode::size_t amount)
 {
 	if(verbose_debug) Genode::log("Ram::\033[33m", __func__, "\033[0m(to=", ram_session, ", size=", amount, ")");
@@ -127,6 +123,7 @@ int Ram_session_component::transfer_quota(Genode::Ram_session_capability ram_ses
 	return result;
 }
 
+
 Genode::size_t Ram_session_component::quota()
 {
 	if(verbose_debug) Genode::log("Ram::\033[33m", __func__, "\033[0m()");
@@ -137,6 +134,7 @@ Genode::size_t Ram_session_component::quota()
 
 	return result;
 }
+
 
 Genode::size_t Ram_session_component::used()
 {
@@ -161,12 +159,13 @@ Ram_session_component *Ram_root::_create_session(const char *args)
 {
 	if(verbose_debug) Genode::log("Ram_root::\033[33m", __func__, "\033[0m(", args,")");
 
-	// Extracting label from args
+	/* Extracting label from args */
 	char label_buf[128];
 	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
 	label_arg.string(label_buf, sizeof(label_buf), "");
 
-	// Revert ram_quota calculation, because the monitor needs the original session creation argument
+	/* Revert ram_quota calculation, because the monitor needs the original
+	 * session creation argument */
 	char ram_quota_buf[32];
 	char readjusted_args[160];
 	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
@@ -177,9 +176,12 @@ Ram_session_component *Ram_root::_create_session(const char *args)
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
-	// Create custom RAM session
-	Ram_session_component *new_session =
-			new (md_alloc()) Ram_session_component(_env, _md_alloc, label_buf, readjusted_args, _bootstrap_phase);
+	/* Create custom RAM session */
+	Ram_session_component *new_session = new (md_alloc()) Ram_session_component(_env,
+										    _md_alloc,
+										    label_buf,
+										    readjusted_args,
+										    _bootstrap_phase);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -220,7 +222,7 @@ void Ram_root::_destroy_session(Ram_session_component *session)
 
 
 Ram_root::Ram_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep, bool &bootstrap_phase)
-:
+	:
 	Root_component<Ram_session_component>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
@@ -232,10 +234,10 @@ Ram_root::Ram_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entryp
 	if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
 }
 
+
 Ram_root::~Ram_root()
 {
-	while(Ram_session_component *obj = _session_rpc_objs.first())
-	{
+	while(Ram_session_component *obj = _session_rpc_objs.first()) {
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}

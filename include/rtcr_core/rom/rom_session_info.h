@@ -27,7 +27,7 @@ struct Rtcr::Rom_session_info : Session_rpc_info
 	Genode::Signal_context_capability sigh;
 
 	Rom_session_info(const char* creation_args, bool bootstrapped)
-	:
+		:
 		Session_rpc_info(creation_args, "", bootstrapped),
 		dataspace(), size(0), sigh()
 	{ }

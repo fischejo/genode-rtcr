@@ -54,7 +54,7 @@ private:
 
 public:
 	Timer_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-			const char *creation_args, bool bootstrapped = false);
+				const char *creation_args, bool bootstrapped = false);
 	~Timer_session_component();
 
 	Timer::Session_capability parent_cap() { return _parent_timer.cap(); }
@@ -120,9 +120,9 @@ protected:
 
 public:
 	Timer_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep, bool &bootstrap_phase);
-    ~Timer_root();
+	~Timer_root();
     
-    Genode::List<Timer_session_component> &session_infos() { return _session_rpc_objs;  }
+	Genode::List<Timer_session_component> &session_infos() { return _session_rpc_objs;  }
 };
 
 #endif /* _RTCR_TIMER_SESSION_H_ */

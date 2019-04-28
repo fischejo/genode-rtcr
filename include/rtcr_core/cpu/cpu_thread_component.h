@@ -47,8 +47,8 @@ private:
 public:
 
 	Cpu_thread_component(Genode::Allocator &md_alloc, Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
-			Genode::Pd_session_capability pd_session_cap, const char *name, Genode::Cpu_session::Weight weight,
-			Genode::addr_t utcb, Genode::Affinity::Location affinity, bool &bootstrap_phase);
+			     Genode::Pd_session_capability pd_session_cap, const char *name, Genode::Cpu_session::Weight weight,
+			     Genode::addr_t utcb, Genode::Affinity::Location affinity, bool &bootstrap_phase);
 	~Cpu_thread_component();
 
 	Genode::Capability<Genode::Cpu_thread> parent_cap() { return _parent_cpu_thread; }

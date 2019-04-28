@@ -58,7 +58,7 @@ private:
 
 public:
 	Rom_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-			const char *label, const char *creation_args, bool &bootstrap_phase);
+			      const char *label, const char *creation_args, bool &bootstrap_phase);
 	~Rom_session_component();
 
 	Genode::Rom_session_capability parent_cap() { return _parent_rom.cap(); }
@@ -120,7 +120,7 @@ protected:
 
 public:
 	Rom_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep, bool &bootstrap_phase);
-    ~Rom_root();
+	~Rom_root();
 
 	Genode::List<Rom_session_component> &session_infos() { return _session_rpc_objs; }
 };

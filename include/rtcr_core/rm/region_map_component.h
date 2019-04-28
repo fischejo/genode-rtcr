@@ -58,7 +58,7 @@ private:
 
 public:
 	Region_map_component(Genode::Allocator &md_alloc, Genode::Capability<Genode::Region_map> region_map_cap,
-			Genode::size_t size, const char *label, bool &bootstrap_phase);
+			     Genode::size_t size, const char *label, bool &bootstrap_phase);
 	~Region_map_component();
 
 	Genode::Capability<Genode::Region_map> parent_cap() { return _parent_region_map; }
@@ -76,7 +76,7 @@ public:
 	 * Attaches a dataspace to parent's Region map and stores information about the attachment
 	 */
 	Local_addr attach(Genode::Dataspace_capability ds_cap, Genode::size_t size, Genode::off_t offset,
-			bool use_local_addr, Region_map::Local_addr local_addr, bool executable) override;
+			  bool use_local_addr, Region_map::Local_addr local_addr, bool executable) override;
 	/**
 	 * Detaches the dataspace from parent's region map and destroys the information about the attachment
 	 */

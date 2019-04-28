@@ -29,8 +29,8 @@ struct Rtcr::Signal_context_info : Normal_obj_info, Genode::List<Signal_context_
 	unsigned long                             const imprint;
 
 	Signal_context_info(Genode::Signal_context_capability sc_cap,
-			Genode::Capability<Genode::Signal_source> ss_cap, unsigned long imprint, bool bootstrapped)
-	:
+			    Genode::Capability<Genode::Signal_source> ss_cap, unsigned long imprint, bool bootstrapped)
+		:
 		Normal_obj_info(bootstrapped),
 		cap     (sc_cap),
 		ss_cap  (ss_cap),

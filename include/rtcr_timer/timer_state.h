@@ -16,18 +16,18 @@
 
 
 namespace Rtcr {
-    class Timer_state;
+	class Timer_state;
 }
 
 class Rtcr::Timer_state : public Module_state
 {
 public:
-    Genode::List<Stored_timer_session_info> _stored_timer_sessions;
-    
-    void print(Genode::Output &output) const override;
+	Genode::List<Stored_timer_session_info> _stored_timer_sessions;
 
-    Timer_state();
-    ~Timer_state();
+	Timer_state();
+	~Timer_state();
+    
+	void print(Genode::Output &output) const override;
 };
 
 #endif /* _RTCR_TIMER_STATE_H_ */

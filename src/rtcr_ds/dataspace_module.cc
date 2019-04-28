@@ -17,43 +17,41 @@ Dataspace_module::Dataspace_module(Genode::Env &env,
 				   Genode::Allocator &alloc,
 				   Genode::Entrypoint &ep)
 
-  :
-  _env(env),
-  _alloc(alloc),
-  _ep(ep)
-{
-
-}
+	:
+	_env(env),
+	_alloc(alloc),
+	_ep(ep)
+{ }
 
 
 Module_state *Dataspace_module::checkpoint()
 {
 #ifdef DEBUG
-    Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
   
 #ifdef DEBUG
-  Dataspace_translation_info *memory_info_d = _dataspace_translations.first();  
-  Genode::log("Dataspaces to checkpoint:");  
-    while(memory_info_d) {
-	Genode::log(" ", *memory_info_d);
-	memory_info_d = memory_info_d->next();
-    }
+	Dataspace_translation_info *memory_info_d = _dataspace_translations.first();  
+	Genode::log("Dataspaces to checkpoint:");  
+	while(memory_info_d) {
+		Genode::log(" ", *memory_info_d);
+		memory_info_d = memory_info_d->next();
+	}
 #endif
 
-    Dataspace_translation_info *memory_info = _dataspace_translations.first();
-  while(memory_info) {
-    _checkpoint_dataspace(memory_info->ckpt_ds_cap,
-			  memory_info->resto_ds_cap,
-			  0,
-			  memory_info->size);
+	Dataspace_translation_info *memory_info = _dataspace_translations.first();
+	while(memory_info) {
+		_checkpoint_dataspace(memory_info->ckpt_ds_cap,
+				      memory_info->resto_ds_cap,
+				      0,
+				      memory_info->size);
 
-    memory_info = memory_info->next();
+		memory_info = memory_info->next();
 
-  }
+	}
 
-  // this module does not provide a state which might be checkpointed.
-  return 0;
+	/* this module does not provide a state which might be checkpointed. */
+	return 0;
 }
 
 
@@ -63,16 +61,16 @@ void Dataspace_module::_checkpoint_dataspace(Genode::Dataspace_capability dst_ds
 					     Genode::size_t size)
 {
 #ifdef DEBUG
-    Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
     
-  char *dst_addr_start = _env.rm().attach(dst_ds_cap);
-  char *src_addr_start = _env.rm().attach(src_ds_cap);
+	char *dst_addr_start = _env.rm().attach(dst_ds_cap);
+	char *src_addr_start = _env.rm().attach(src_ds_cap);
 
-  Genode::memcpy(dst_addr_start + dst_offset, src_addr_start, size);
+	Genode::memcpy(dst_addr_start + dst_offset, src_addr_start, size);
 
-  _env.rm().detach(src_addr_start);
-  _env.rm().detach(dst_addr_start);
+	_env.rm().detach(src_addr_start);
+	_env.rm().detach(dst_addr_start);
 }
 
 
@@ -81,20 +79,21 @@ void Dataspace_module::register_dataspace(Genode::Ram_dataspace_capability ckpt_
 					  Genode::size_t size)
 {
 #ifdef DEBUG
-    Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
-  Dataspace_translation_info *trans_info = _dataspace_translations.first();
-  if(trans_info)
-    trans_info = trans_info->find_by_resto_badge(resto_ds_cap.local_name());
+	Dataspace_translation_info *trans_info = _dataspace_translations.first();
+	if(trans_info)
+		trans_info = trans_info->find_by_resto_badge(resto_ds_cap.local_name());
 
-  if(!trans_info) {
-    trans_info = new (_alloc) Dataspace_translation_info(ckpt_ds_cap,
-							    resto_ds_cap,
-							    size);
-    _dataspace_translations.insert(trans_info);
-  }  
+	if(!trans_info) {
+		trans_info = new (_alloc) Dataspace_translation_info(ckpt_ds_cap,
+								     resto_ds_cap,
+								     size);
+		_dataspace_translations.insert(trans_info);
+	}  
 }
+
 
 void Dataspace_module::restore(Module_state *state)
 {
@@ -105,7 +104,7 @@ void Dataspace_module::restore(Module_state *state)
 Genode::Service *Dataspace_module::resolve_session_request(const char *service_name,
 							   const char *args)
 {
-  return 0;
+	return 0;
 }
 
 

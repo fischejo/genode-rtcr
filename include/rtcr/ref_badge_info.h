@@ -38,7 +38,6 @@ struct Rtcr::Ref_badge_info : Genode::List<Ref_badge_info>::Element
 	void print(Genode::Output &output) const
 	{
 		using Genode::Hex;
-
 		Genode::print(output, "<ref_badge=", ref_badge, ">");
 	}
 };

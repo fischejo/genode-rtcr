@@ -17,7 +17,6 @@
 #include <cpu_session/cpu_session.h>
 #include <util/list.h>
 
-
 /* Local includes */
 #include <rtcr/core_module_abstract.h>
 #include <rtcr/module.h>
@@ -27,7 +26,6 @@
 namespace Rtcr {
 	class Target_child;
 }
-
 
 /**
  * Encapsulates the policy and creation of the child
@@ -77,15 +75,26 @@ private:
 	 */
 	Genode::Child                 *_child;
 
+	/**
+	 * In order to create a child process, a few sessions are necessary. These
+	 * are provided by a core module implementation.
+	 */
 	Core_module_abstract *core;
-  	Genode::List<Module> modules;
+
+	/**
+	 * list of all currently loaded modules.
+	 */
+	Genode::List<Module> modules;
 	
 public:
 
 	/**
-	 * Constructor
+	 * Create a child process
 	 *
-	 * TODO Separate child's name and filename to support multiple child's with the same rom module
+	 * \param env               Environment
+	 * \param alloc             Heap Allocator
+	 * \param parent_services   Services which are already provided by the parents
+	 * \param name              Name of ?
 	 */
 	Target_child(Genode::Env &env,
 		     Genode::Allocator &alloc,
@@ -93,26 +102,25 @@ public:
 		     const char *name);
 
 	~Target_child();
-
   
 	/**
 	 * Start child from scratch
 	 */
 	void start();
 
-  void checkpoint(Target_state &state);
-  void restore(Target_state &state);
-
-
-  /**
-	 * Pause child
-	 */
-	//	void pause()  { _resources.cpu.pause_threads();  }
 	/**
-	 * Resume child
+	 * Checkpoint the child
+	 *
+	 * \param state which stores the current state of the child
 	 */
-	//	void resume() { _resources.cpu.resume_threads(); }
+	void checkpoint(Target_state &state);
 
+	/**
+	 * Restore child to a specific state
+	 *
+	 * \param state which provides the state for the child
+	 */
+	void restore(Target_state &state);
 	
 	/****************************
 	 ** Child-policy interface **

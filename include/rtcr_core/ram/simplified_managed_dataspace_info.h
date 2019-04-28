@@ -35,7 +35,7 @@ struct Rtcr::Simplified_managed_dataspace_info : Genode::List<Simplified_managed
 		bool const modified;
 
 		Simplified_designated_ds_info(Genode::Ram_dataspace_capability cap, Genode::addr_t addr, Genode::size_t size, bool modified)
-		: dataspace_cap(cap), addr(addr), size(size), modified(modified) {}
+			: dataspace_cap(cap), addr(addr), size(size), modified(modified) {}
 
 		void print(Genode::Output &output) const
 		{
@@ -49,7 +49,7 @@ struct Rtcr::Simplified_managed_dataspace_info : Genode::List<Simplified_managed
 	Genode::List<Simplified_designated_ds_info> designated_dataspaces;
 
 	Simplified_managed_dataspace_info(Genode::Ram_dataspace_capability cap, Genode::List<Simplified_designated_ds_info> &list)
-	: region_map_dataspace_cap(cap), designated_dataspaces(list) { }
+		: region_map_dataspace_cap(cap), designated_dataspaces(list) { }
 
 	Simplified_managed_dataspace_info *find_by_badge(Genode::uint16_t badge)
 	{

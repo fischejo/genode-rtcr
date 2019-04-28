@@ -26,25 +26,25 @@ struct Rtcr::Stored_rom_session_info : Stored_session_info, Genode::List<Stored_
 	Genode::uint16_t sigh_badge;
 
 	Stored_rom_session_info(Rom_session_component &rom_session, Genode::addr_t targets_kcap,
-			Genode::Ram_dataspace_capability copy_ds_cap)
-	:
+				Genode::Ram_dataspace_capability copy_ds_cap)
+		:
 		Stored_session_info(rom_session.parent_state().creation_args.string(),
-				rom_session.parent_state().upgrade_args.string(),
-				targets_kcap,
-				rom_session.cap().local_name(),
-				rom_session.parent_state().bootstrapped),
+				    rom_session.parent_state().upgrade_args.string(),
+				    targets_kcap,
+				    rom_session.cap().local_name(),
+				    rom_session.parent_state().bootstrapped),
 		dataspace_badge (rom_session.parent_state().dataspace.local_name()),
 		sigh_badge      (rom_session.parent_state().sigh.local_name())
 	{ }
 
 	Stored_rom_session_info(const char* creation_args,
-                                        const char* upgrade_args,
-                                        Genode::addr_t kcap,
-                                        Genode::uint16_t local_name,
-                                        bool bootstrapped,
+				const char* upgrade_args,
+				Genode::addr_t kcap,
+				Genode::uint16_t local_name,
+				bool bootstrapped,
 				Genode::uint16_t _dataspace_badge,
-        			Genode::uint16_t _sigh_badge)
-	:
+				Genode::uint16_t _sigh_badge)
+		:
 		Stored_session_info(creation_args,upgrade_args,kcap,local_name,bootstrapped),
 		dataspace_badge(_dataspace_badge),
 		sigh_badge(_sigh_badge)
@@ -64,7 +64,7 @@ struct Rtcr::Stored_rom_session_info : Stored_session_info, Genode::List<Stored_
 
 		Stored_session_info::print(output);
 		Genode::print(output, ", dataspace_badge=", dataspace_badge,
-				", sigh_badge=", sigh_badge);
+			      ", sigh_badge=", sigh_badge);
 	}
 
 };

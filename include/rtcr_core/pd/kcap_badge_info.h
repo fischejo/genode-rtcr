@@ -25,7 +25,7 @@ struct Rtcr::Kcap_badge_info : Genode::List<Kcap_badge_info>::Element
 	Genode::uint16_t badge;
 
 	Kcap_badge_info(Genode::addr_t kcap, Genode::uint16_t badge)
-	: kcap(kcap), badge(badge) { }
+		: kcap(kcap), badge(badge) { }
 
 	Kcap_badge_info *find_by_kcap(Genode::addr_t kcap)
 	{

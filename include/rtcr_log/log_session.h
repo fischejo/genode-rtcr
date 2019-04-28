@@ -55,7 +55,7 @@ private:
 
 public:
 	Log_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-			const char *label, const char *creation_args, bool bootstrapped = false);
+			      const char *label, const char *creation_args, bool bootstrapped = false);
 	~Log_session_component();
 
 	Genode::Log_session_capability parent_cap() { return _parent_log.cap(); }
@@ -115,7 +115,7 @@ protected:
 
 public:
 	Log_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep, bool &bootstrap_phase);
-    ~Log_root();
+	~Log_root();
 
 	Genode::List<Log_session_component> &session_infos() { return _session_rpc_objs; }
 };

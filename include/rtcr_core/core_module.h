@@ -27,13 +27,18 @@
 #include <rtcr_ds/dataspace_module.h>
 
 namespace Rtcr {
-    class Core_module;
-    class Core_module_factory;
+	class Core_module;
+	class Core_module_factory;
 }
 
 using namespace Rtcr;
 
 
+/**
+ * The class Rtcr::Core_module provides the a simple and minimal implementation
+ * of the Rtcr::Core_module_abstract class. The implementation is split up in
+ * several class. More about that in class Core_module_base.
+ */
 class Rtcr::Core_module : public virtual Core_module_base,
 			  public Core_module_pd,
 			  public Core_module_cpu,
@@ -42,65 +47,89 @@ class Rtcr::Core_module : public virtual Core_module_base,
                           public Core_module_rom
 {
 private:
-  Dataspace_module *_ds_module;
-  Core_state &_state;
-
+	Dataspace_module *_ds_module;
+	Core_state &_state;
 
 protected:
-  Core_state &_initialize_state(Genode::Allocator &alloc);
-  
+
+	/**
+	 * Create a Module_state object with the given allocator
+	 */
+	Core_state &_initialize_state(Genode::Allocator &alloc);
+
+	/**
+	 * Provide a reference to the loaded dataspace module
+	 *
+	 * \return Reference to Dataspace Module
+	 */    
+	virtual Dataspace_module &ds_module() override { return *_ds_module; }
+
+    
 public:  
 
-  Core_module(Genode::Env &env,
-	      Genode::Allocator &alloc,
-	      Genode::Entrypoint &ep,
-	      const char* label,
-	      bool &bootstrap,
-	      Genode::Xml_node *config);
+	Core_module(Genode::Env &env,
+		    Genode::Allocator &alloc,
+		    Genode::Entrypoint &ep,
+		    const char* label,
+		    bool &bootstrap,
+		    Genode::Xml_node *config);
 
-  ~Core_module();
+	~Core_module();
 
-    void initialize(Genode::List<Module> &modules);
-  
-    Module_state *checkpoint();
-    void restore(Module_state *state);
+	/**
+	 * Called by the Target_child when all modules are initialized.
+	 *
+	 * \param modules which were loaded. 
+	 */
+	void initialize(Genode::List<Module> &modules) override;
 
-    Genode::Service *resolve_session_request(const char *service_name, const char *args);
+	/**
+	 * Checkpoint PD,RAM,ROM,RM,CPU sessions
+	 *
+	 * \return the internal Core_state object which contains the checkpointed
+	 *         state of the sessions.
+	 */
+	Module_state *checkpoint() override;
 
-  virtual Dataspace_module &ds_module()
-  {
-    return *_ds_module;
-  }
+	/**
+	 * Restore this module to a state.
+	 *
+	 * Not yet implemented.
+	 */    
+	void restore(Module_state *state) override;
 
-  virtual Core_state &state()
-  {
-    return _state;
-  }
+	/**
+	 * If the child requests a service of PD,RM,RAM,ROM or CPU, this module provides it.
+	 */    
+	Genode::Service *resolve_session_request(const char *service_name, const char *args) override;
 
-  Module_name name(){
-    return "core";
-  }
+	/**
+	 * Get state of this module
+	 *
+	 * \return Core_state object 
+	 */    
+	virtual Core_state &state() override { return _state; }
+
+	Module_name name() override { return "core"; }
 };
 
-
-// create a factory class for Cpu_session_handler
+/**
+ * Factory class for creating the Rtcr::Core_module
+ */
 class Rtcr::Core_module_factory : public Module_factory
 {
 public:
-  Module* create(Genode::Env &env,
-		 Genode::Allocator &alloc,
-		 Genode::Entrypoint &ep,
-		 const char* label,
-		 bool &bootstrap,
-		 Genode::Xml_node *config)
-  {   
-    return new (alloc) Core_module(env, alloc, ep, label, bootstrap, config);
-  }
+	Module* create(Genode::Env &env,
+		       Genode::Allocator &alloc,
+		       Genode::Entrypoint &ep,
+		       const char* label,
+		       bool &bootstrap,
+		       Genode::Xml_node *config) override
+	{   
+		return new (alloc) Core_module(env, alloc, ep, label, bootstrap, config);
+	}
     
-  Module_name name()
-  {
-    return "core";
-  }
+	Module_name name() override { return "core"; }
   
 };
 

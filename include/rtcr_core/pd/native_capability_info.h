@@ -21,15 +21,15 @@ namespace Rtcr {
  * a Cpu_thread_capability
  */
 struct Rtcr::Native_capability_info : Normal_obj_info, private Simple_counter<Native_capability_info>,
-                                      Genode::List<Native_capability_info>::Element
+	    Genode::List<Native_capability_info>::Element
 {
 	// Creation arguments and result
 	Genode::Native_capability const cap;
 	Genode::Native_capability const ep_cap;
 
 	Native_capability_info(Genode::Native_capability native_cap,
-			Genode::Native_capability ep_cap, bool bootstrapped)
-	:
+			       Genode::Native_capability ep_cap, bool bootstrapped)
+		:
 		Normal_obj_info (bootstrapped),
 		cap    (native_cap),
 		ep_cap (ep_cap)

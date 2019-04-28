@@ -10,7 +10,6 @@
 using namespace Rtcr;
 
 /* Create a static instance of the Core_module_factory. This registers the module */
-
 Rtcr::Timer_module_factory _timer_module_factory_instance;
 
 
@@ -18,63 +17,64 @@ Timer_module::Timer_module(Genode::Env &env,
 			   Genode::Allocator &alloc,
 			   Genode::Entrypoint &ep,
 			   bool &bootstrap)
-  :
-    _env(env),
-    _alloc(alloc),
-    _ep(ep),
-    _bootstrap(bootstrap),
-    _timer_state(_initialize_state(alloc))
+	:
+	_env(env),
+	_alloc(alloc),
+	_ep(ep),
+	_bootstrap(bootstrap),
+	_timer_state(_initialize_state(alloc))
 {}
+
 
 Timer_module::~Timer_module()
 {
-  if(_timer_root) Genode::destroy(_alloc, _timer_root);
-  if(_timer_service) Genode::destroy(_alloc, _timer_service);
+	if(_timer_root) Genode::destroy(_alloc, _timer_root);
+	if(_timer_service) Genode::destroy(_alloc, _timer_service);
 }
 
 
 void Timer_module::initialize(Genode::List<Module> &modules)
 {
 #ifdef DEBUG
-    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
   
-  Module *module = modules.first();
-  while (!_core_module && module) {
-    _core_module = dynamic_cast<Core_module_abstract*>(module);
-    module = module->next();
-  }
+	Module *module = modules.first();
+	while (!_core_module && module) {
+		_core_module = dynamic_cast<Core_module_abstract*>(module);
+		module = module->next();
+	}
 
-  if(!_core_module)
-    Genode::error("No Core_module loaded! ");
+	if(!_core_module)
+		Genode::error("No Core_module loaded! ");
 }
 
 
 Timer_state &Timer_module::_initialize_state(Genode::Allocator &_alloc)
 {
-  return *new(_alloc) Timer_state();
+	return *new(_alloc) Timer_state();
 }
 
 
 Module_state *Timer_module::checkpoint()
 {
 #ifdef DEBUG
-    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
-  Genode::List<Stored_timer_session_info> &stored_infos = _timer_state._stored_timer_sessions;
-  Genode::List<Timer_session_component> &child_infos = _timer_root->session_infos();
-  Timer_session_component *child_info = nullptr;
-  Stored_timer_session_info *stored_info=  nullptr;
+	Genode::List<Stored_timer_session_info> &stored_infos = _timer_state._stored_timer_sessions;
+	Genode::List<Timer_session_component> &child_infos = _timer_root->session_infos();
+	Timer_session_component *child_info = nullptr;
+	Stored_timer_session_info *stored_info=  nullptr;
 
-  /* Update state_info from child_info If a child_info has no corresponding
-   * state_info, create it */
+	/* Update state_info from child_info If a child_info has no corresponding
+	 * state_info, create it */
 	child_info = child_infos.first();
 	while(child_info) {
-	  /* Find corresponding state_info */
+		/* Find corresponding state_info */
 		stored_info = stored_infos.first();
 		if(stored_info)
-		  stored_info = stored_info->find_by_badge(child_info->cap().local_name());
+			stored_info = stored_info->find_by_badge(child_info->cap().local_name());
 
 		/* No corresponding stored_info => create it */
 		if(!stored_info) {
@@ -102,20 +102,20 @@ Module_state *Timer_module::checkpoint()
 
 		/* No corresponding child_info => delete it */
 		if(!child_info) {
-		  stored_infos.remove(stored_info);
-		  _destroy_stored_timer_session(*stored_info);
+			stored_infos.remove(stored_info);
+			_destroy_stored_timer_session(*stored_info);
 		}
 
 		stored_info = next_info;
 	}
-    return &_timer_state;
+	return &_timer_state;
 }
 
 
 void Timer_module::_destroy_stored_timer_session(Stored_timer_session_info &stored_info)
 {
 #ifdef DEBUG
-    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif  
 	Genode::destroy(_alloc, &stored_info);
 }
@@ -125,7 +125,7 @@ void Timer_module::_destroy_stored_timer_session(Stored_timer_session_info &stor
 void Timer_module::restore(Module_state *state)
 {
 #ifdef DEBUG
-    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
 
 }
@@ -135,16 +135,16 @@ Genode::Service *Timer_module::resolve_session_request(const char *service_name,
 						       const char *args)
 {
 #ifdef DEBUG
-    Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
   
-  if(!Genode::strcmp(service_name, "Timer")) {
-    if(!_timer_root) {
-      _timer_root = new (_alloc) Timer_root(_env, _alloc, _ep, _bootstrap);
-      _timer_service = new (_alloc) Genode::Local_service("Timer",_timer_root);
-    }
-    return _timer_service;
-  }
-  return 0;
+	if(!Genode::strcmp(service_name, "Timer")) {
+		if(!_timer_root) {
+			_timer_root = new (_alloc) Timer_root(_env, _alloc, _ep, _bootstrap);
+			_timer_service = new (_alloc) Genode::Local_service("Timer",_timer_root);
+		}
+		return _timer_service;
+	}
+	return 0;
 }
 

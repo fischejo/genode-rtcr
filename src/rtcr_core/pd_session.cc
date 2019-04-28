@@ -10,8 +10,8 @@ using namespace Rtcr;
 
 
 Pd_session_component::Pd_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-		const char *label, const char *creation_args, bool &bootstrap_phase)
-:
+					   const char *label, const char *creation_args, bool &bootstrap_phase)
+	:
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
@@ -75,7 +75,7 @@ Genode::Capability<Genode::Signal_source> Pd_session_component::alloc_signal_sou
 
 	auto result_cap = _parent_pd.alloc_signal_source();
 
-	// Create and insert list element to monitor this signal source
+	/* Create and insert list element to monitor this signal source */
 	Signal_source_info *new_ss_info = new (_md_alloc) Signal_source_info(result_cap, _bootstrap_phase);
 	Genode::Lock::Guard guard(_parent_state.signal_sources_lock);
 	_parent_state.signal_sources.insert(new_ss_info);
@@ -90,36 +90,33 @@ void Pd_session_component::free_signal_source(Genode::Capability<Genode::Signal_
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(", cap, ")");
 
-	// Find list element
+	/* Find list element */
 	Genode::Lock::Guard guard(_parent_state.signal_sources_lock);
 	Signal_source_info *ss_info = _parent_state.signal_sources.first();
 	if(ss_info) ss_info = ss_info->find_by_badge(cap.local_name());
 
-	// List element found?
-	if(ss_info)
-	{
-		// Remove and destroy list element
+	/* List element found? */
+	if(ss_info) {
+		/* Remove and destroy list element */
 		_parent_state.signal_sources.remove(ss_info);
 		Genode::destroy(_md_alloc, ss_info);
 
-		// Free signal source
+		/* Free signal source */
 		_parent_pd.free_signal_source(cap);
-	}
-	else
-	{
+	} else {
 		Genode::error("No list element found!");
 	}
 }
 
 
 Genode::Signal_context_capability Pd_session_component::alloc_context(Signal_source_capability source,
-		unsigned long imprint)
+								      unsigned long imprint)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(source ", source, ", imprint=", Genode::Hex(imprint), ")");
 
 	auto result_cap = _parent_pd.alloc_context(source, imprint);
 
-	// Create and insert list element to monitor this signal context
+	/* Create and insert list element to monitor this signal context */
 	Signal_context_info *new_sc_info = new (_md_alloc) Signal_context_info(result_cap, source, imprint, _bootstrap_phase);
 	Genode::Lock::Guard guard(_parent_state.signal_contexts_lock);
 	_parent_state.signal_contexts.insert(new_sc_info);
@@ -134,23 +131,20 @@ void Pd_session_component::free_context(Genode::Signal_context_capability cap)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(", cap, ")");
 
-	// Find list element
+	/* Find list element */
 	Genode::Lock::Guard guard(_parent_state.signal_contexts_lock);
 	Signal_context_info *sc_info = _parent_state.signal_contexts.first();
 	if(sc_info) sc_info = sc_info->find_by_badge(cap.local_name());
 
-	// List element found?
-	if(sc_info)
-	{
-		// Remove and destroy list element
+	/* List element found? */
+	if(sc_info) {
+		/* Remove and destroy list element */
 		_parent_state.signal_contexts.remove(sc_info);
 		Genode::destroy(_md_alloc, sc_info);
 
-		// Free signal context
+		/* Free signal context */
 		_parent_pd.free_context(cap);
-	}
-	else
-	{
+	} else {
 		Genode::error("No list element found!");
 	}
 }
@@ -170,7 +164,7 @@ Genode::Native_capability Pd_session_component::alloc_rpc_cap(Genode::Native_cap
 
 	auto result_cap = _parent_pd.alloc_rpc_cap(ep);
 
-	// Create and insert list element to monitor this native_capability
+	/* Create and insert list element to monitor this native_capability */
 	Native_capability_info *new_nc_info = new (_md_alloc) Native_capability_info(result_cap, ep, _bootstrap_phase);
 	Genode::Lock::Guard guard(_parent_state.native_caps_lock);
 	_parent_state.native_caps.insert(new_nc_info);
@@ -185,23 +179,20 @@ void Pd_session_component::free_rpc_cap(Genode::Native_capability cap)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(", cap,")");
 
-	// Find list element
+	/* Find list element */
 	Genode::Lock::Guard guard(_parent_state.native_caps_lock);
 	Native_capability_info *nc_info = _parent_state.native_caps.first();
 	if(nc_info) nc_info = nc_info->find_by_native_badge(cap.local_name());
 
-	// List element found?
-	if(nc_info)
-	{
-		// Remove and destroy list element
+	/* List element found? */
+	if(nc_info) {
+		/* Remove and destroy list element */
 		_parent_state.native_caps.remove(nc_info);
 		Genode::destroy(_md_alloc, nc_info);
 
-		// Free native capability
+		/* Free native capability */
 		_parent_pd.free_rpc_cap(cap);
-	}
-	else
-	{
+	} else {
 		Genode::error("No list element found!");
 	}
 }
@@ -254,16 +245,18 @@ Genode::Capability<Genode::Pd_session::Native_pd> Pd_session_component::native_p
 	return result;
 }
 
+
 Pd_session_component *Pd_root::_create_session(const char *args)
 {
 	if(verbose_debug) Genode::log("Pd_root::\033[33m", __func__, "\033[0m(", args,")");
 
-	// Extracting label from args
+	/* Extracting label from args */
 	char label_buf[128];
 	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
 	label_arg.string(label_buf, sizeof(label_buf), "");
 
-	// Revert ram_quota calculation, because the monitor needs the original session creation argument
+	/* Revert ram_quota calculation, because the monitor needs the original
+	 * session creation argument */
 	char ram_quota_buf[32];
 	char readjusted_args[160];
 	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
@@ -274,9 +267,9 @@ Pd_session_component *Pd_root::_create_session(const char *args)
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
-	// Create custom Pd_session
+	/* Create custom Pd_session */
 	Pd_session_component *new_session =
-			new (md_alloc()) Pd_session_component(_env, _md_alloc, _ep, label_buf, readjusted_args, _bootstrap_phase);
+		new (md_alloc()) Pd_session_component(_env, _md_alloc, _ep, label_buf, readjusted_args, _bootstrap_phase);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -317,8 +310,8 @@ void Pd_root::_destroy_session(Pd_session_component *session)
 
 
 Pd_root::Pd_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep,
-		bool &bootstrap_phase)
-:
+		 bool &bootstrap_phase)
+	:
 	Root_component<Pd_session_component>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
@@ -333,8 +326,7 @@ Pd_root::Pd_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoi
 
 Pd_root::~Pd_root()
 {
-	while(Pd_session_component *obj = _session_rpc_objs.first())
-	{
+	while(Pd_session_component *obj = _session_rpc_objs.first()) {
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}

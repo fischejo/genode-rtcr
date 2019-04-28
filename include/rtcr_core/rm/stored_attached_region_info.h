@@ -30,10 +30,10 @@ struct Rtcr::Stored_attached_region_info : Stored_normal_info, Genode::List<Stor
 	bool           const executable;
 
 	Stored_attached_region_info(Attached_region_info &info, Genode::addr_t kcap, Genode::Ram_dataspace_capability copy_ds_cap)
-	:
+		:
 		Stored_normal_info(kcap,
-				info.attached_ds_cap.local_name(),
-				info.bootstrapped),
+				   info.attached_ds_cap.local_name(),
+				   info.bootstrapped),
 		attached_ds_badge (info.attached_ds_cap.local_name()),
 		memory_content    (copy_ds_cap),
 		size       (info.size),
@@ -43,23 +43,23 @@ struct Rtcr::Stored_attached_region_info : Stored_normal_info, Genode::List<Stor
 	{ }
 	
 	Stored_attached_region_info(Genode::addr_t kcap,
-					 Genode::uint16_t local_name,
-					bool bootstrapped,
-					Genode::uint16_t _attached_ds_badge,
-        				Genode::Ram_dataspace_capability _memory_content,
-        				Genode::size_t _size,
-        				Genode::off_t _offset,
-        				Genode::addr_t _rel_addr,
-        				bool _executable)
-	:
+				    Genode::uint16_t local_name,
+				    bool bootstrapped,
+				    Genode::uint16_t _attached_ds_badge,
+				    Genode::Ram_dataspace_capability _memory_content,
+				    Genode::size_t _size,
+				    Genode::off_t _offset,
+				    Genode::addr_t _rel_addr,
+				    bool _executable)
+		:
 		Stored_normal_info(kcap,local_name,bootstrapped),
 		attached_ds_badge (_attached_ds_badge),
-                memory_content    (_memory_content),
-                size       (_size),
-                offset     (_offset),
-                rel_addr   (_rel_addr),
-                executable (_executable)
-        { }
+		memory_content    (_memory_content),
+		size       (_size),
+		offset     (_offset),
+		rel_addr   (_rel_addr),
+		executable (_executable)
+	{ }
 
 	Stored_attached_region_info *find_by_addr(Genode::addr_t addr)
 	{

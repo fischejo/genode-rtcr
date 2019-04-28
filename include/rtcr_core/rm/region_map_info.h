@@ -44,7 +44,7 @@ struct Rtcr::Region_map_info : Normal_rpc_info
 	Genode::List<Attached_region_info> attached_regions;
 
 	Region_map_info(Genode::size_t size, Genode::Dataspace_capability ds_cap, bool bootstrapped)
-	:
+		:
 		Normal_rpc_info(bootstrapped),
 		size(size), ds_cap(ds_cap), sigh(),
 		attached_regions_lock(), attached_regions()

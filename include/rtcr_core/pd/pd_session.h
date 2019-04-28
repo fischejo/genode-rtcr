@@ -80,7 +80,7 @@ private:
 
 public:
 	Pd_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-			const char *label, const char *creation_args, bool &bootstrap_phase);
+			     const char *label, const char *creation_args, bool &bootstrap_phase);
 	~Pd_session_component();
 
 	Genode::Pd_session_capability parent_cap() { return _parent_pd.cap(); }
@@ -111,7 +111,7 @@ public:
 	void free_signal_source(Signal_source_capability cap) override;
 
 	Genode::Signal_context_capability alloc_context(Signal_source_capability source,
-			unsigned long imprint) override;
+							unsigned long imprint) override;
 	void free_context(Genode::Signal_context_capability cap) override;
 
 	void submit(Genode::Signal_context_capability context, unsigned cnt) override;
@@ -178,8 +178,8 @@ protected:
 
 public:
 	Pd_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep,
-			bool &bootstrap_phase);
-    ~Pd_root();
+		bool &bootstrap_phase);
+	~Pd_root();
 
 	Genode::List<Pd_session_component> &session_infos() { return _session_rpc_objs; }
 };

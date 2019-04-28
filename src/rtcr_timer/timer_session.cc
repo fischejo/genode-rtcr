@@ -10,8 +10,8 @@ using namespace Rtcr;
 
 
 Timer_session_component::Timer_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-		const char *creation_args, bool bootstrapped)
-:
+						 const char *creation_args, bool bootstrapped)
+	:
 	_md_alloc     (md_alloc),
 	_ep           (ep),
 	_parent_timer (env),
@@ -60,7 +60,6 @@ void Timer_session_component::sigh(Genode::Signal_context_capability sigh)
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m(", sigh, ")");
 
 	_parent_state.sigh = sigh;
-
 	_parent_timer.sigh(sigh);
 }
 
@@ -74,14 +73,16 @@ unsigned long Timer_session_component::elapsed_ms() const
 	return result;
 }
 
+
 unsigned long Timer_session_component::now_us() const
 {
-        if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m()");
-        auto result = _parent_timer.now_us();
-        if(verbose_debug) Genode::log("  result: ", result);
+	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m()");
+	auto result = _parent_timer.now_us();
+	if(verbose_debug) Genode::log("  result: ", result);
 
-        return result;
+	return result;
 }
+
 
 void Timer_session_component::msleep(unsigned ms)
 {
@@ -105,7 +106,8 @@ Timer_session_component *Timer_root::_create_session(const char *args)
 {
 	if(verbose_debug) Genode::log("Timer_root::\033[33m", __func__, "\033[0m(", args,")");
 
-	// Revert ram_quota calculation, because the monitor needs the original session creation argument
+	/* Revert ram_quota calculation, because the monitor needs the original
+	 * session creation argument */
 	char ram_quota_buf[32];
 	char readjusted_args[160];
 	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
@@ -116,9 +118,9 @@ Timer_session_component *Timer_root::_create_session(const char *args)
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
-	// Create virtual session object
+	/* Create virtual session object */
 	Timer_session_component *new_session =
-			new (md_alloc()) Timer_session_component(_env, _md_alloc, _ep, readjusted_args, _bootstrap_phase);
+		new (md_alloc()) Timer_session_component(_env, _md_alloc, _ep, readjusted_args, _bootstrap_phase);
 
 	Genode::Lock::Guard guard(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -160,7 +162,7 @@ void Timer_root::_destroy_session(Timer_session_component *session)
 
 
 Timer_root::Timer_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep, bool &bootstrap_phase)
-:
+	:
 	Root_component<Timer_session_component>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
@@ -175,11 +177,10 @@ Timer_root::Timer_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::En
 
 Timer_root::~Timer_root()
 {
-    while(Timer_session_component *obj = _session_rpc_objs.first())
-    {
-    	_session_rpc_objs.remove(obj);
-        Genode::destroy(_md_alloc, obj);
-    }
+	while(Timer_session_component *obj = _session_rpc_objs.first()) {
+		_session_rpc_objs.remove(obj);
+		Genode::destroy(_md_alloc, obj);
+	}
 
-    if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
+	if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
 }

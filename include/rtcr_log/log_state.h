@@ -16,17 +16,19 @@
 
 
 namespace Rtcr {
-    class Log_state;
+	class Log_state;
 }
 
 
 class Rtcr::Log_state : public Module_state
 {
 public:
-  Log_state();
-  ~Log_state();
-  Genode::List<Stored_log_session_info> _stored_log_sessions;
-  void print(Genode::Output &output) const override;
+	Log_state();
+	~Log_state();
+
+	Genode::List<Stored_log_session_info> _stored_log_sessions;
+
+	void print(Genode::Output &output) const override;
 };
 
 #endif /* _RTCR_LOG_STATE_H_ */

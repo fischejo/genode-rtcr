@@ -12,14 +12,24 @@
 #include <util/string.h>
 
 namespace Rtcr {
-    class Module_state;
+	class Module_state;
 }
 
-
+/**
+ * Container for a checkpointed state of a module
+ */
 class Rtcr::Module_state
 {
 public:
-    virtual void print(Genode::Output &output) const = 0;
+	/**
+	 * Print the internal data structures of this Module_state.
+	 *
+	 * Usage:
+	 * ```C++
+	 * Module_state &state = new Module_state();
+	 * Genode::log(state);
+	 */
+	virtual void print(Genode::Output &output) const = 0;
 };
 
 #endif /* _RTCR_MODULE_STATE_H_ */

@@ -20,70 +20,98 @@
 #include <rtcr/module_factory.h>
 #include <rtcr/core_module_abstract.h>
 
+/* Log module includes */
 #include <rtcr_log/log_state.h>
 
 namespace Rtcr {
-    class Log_module;
-    class Log_module_factory;
+	class Log_module;
+	class Log_module_factory;
 }
 
 using namespace Rtcr;
 
-
+/**
+ * The Rtcr::Log_module provides a Log session and is able to checkpoint/restore
+ * this session.
+ */
 class Rtcr::Log_module : public virtual Module
 {
-private:  
-    Genode::Env        &_env;
-    Genode::Allocator  &_alloc;
-    Genode::Entrypoint &_ep;
+private:
+	Genode::Env        &_env;
+	Genode::Allocator  &_alloc;
+	Genode::Entrypoint &_ep;
 
-    Log_root *_log_root;
-    Genode::Local_service *_log_service;
-    bool &_bootstrap;
-    Core_module_abstract *_core_module;
-    Log_state &_log_state;
+protected:
+	Log_root *_log_root;
+	Genode::Local_service *_log_service;
+	bool &_bootstrap;
+	Core_module_abstract *_core_module;
+	Log_state &_log_state;
   
-    void _destroy_stored_log_session(Stored_log_session_info &stored_info);
-    Log_state &_initialize_state(Genode::Allocator &alloc);
+	void _destroy_stored_log_session(Stored_log_session_info &stored_info);
+
+	/**
+	 * Create a Module_state object with the given allocator
+	 */
+	Log_state &_initialize_state(Genode::Allocator &alloc);
   
 public:
   
-  Log_module(Genode::Env &env,
-	      Genode::Allocator &alloc,
-	      Genode::Entrypoint &ep,
-	      bool &bootstrap);
+	Log_module(Genode::Env &env,
+		   Genode::Allocator &alloc,
+		   Genode::Entrypoint &ep,
+		   bool &bootstrap);
 
-    ~Log_module();
-    void initialize(Genode::List<Module> &modules);
-    Module_state *checkpoint();
-    void restore(Module_state *state);
-  
-    Genode::Service *resolve_session_request(const char *service_name, const char *args);
+	~Log_module();
 
-  Module_name name(){
-    return "log";
-  }  
+	/**
+	 * Called by the Target_child when all modules are initialized.
+	 *
+	 * \param modules which were loaded. 
+	 */
+	void initialize(Genode::List<Module> &modules) override;
+
+	/**
+	 * Checkpoint LOG session
+	 *
+	 * \return the internal Log_state object which contains the checkpointed
+	 *         state of the LOG session.
+	 */
+	Module_state *checkpoint() override;
+
+	/**
+	 * Restore this module to a state.
+	 *
+	 * Not yet implemented.
+	 */    
+	void restore(Module_state *state) override;
+
+	/**
+	 * If the child requests a LOG service, this module provides it.
+	 */    
+	Genode::Service *resolve_session_request(const char *service_name,
+						 const char *args) override;
+    
+	Module_name name() override { return "log"; }  
 };
 
-
+/**
+ * Factory class for creating the Rtcr::Log_module
+ */
 class Rtcr::Log_module_factory : public Module_factory
 {
 public:
-  Module* create(Genode::Env &env,
-		 Genode::Allocator &alloc,
-		 Genode::Entrypoint &ep,
-		 const char* label,
-		 bool &bootstrap,
-		 Genode::Xml_node *config)
-  {    
-    return new (alloc) Log_module(env, alloc, ep,  bootstrap);
-  }
+	Module* create(Genode::Env &env,
+		       Genode::Allocator &alloc,
+		       Genode::Entrypoint &ep,
+		       const char* label,
+		       bool &bootstrap,
+		       Genode::Xml_node *config) override
+	{    
+		return new (alloc) Log_module(env, alloc, ep,  bootstrap);
+	}
     
-  Module_name name()
-  {
-    return "log";
-  }
-  
+	Module_name name() override { return "log"; }
 };
 
 #endif /* _RTCR_LOG_MODULE_H_ */

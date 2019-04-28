@@ -63,7 +63,7 @@ private:
 
 public:
 	Rm_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-			const char *creation_args, bool &bootstrap_phase);
+			     const char *creation_args, bool &bootstrap_phase);
 	~Rm_session_component();
 
 	Genode::Rm_session_capability parent_cap() { return _parent_rm.cap(); }
@@ -132,7 +132,7 @@ protected:
 
 public:
 	Rm_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep, bool &bootstrap_phase);
-    ~Rm_root();
+	~Rm_root();
 
 	Genode::List<Rm_session_component> &session_infos() { return _session_rpc_objs; }
 };

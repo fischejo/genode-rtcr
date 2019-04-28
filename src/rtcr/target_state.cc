@@ -10,11 +10,10 @@ using namespace Rtcr;
 
 
 Target_state::Target_state(Genode::Env &env, Genode::Allocator &alloc)
-    :
-    _env   (env),
-    _alloc (alloc)
+	:
+	_env   (env),
+	_alloc (alloc)
 { }
-
 
 
 Target_state::~Target_state()
@@ -22,46 +21,47 @@ Target_state::~Target_state()
 // TODO delete all list elements
 }
 
+
 void Target_state::store(Module_name name, Module_state &state)
 {
-    /* if state is already stored, search for it and update it. */
-    Module_state_container *container = _containers.first();
-    while(container) {
-	if(!Genode::strcmp(container->name.string(), name.string())) {
-	    container->state = state;
-	    return;
+	/* if state is already stored, search for it and update it. */
+	Module_state_container *container = _containers.first();
+	while(container) {
+		if(!Genode::strcmp(container->name.string(), name.string())) {
+			container->state = state;
+			return;
+		}
+		container = container->next();
 	}
-	container = container->next();
-    }
 
-    /* otherwise register new container */
-    _containers.insert(new(_alloc) Module_state_container(state, name));
+	/* otherwise register new container */
+	_containers.insert(new(_alloc) Module_state_container(state, name));
 }
 
 
 Module_state *Target_state::state(Module_name name)
 {
-    Module_state_container *container = _containers.first();
-    while(container) {
-	if(!Genode::strcmp(container->name.string(), name.string()))
-	    return &container->state;
-	container = container->next();
-    }
-    return nullptr;
+	Module_state_container *container = _containers.first();
+	while(container) {
+		if(!Genode::strcmp(container->name.string(), name.string()))
+			return &container->state;
+		container = container->next();
+	}
+	return nullptr;
 }
 
 
 void Target_state::print(Genode::Output &output) const
 {
-    Genode::print(output, "##########################\n");
-    Genode::print(output, "###    Target_state    ###\n");
-    Genode::print(output, "##########################\n");
+	Genode::print(output, "##########################\n");
+	Genode::print(output, "###    Target_state    ###\n");
+	Genode::print(output, "##########################\n");
 
-    /* Module states */
-    Module_state_container const *container = _containers.first();
-    while(container) {
-	Genode::print(output, container->state, "\n");
-	container = container->next();
-    }
+	/* Module states */
+	Module_state_container const *container = _containers.first();
+	while(container) {
+		Genode::print(output, container->state, "\n");
+		container = container->next();
+	}
 
 }
