@@ -57,6 +57,8 @@ protected:
 				   Genode::Dataspace_capability src_ds_cap,
 				   Genode::addr_t dst_offset,
 				   Genode::size_t size);
+
+	void _destroy_list(Genode::List<Dataspace_translation_info> &list);
 public:
 
 	Dataspace_module(Genode::Env &env,

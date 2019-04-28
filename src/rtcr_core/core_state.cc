@@ -17,7 +17,11 @@ Core_state::Core_state()
 
 Core_state::~Core_state()
 {
-	// TODO delete all list elements
+//	_destroy_pd();
+//	_destroy_cpu();
+//	_destroy_ram();
+//	_destroy_rom();
+//	_destroy_rm();	
 }
 
 

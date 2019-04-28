@@ -73,6 +73,8 @@ protected:
 	 */
 	Ref_badge_info *find_region_map_by_badge(Genode::uint16_t badge) override;
 
+	void _destroy_list(Genode::List<Ref_badge_info> &list);
+	
 public:    
 	Core_module_rm(Genode::Env &env,
 		       Genode::Allocator &alloc,

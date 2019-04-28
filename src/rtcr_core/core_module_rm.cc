@@ -32,6 +32,7 @@ void Core_module_rm::_initialize_rm_session(const char* label, bool &bootstrap)
 
 Core_module_rm::~Core_module_rm()
 {
+	_destroy_list(_region_maps);
 	Genode::destroy(_alloc, _rm_root);
 	Genode::destroy(_alloc, _rm_service);        
 }
@@ -373,4 +374,13 @@ Ref_badge_info *Core_module_rm::find_region_map_by_badge(Genode::uint16_t badge)
 	if(region_map_dataspace)
 		return region_map_dataspace->find_by_badge(badge);
 	return 0;
+}
+
+void Core_module_rm::_destroy_list(Genode::List<Ref_badge_info> &list)
+{
+	while(Ref_badge_info *elem = list.first())
+	{
+		list.remove(elem);
+		Genode::destroy(_alloc, elem);
+	}
 }

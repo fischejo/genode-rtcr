@@ -24,6 +24,12 @@ Dataspace_module::Dataspace_module(Genode::Env &env,
 { }
 
 
+Dataspace_module::~Dataspace_module()
+{
+	_destroy_list(_dataspace_translations);
+}
+
+
 Module_state *Dataspace_module::checkpoint()
 {
 #ifdef DEBUG
@@ -108,3 +114,10 @@ Genode::Service *Dataspace_module::resolve_session_request(const char *service_n
 }
 
 
+void Dataspace_module::_destroy_list(Genode::List<Dataspace_translation_info> &list)
+{
+	while(Dataspace_translation_info *elem = list.first()) {
+		list.remove(elem);
+		Genode::destroy(_alloc, elem);
+	}
+}

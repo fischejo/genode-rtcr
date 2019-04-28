@@ -63,7 +63,8 @@ Ram_session_component *Core_module_ram::_find_ram_session(const char *label, Ram
 
 Core_module_ram::~Core_module_ram()
 {
-
+	Genode::destroy(_alloc, _ram_root);
+	Genode::destroy(_alloc, _ram_service);    
 }
 
 

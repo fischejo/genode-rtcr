@@ -103,10 +103,9 @@ Target_child::Target_child(Genode::Env &env,
 
 Target_child::~Target_child()
 {
-	if(_child)
-		Genode::destroy(_alloc, _child);
-
-	Genode::log("\033[33m", __func__, "\033[0m() ", _name.string());
+	if(_child) Genode::destroy(_alloc, _child);
+	Genode::destroy(_alloc, _address_space);
+	Genode::destroy(_alloc, _initial_thread);	
 }
 
 

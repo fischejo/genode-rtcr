@@ -18,7 +18,10 @@ Target_state::Target_state(Genode::Env &env, Genode::Allocator &alloc)
 
 Target_state::~Target_state()
 {
-// TODO delete all list elements
+	while(Module_state_container *container = _containers.first()) {
+		_containers.remove(container);
+		Genode::destroy(_alloc, container);
+	}
 }
 
 
