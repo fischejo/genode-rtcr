@@ -9,20 +9,16 @@
 using namespace Rtcr;
 
 
-Cpu_thread_component &Cpu_session_component::_create_thread(Genode::Pd_session_capability child_pd_cap,
-							    Genode::Pd_session_capability parent_pd_cap,
-							    Name const &name,
-							    Genode::Affinity::Location affinity,
-							    Weight weight,
-							    Genode::addr_t utcb)
+Cpu_thread_component &Cpu_session_component::_create_thread(Genode::Pd_session_capability child_pd_cap, Genode::Pd_session_capability parent_pd_cap,
+		Name const &name, Genode::Affinity::Location affinity, Weight weight, Genode::addr_t utcb)
 {
 	/* Create real CPU thread from parent */
 	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap, name, affinity, weight, utcb);
 
 	/* Create custom CPU thread */
 	Cpu_thread_component *new_cpu_thread =
-		new (_md_alloc) Cpu_thread_component(_md_alloc, cpu_thread_cap, child_pd_cap, name.string(),
-						     weight, utcb, affinity, _bootstrap_phase);
+			new (_md_alloc) Cpu_thread_component(_md_alloc, cpu_thread_cap, child_pd_cap, name.string(),
+					weight, utcb, affinity, _bootstrap_phase);
 
 	/* Manage custom CPU thread */
 	_ep.manage(*new_cpu_thread);
@@ -61,7 +57,7 @@ Cpu_session_component::Cpu_session_component(Genode::Env &env,
 					     const char *label,
 					     const char *creation_args,
 					     bool &bootstrap_phase)
-	:
+:
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
@@ -94,6 +90,26 @@ Cpu_session_component *Cpu_session_component::find_by_badge(Genode::uint16_t bad
 }
 
 
+int Cpu_session_component::set_sched_type(unsigned core, unsigned sched_type)
+{
+	auto result = _parent_cpu.set_sched_type(core, sched_type);
+
+	if(verbose_debug) Genode::log("  result: ", result);
+
+	return result;
+}
+
+
+int Cpu_session_component::get_sched_type(unsigned core)
+{
+	auto result = _parent_cpu.get_sched_type(core);
+
+	if(verbose_debug) Genode::log("  result: ", result);
+
+	return result;
+}
+
+
 Genode::Thread_capability Cpu_session_component::create_thread(Genode::Pd_session_capability child_pd_cap,
 							       Name const &name,
 							       Genode::Affinity::Location affinity,
@@ -102,7 +118,7 @@ Genode::Thread_capability Cpu_session_component::create_thread(Genode::Pd_sessio
 {
 	if(verbose_debug) Genode::log("Cpu::\033[33m", __func__, "\033[0m(name=", name.string(), ")");
 
-	// Find corresponding parent PD session cap for the given custom PD session cap
+	/* Find corresponding parent PD session cap for the given custom PD session cap */
 	Pd_session_component *pd_session = _pd_root.session_infos().first();
 	if(pd_session) pd_session = pd_session->find_by_badge(child_pd_cap.local_name());
 	if(!pd_session) {
@@ -110,7 +126,7 @@ Genode::Thread_capability Cpu_session_component::create_thread(Genode::Pd_sessio
 		throw Genode::Exception();
 	}
 
-	// Create custom CPU thread
+	/* Create custom CPU thread*/
 	Cpu_thread_component &new_cpu_thread = _create_thread(child_pd_cap,
 							      pd_session->parent_cap(),
 							      name,
@@ -118,9 +134,7 @@ Genode::Thread_capability Cpu_session_component::create_thread(Genode::Pd_sessio
 							      weight,
 							      utcb);
 
-	if(verbose_debug)
-		Genode::log("  Created custom CPU thread ", new_cpu_thread.cap());
-
+	if(verbose_debug) Genode::log("  Created custom CPU thread ", new_cpu_thread.cap());
 	return new_cpu_thread.cap();
 }
 
@@ -129,12 +143,12 @@ void Cpu_session_component::kill_thread(Genode::Thread_capability thread_cap)
 {
 	if(verbose_debug) Genode::log("Cpu::\033[33m", __func__, "\033[0m(", thread_cap,")");
 
-	// Find CPU thread for the given capability
+	/* Find CPU thread for the given capability */
 	Genode::Lock::Guard lock (_parent_state.cpu_threads_lock);
 	Cpu_thread_component *cpu_thread = _parent_state.cpu_threads.first();
 	if(cpu_thread) cpu_thread = cpu_thread->find_by_badge(thread_cap.local_name());
 
-	// If found, delete everything concerning this RPC object
+	/* If found, delete everything concerning this RPC object */
 	if(cpu_thread) {
 		if(verbose_debug) Genode::log("  deleting ", cpu_thread->cap());
 
@@ -146,7 +160,6 @@ void Cpu_session_component::kill_thread(Genode::Thread_capability thread_cap)
 	}
 }
 
-
 void Cpu_session_component::exception_sigh(Genode::Signal_context_capability handler)
 {
 	if(verbose_debug) Genode::log("Cpu::\033[33m", __func__, "\033[0m(", handler, ")");
@@ -154,7 +167,6 @@ void Cpu_session_component::exception_sigh(Genode::Signal_context_capability han
 	_parent_state.sigh = handler;
 	_parent_cpu.exception_sigh(handler);
 }
-
 
 Genode::Affinity::Space Cpu_session_component::affinity_space() const
 {
@@ -167,7 +179,6 @@ Genode::Affinity::Space Cpu_session_component::affinity_space() const
 	return result;
 }
 
-
 Genode::Dataspace_capability Cpu_session_component::trace_control()
 {
 	if(verbose_debug) Genode::log("Cpu::\033[33m", __func__, "\033[0m()");
@@ -178,7 +189,6 @@ Genode::Dataspace_capability Cpu_session_component::trace_control()
 
 	return result;
 }
-
 
 Genode::Cpu_session::Quota Cpu_session_component::quota()
 {
@@ -191,6 +201,29 @@ Genode::Cpu_session::Quota Cpu_session_component::quota()
 	return result;
 }
 
+void Cpu_session_component::set(Genode::Ram_session_capability ram_cap)
+{
+	// TODO verbose_debug
+	_parent_cpu.set(ram_cap);
+}
+
+void Cpu_session_component::deploy_queue(Genode::Dataspace_capability ds)
+{
+	// TODO verbose_debug
+	_parent_cpu.deploy_queue(ds);
+}
+
+void Cpu_session_component::rq(Genode::Dataspace_capability ds)
+{
+	// TODO verbose_debug
+	_parent_cpu.rq(ds);
+}
+
+void Cpu_session_component::dead(Genode::Dataspace_capability ds)
+{
+	// TODO verbose_debug
+	_parent_cpu.dead(ds);
+}
 
 int Cpu_session_component::ref_account(Genode::Cpu_session_capability c)
 {
@@ -203,7 +236,6 @@ int Cpu_session_component::ref_account(Genode::Cpu_session_capability c)
 	return result;
 }
 
-
 int Cpu_session_component::transfer_quota(Genode::Cpu_session_capability c, Genode::size_t q)
 {
 	if(verbose_debug) Genode::log("Cpu::\033[33m", __func__, "\033[0m(to ", c, "quota=", q, ")");
@@ -215,6 +247,12 @@ int Cpu_session_component::transfer_quota(Genode::Cpu_session_capability c, Geno
 	return result;
 }
 
+void Cpu_session_component::killed()
+{
+	if(verbose_debug) Genode::log("Cpu::\033[33m", __func__, "\033[0m()");
+
+	_parent_cpu.killed();
+}
 
 Genode::Capability<Genode::Cpu_session::Native_cpu> Cpu_session_component::native_cpu()
 {
@@ -225,65 +263,6 @@ Genode::Capability<Genode::Cpu_session::Native_cpu> Cpu_session_component::nativ
 	if(verbose_debug) Genode::log("  result: ", result);
 
 	return result;
-}
-
-
-int Cpu_session_component::set_sched_type(unsigned core, unsigned sched_type)
-{
-	// TODO verbose_debug
-
-	auto result = _parent_cpu.set_sched_type(core, sched_type);
-
-	if(verbose_debug) Genode::log("  result: ", result);
-
-	return result;
-}
-
-
-int Cpu_session_component::get_sched_type(unsigned core)
-{
-	// TODO verbose_debug
-
-	auto result = _parent_cpu.get_sched_type(core);
-
-	if(verbose_debug) Genode::log("  result: ", result);
-
-	return result;
-}
-
-
-void Cpu_session_component::set(Genode::Ram_session_capability ram_cap)
-{
-	// TODO verbose_debug
-	_parent_cpu.set(ram_cap);
-}
-
-
-void Cpu_session_component::deploy_queue(Genode::Dataspace_capability ds)
-{
-	// TODO verbose_debug
-	_parent_cpu.deploy_queue(ds);
-}
-
-
-void Cpu_session_component::rq(Genode::Dataspace_capability ds)
-{
-	// TODO verbose_debug
-	_parent_cpu.rq(ds);
-}
-
-
-void Cpu_session_component::dead(Genode::Dataspace_capability ds)
-{
-	// TODO verbose_debug
-	_parent_cpu.dead(ds);
-}
-
-
-void Cpu_session_component::killed()
-{
-	// TODO verbose_debug
-	_parent_cpu.killed();
 }
 
 
@@ -309,8 +288,13 @@ Cpu_session_component *Cpu_root::_create_session(const char *args)
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
 	/* Create custom Rm_session */
-	Cpu_session_component *new_session =
-		new (md_alloc()) Cpu_session_component(_env, _md_alloc, _ep, _pd_root, label_buf, readjusted_args, _bootstrap_phase);
+	Cpu_session_component *new_session = new (md_alloc()) Cpu_session_component(_env,
+										    _md_alloc,
+										    _ep,
+										    _pd_root,
+										    label_buf,
+										    readjusted_args,
+										    _bootstrap_phase);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -351,8 +335,8 @@ void Cpu_root::_destroy_session(Cpu_session_component *session)
 
 
 Cpu_root::Cpu_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep,
-		   Pd_root &pd_root, bool &bootstrap_phase)
-	:
+		Pd_root &pd_root, bool &bootstrap_phase)
+:
 	Root_component<Cpu_session_component>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
@@ -365,10 +349,10 @@ Cpu_root::Cpu_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entryp
 	if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
 }
 
-
 Cpu_root::~Cpu_root()
 {
-	while(Cpu_session_component *obj = _session_rpc_objs.first()) {
+	while(Cpu_session_component *obj = _session_rpc_objs.first())
+	{
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}

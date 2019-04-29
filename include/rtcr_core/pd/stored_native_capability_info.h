@@ -30,15 +30,6 @@ struct Rtcr::Stored_native_capability_info : Stored_normal_info, Genode::List<St
 		ep_badge(info.ep_cap.local_name())
 	{ }
 
-	Stored_native_capability_info(Genode::addr_t kcap,
-				      Genode::uint16_t local_name,
-				      bool bootstrapped,
-				      Genode::uint16_t _ep_badge)
-		:
-		Stored_normal_info(kcap,local_name,bootstrapped),
-		ep_badge(_ep_badge)
-	{ }
-
 	Stored_native_capability_info *find_by_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->badge)

@@ -23,7 +23,7 @@ namespace Rtcr {
 	class Cpu_session_component;
 	class Cpu_root;
 
-	constexpr bool cpu_verbose_debug = true;
+	constexpr bool cpu_verbose_debug = false;
 	constexpr bool cpu_root_verbose_debug = false;
 }
 
@@ -71,19 +71,27 @@ private:
 	 */
 	Cpu_session_info       _parent_state;
 
-	Cpu_thread_component &_create_thread(Genode::Pd_session_capability child_pd_cap, Genode::Pd_session_capability parent_pd_cap,
-					     Name const &name, Genode::Affinity::Location affinity, Weight weight, Genode::addr_t utcb);
+	Cpu_thread_component &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap,
+						    Genode::Pd_session_capability parent_pd_cap,
+						    Name const &name,
+						    Genode::Affinity::Location affinity,
+						    Weight weight,
+						    Genode::addr_t utcb,
+						    unsigned priority,
+						    unsigned deadline);
+	
+	Cpu_thread_component &_create_thread(Genode::Pd_session_capability child_pd_cap,
+					     Genode::Pd_session_capability parent_pd_cap,
+					     Name const &name,
+					     Genode::Affinity::Location affinity,
+					     Weight weight,
+					     Genode::addr_t utcb);
+	
 	void _kill_thread(Cpu_thread_component &cpu_thread);
-
-	/*
-	 * KIA4SM method
-	 */
-	Cpu_thread_component &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap, Genode::Pd_session_capability parent_pd_cap,
-						    Name const &name, Genode::Affinity::Location affinity, Weight weight, Genode::addr_t utcb, unsigned priority, unsigned deadline);
 
 public:
 	Cpu_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-			      Pd_root &pd_root, const char *label, const char *creation_args, bool &bootstrap_phase);
+			Pd_root &pd_root, const char *label, const char *creation_args, bool &bootstrap_phase);
 	~Cpu_session_component();
 
 	Genode::Cpu_session_capability parent_cap() { return _parent_cpu.cap(); }
@@ -97,9 +105,11 @@ public:
 	 ** Cpu_session interface **
 	 ***************************/
 
+	int set_sched_type(unsigned core, unsigned sched_type) override;
+	int get_sched_type(unsigned core) override;
 	Genode::Thread_capability create_thread(Genode::Pd_session_capability pd_cap,
-						Name const &name, Genode::Affinity::Location affinity, Weight weight,
-						Genode::addr_t utcb) override;
+			Name const &name, Genode::Affinity::Location affinity, Weight weight,
+			Genode::addr_t utcb) override;
 	void kill_thread(Genode::Thread_capability thread_cap) override;
 
 	void exception_sigh(Genode::Signal_context_capability handler) override;
@@ -107,21 +117,14 @@ public:
 	Genode::Affinity::Space affinity_space() const override;
 	Genode::Dataspace_capability trace_control() override;
 	Quota quota() override;
-	int ref_account(Genode::Cpu_session_capability c) override;
-	int transfer_quota(Genode::Cpu_session_capability c, Genode::size_t q) override;
-	Genode::Capability<Native_cpu> native_cpu() override;
-
-	/*
-	 * KIA4SM methods
-	 */
-
-	int set_sched_type(unsigned core, unsigned sched_type) override;
-	int get_sched_type(unsigned core) override;
 	void set(Genode::Ram_session_capability ram_cap) override;
 	void deploy_queue(Genode::Dataspace_capability ds) override;
 	void rq(Genode::Dataspace_capability ds) override;
 	void dead(Genode::Dataspace_capability ds) override;
+	int ref_account(Genode::Cpu_session_capability c) override;
+	int transfer_quota(Genode::Cpu_session_capability c, Genode::size_t q) override;
 	void killed() override;
+	Genode::Capability<Native_cpu> native_cpu() override;
 };
 
 
@@ -177,8 +180,8 @@ protected:
 
 public:
 	Cpu_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep,
-		 Pd_root &pd_root, bool &bootstrap_phase);
-	~Cpu_root();
+			Pd_root &pd_root, bool &bootstrap_phase);
+    ~Cpu_root();
 
 	Genode::List<Cpu_session_component> &session_infos() { return _session_rpc_objs; }
 };

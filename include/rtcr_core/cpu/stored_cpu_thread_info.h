@@ -49,25 +49,6 @@ struct Rtcr::Stored_cpu_thread_info : Stored_normal_info, Genode::List<Stored_cp
 		ts          	()
 	{ }
 
-	Stored_cpu_thread_info(Genode::addr_t kcap,
-			       Genode::uint16_t local_name,
-			       bool bootstrapped,Genode::uint16_t _pd_session_badge, Genode::Cpu_session::Name _name, 
-			       Genode::Cpu_session::Weight _weight, Genode::addr_t _utcb, bool _started, bool _paused, 
-			       bool _single_step, Genode::Affinity::Location _affinity, Genode::uint16_t _sigh_badge)
-		:
-		Stored_normal_info(kcap,local_name,bootstrapped),
-		pd_session_badge(_pd_session_badge),
-		name        	(_name),
-		weight      	(_weight),
-		utcb        	(_utcb),
-		started     	(_started),
-		paused      	(_paused),
-		single_step 	(_single_step),
-		affinity    	(_affinity),
-		sigh_badge  	(_sigh_badge),
-		ts          	()
-	{ }
-
 	Stored_cpu_thread_info *find_by_name(const char *name)
 	{
 		if(!Genode::strcmp(name, this->name.string()))

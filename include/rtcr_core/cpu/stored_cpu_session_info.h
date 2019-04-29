@@ -36,18 +36,6 @@ struct Rtcr::Stored_cpu_session_info : Stored_session_info, Genode::List<Stored_
 		stored_cpu_thread_infos()
 	{ }
 
-	Stored_cpu_session_info(const char* creation_args,
-				const char* upgrade_args,
-				Genode::addr_t kcap,
-				Genode::uint16_t local_name,
-				bool bootstrapped,
-				Genode::uint16_t sigh_badge)
-		:
-		Stored_session_info(creation_args,upgrade_args,kcap,local_name,bootstrapped),
-		sigh_badge(sigh_badge),
-		stored_cpu_thread_infos()
-	{ }
-
 	Stored_cpu_session_info *find_by_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->badge)

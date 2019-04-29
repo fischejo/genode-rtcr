@@ -37,21 +37,6 @@ struct Rtcr::Stored_timer_session_info : Stored_session_info, Genode::List<Store
 		periodic   (timer_session.parent_state().periodic)
 	{ }
 
-	Stored_timer_session_info(const char* creation_args,
-				  const char* upgrade_args,
-				  Genode::addr_t kcap,
-				  Genode::uint16_t local_name,
-				  bool bootstrapped,
-				  Genode::uint16_t _sigh_badge,
-				  unsigned _timeout,
-				  bool _periodic)
-		:
-		Stored_session_info(creation_args,upgrade_args,kcap,local_name,bootstrapped),
-		sigh_badge (_sigh_badge),
-		timeout    (_timeout),
-		periodic   (_periodic)
-	{ }
-
 	Stored_timer_session_info *find_by_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->badge)

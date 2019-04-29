@@ -35,16 +35,6 @@ struct Rtcr::Stored_ram_session_info : Stored_session_info, Genode::List<Stored_
 		stored_ramds_infos()
 	{ }
 
-	Stored_ram_session_info(const char* creation_args,
-				const char* upgrade_args,
-				Genode::addr_t kcap,
-				Genode::uint16_t local_name,
-				bool bootstrapped)
-		:
-		Stored_session_info(creation_args,upgrade_args,kcap,local_name,bootstrapped),
-		stored_ramds_infos()
-	{ }
-
 	Stored_ram_session_info *find_by_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->badge)

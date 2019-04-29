@@ -29,16 +29,16 @@ void Component::construct(Genode::Env &env)
 	//	env.parent().upgrade(timer, "ram_quota=8K");
 	//	env.parent().upgrade(env.ram_session_cap(), "ram_quota=24K");
 	int n  = 0;
-	while(1)
-	{
-		if(n == 1)
-			log("1 sheep. zzZ");
-		else
-			log(n, " sheeps. zzZ");
+	while(1) {
+		log("1 sheep. zzZ");
 		n++;
-		//unsigned int a = n;
-		//n = a;
-		timer.msleep(1000);
+
+		/*
+		 * Busy waiting is used here to avoid pausing this component during an RPC call to the timer component.
+		 * This could cause a resume call to this component to fail.
+		 */
+		for(int i = 0; i < 100000000; i++)
+			__asm__("NOP");		
 	}
 
 
