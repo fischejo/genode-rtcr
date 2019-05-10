@@ -112,8 +112,9 @@ public:
 	 * Checkpoint the child
 	 *
 	 * \param state which stores the current state of the child
+	 * \param resume child after checkpointing (default: true)
 	 */
-	void checkpoint(Target_state &state);
+	void checkpoint(Target_state &state, bool resume = true);
 
 	/**
 	 * Restore child to a specific state

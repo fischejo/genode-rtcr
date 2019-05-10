@@ -133,12 +133,16 @@ void Target_child::start()
 }
 
 
-void Target_child::checkpoint(Target_state &target_state)
+void Target_child::checkpoint(Target_state &target_state, bool resume)
 {
 #ifdef DEBUG
 	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
+
+	/* pause child */
 	core->pause();
+
+	/* checkpoint every module */
 	Module *module = modules.first();
 	while (module) {
 		Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),  "\e[0m\e[38;5;214m","]->checkpoint()", "\033[0m");      
@@ -149,8 +153,10 @@ void Target_child::checkpoint(Target_state &target_state)
 			target_state.store(module->name(), *module_state);
 		module = module->next();
 	}
-	// Unknown Bug. Child can not be resumed.
-	// core->resume();
+
+	/* resume child */
+	if(resume)
+		core->resume();
 }
 
 
