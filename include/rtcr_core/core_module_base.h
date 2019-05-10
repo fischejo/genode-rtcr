@@ -41,7 +41,11 @@ using namespace Rtcr;
  * - RM Session and Checkpointing/Restoring
  *
  * Due to the strong coupling between PD, RAM and RM sessions checkpointing,
- * this module is implemented with a diamand hierarchy.
+ * this module is implemented with a diamand hierarchy. Where all classes in
+ * level 2 inherits from level 1 and class Core_module (level 3) inherits from
+ * all classes in level 2. This concept allows to seperate logic in container
+ * classes (level 2) but there is still the possibility to share methods between
+ * container classes.
  *
  *                      +---------------------+
  *                      |  Core_module_base   |                      [ LEVEL 1 ]
