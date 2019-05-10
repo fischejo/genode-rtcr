@@ -149,7 +149,8 @@ void Target_child::checkpoint(Target_state &target_state)
 			target_state.store(module->name(), *module_state);
 		module = module->next();
 	}
-	core->resume();
+	// Unknown Bug. Child can not be resumed.
+	// core->resume();
 }
 
 
