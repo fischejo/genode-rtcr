@@ -40,6 +40,20 @@ struct Rtcr::Stored_region_map_info : Stored_normal_info, Genode::List<Stored_re
 		stored_attached_region_infos()
 	{ }
 
+	Stored_region_map_info(Genode::addr_t kcap,
+			       Genode::uint16_t local_name,
+			       bool bootstrapped,
+			       Genode::size_t _size,
+			       Genode::uint16_t _ds_badge,
+			       Genode::uint16_t _sigh_badge)
+		:
+		Stored_normal_info(kcap,local_name,bootstrapped),
+		size(_size),
+		ds_badge(_ds_badge),
+		sigh_badge(_sigh_badge),
+		stored_attached_region_infos()
+	{ }
+
 	Stored_region_map_info *find_by_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->badge)
@@ -54,6 +68,10 @@ struct Rtcr::Stored_region_map_info : Stored_normal_info, Genode::List<Stored_re
 
 		Stored_normal_info::print(output);
 		Genode::print(output, ", size=", size, ", ds_badge=", ds_badge, ", sigh_badge=", sigh_badge);
+	}
+
+	Genode::uint16_t get_ds_badge() {
+		return ds_badge;
 	}
 
 };

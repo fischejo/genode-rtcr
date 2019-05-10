@@ -38,6 +38,20 @@ struct Rtcr::Stored_ram_dataspace_info : Stored_normal_info, Genode::List<Stored
 		timestamp(info.timestamp())
 	{ }
 
+	Stored_ram_dataspace_info(Genode::addr_t kcap,
+				  Genode::uint16_t local_name,
+				  bool bootstrapped,
+				  Genode::Ram_dataspace_capability _memory_content,
+				  Genode::size_t _size,
+				  Genode::Cache_attribute _cached,
+				  Genode::size_t _timestamp)
+		:
+		Stored_normal_info(kcap,local_name,bootstrapped),
+		memory_content(_memory_content),
+		size(_size), cached(_cached), 
+		timestamp(_timestamp)
+	{ }
+
 	Stored_ram_dataspace_info *find_by_badge(Genode::uint16_t badge)
 	{
 		if(badge == this->badge)

@@ -42,6 +42,25 @@ struct Rtcr::Stored_attached_region_info : Stored_normal_info, Genode::List<Stor
 		executable (info.executable)
 	{ }
 	
+	Stored_attached_region_info(Genode::addr_t kcap,
+				    Genode::uint16_t local_name,
+				    bool bootstrapped,
+				    Genode::uint16_t _attached_ds_badge,
+				    Genode::Ram_dataspace_capability _memory_content,
+				    Genode::size_t _size,
+				    Genode::off_t _offset,
+				    Genode::addr_t _rel_addr,
+				    bool _executable)
+		:
+		Stored_normal_info(kcap,local_name,bootstrapped),
+		attached_ds_badge (_attached_ds_badge),
+		memory_content    (_memory_content),
+		size       (_size),
+		offset     (_offset),
+		rel_addr   (_rel_addr),
+		executable (_executable)
+	{ }
+
 	Stored_attached_region_info *find_by_addr(Genode::addr_t addr)
 	{
 		if((addr >= rel_addr) && (addr <= rel_addr + size))
