@@ -12,8 +12,25 @@ using namespace Rtcr;
 
 Target_child::Target_child(Genode::Env &env,
 			   Genode::Allocator &alloc,
+			   Genode::Service_registry &parent_services)
+	: Target_child(env, alloc, parent_services, _child_name_from_xml()) {}
+
+
+Child_name Target_child::_child_name_from_xml()
+{
+	/* parse name of child application from xml config */	
+	const Genode::Xml_node& config_node = Genode::config()->xml_node();
+	Genode::Xml_node child_node = config_node.sub_node("child");
+	Child_name child_name = child_node.attribute_value("name", Child_name());	
+	Genode::log("\e[38;5;214m", "Use XML defined child name: \e[1m", child_name, "\033[0m");
+	return child_name;
+}
+
+
+Target_child::Target_child(Genode::Env &env,
+			   Genode::Allocator &alloc,
 			   Genode::Service_registry &parent_services,
-			   const char *name)
+			   Child_name name)
 	:
 	_name            (name),
 	_env             (env),
@@ -35,9 +52,9 @@ Target_child::Target_child(Genode::Env &env,
 		factory = factory->next();
 	}    
 
-	/* parse module nodes of config */
+	/* get xml node object of configuration */
 	const Genode::Xml_node& config_node = Genode::config()->xml_node();
-
+	
 	/* load modules */
 	try {
 		Genode::Xml_node module_node = config_node.sub_node("module");

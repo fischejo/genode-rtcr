@@ -1,4 +1,4 @@
-TARGET = rtcr_test
+TARGET = rtcr_app
 SRC_CC += main.cc
 
 LIBS   = base rtcr

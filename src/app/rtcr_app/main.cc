@@ -51,8 +51,8 @@ struct Rtcr::Main
 	  
 	  Target_child child (env,
 			      heap,
-			      parent_services,
-			      "sheep_counter");
+			      parent_services);
+
 
 	  child.start();
 

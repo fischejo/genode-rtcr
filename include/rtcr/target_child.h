@@ -25,6 +25,7 @@
 
 namespace Rtcr {
 	class Target_child;
+	typedef Genode::String<32> Child_name;	
 }
 
 /**
@@ -36,7 +37,7 @@ private:
 	/**
 	 * Child's unique name and filename of child's rom module
 	 */
-	Genode::String<32>  _name;
+	Child_name  _name;
 	/**
 	 * Local environment
 	 */
@@ -85,6 +86,17 @@ private:
 	 * list of all currently loaded modules.
 	 */
 	Genode::List<Module> modules;
+
+	/**
+	 * Parse name of child component from XML configuration. 
+	 *
+	 * The name can be defined as following:
+	 * ```XML
+	 * <config>
+	 *   <child name="sheep_counter" />
+	 * </config>
+	 */
+	Child_name _child_name_from_xml();
 	
 public:
 
@@ -94,13 +106,26 @@ public:
 	 * \param env               Environment
 	 * \param alloc             Heap Allocator
 	 * \param parent_services   Services which are already provided by the parents
-	 * \param name              Name of ?
+	 * \param name              Name of child component
 	 */
 	Target_child(Genode::Env &env,
 		     Genode::Allocator &alloc,
 		     Genode::Service_registry &parent_services,
-		     const char *name);
+		     Child_name name);
 
+	/**
+	 * Create a child process
+	 *
+	 * The name of the child component is parsed from the XML Configuration.
+	 *
+	 * \param env               Environment
+	 * \param alloc             Heap Allocator
+	 * \param parent_services   Services which are already provided by the parents
+	 */
+	Target_child(Genode::Env &env,
+		     Genode::Allocator &alloc,
+		     Genode::Service_registry &parent_services);
+	
 	~Target_child();
   
 	/**

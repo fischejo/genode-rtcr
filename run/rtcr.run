@@ -2,7 +2,7 @@
 # Build
 #
 
-build { core init drivers/timer app/rtcr_test app/sheep_counter }
+build { core init drivers/timer app/rtcr_app app/sheep_counter }
 
 create_boot_directory
 
@@ -32,9 +32,10 @@ install_config {
                     <service name="Timer"/>
                 </provides>
 	</start>
-	<start name="rtcr_test">
+	<start name="rtcr_app">
     		<resource name="RAM" quantum="256M"/>
                 <config>
+                    <child name="sheep_counter" />
                     <module name="ds" />    
                     <module name="timer" />
                     <module name="log" />
@@ -48,7 +49,7 @@ install_config {
 # Boot image
 #
 
-build_boot_image { core init timer rtcr_test sheep_counter }
+build_boot_image { core init timer rtcr_app sheep_counter }
 
 append qemu_args " -nographic "
 
