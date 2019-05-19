@@ -25,7 +25,8 @@ Core_module::Core_module(Genode::Env &env,
 	Core_module_cpu(env, alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
 	Core_module_rm(env, alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
 	Core_module_ram(env, alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
-	Core_module_rom(env, alloc, ep)
+	Core_module_rom(env, alloc, ep),
+	Core_module_ds(env, alloc, ep)
 {
 	_initialize_pd_session(label, bootstrap);
 	_initialize_cpu_session(label, bootstrap);
@@ -38,19 +39,6 @@ Core_module::Core_module(Genode::Env &env,
 Core_state &Core_module::_initialize_state(Genode::Allocator &alloc)
 {
 	return *new(alloc) Core_state(alloc);
-}
-
-
-void Core_module::initialize(Genode::List<Module> &modules)
-{
-	Module *module = modules.first();
-	while (!_ds_module && module) {
-		_ds_module = dynamic_cast<Dataspace_module*>(module);
-		module = module->next();
-	}
-
-	if(!_ds_module)
-		Genode::error("No Dataspace_module loaded! ");
 }
 
 
@@ -71,6 +59,8 @@ Module_state *Core_module::checkpoint()
 	/* depends on Core_module_rm::_create_region_map_dataspace_list */    
 	Core_module_ram::_checkpoint();
 
+	Core_module_ds::_checkpoint();
+	
 	return &_state;
 }
 

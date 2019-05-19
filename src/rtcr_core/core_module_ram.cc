@@ -154,9 +154,9 @@ void Core_module_ram::_prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_
 		}
 
 		/* register dataspace for checkpointing */
-		ds_module().register_dataspace(stored_info->memory_content,
-					       child_info->cap,
-					       child_info->size);
+		checkpoint_dataspace(stored_info->memory_content,
+				     child_info->cap,
+				     child_info->size);
 
 		child_info = child_info->next();
 	}

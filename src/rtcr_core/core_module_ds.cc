@@ -1,0 +1,85 @@
+/*
+ * \brief  Dataspace implementation of Core_module
+ * \author Johannes Fischer
+ * \date   2019-06-19
+ */
+
+#include <rtcr_core/core_module_ds.h>
+
+using namespace Rtcr;
+
+
+Core_module_ds::Core_module_ds(Genode::Env &env, Genode::Allocator &alloc, Genode::Entrypoint &ep)
+	: _alloc(alloc), _env(env), _ep(ep), _ds_module(nullptr)
+{}
+
+
+void Core_module_ds::checkpoint_dataspace(Genode::Ram_dataspace_capability ckpt_ds_cap,
+					  Genode::Dataspace_capability resto_ds_cap,
+					  Genode::size_t size)
+{
+#ifdef DEBUG
+	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+
+	Dataspace_translation_info *trans_info = _dataspace_translations.first();
+	if(trans_info)
+		trans_info = trans_info->find_by_resto_badge(resto_ds_cap.local_name());
+
+	/* if the dataspace is not already in the list, it will be added and it
+	 * will be handed over to the dataspace module which will do the
+	 * copying */
+	if(!trans_info) {
+		trans_info = new (_alloc) Dataspace_translation_info(ckpt_ds_cap,
+								     resto_ds_cap,
+								     size);
+#ifdef DEBUG		
+		Genode::log("Dataspaces to checkpoint:");  
+		Genode::log(" ", trans_info);
+#endif
+		/* add dataspace to the list of checkpointed dataspaces */
+		_dataspace_translations.insert(trans_info);
+
+		/* let the dataspace module copy it */
+		_ds_module->checkpoint_dataspace(ckpt_ds_cap, resto_ds_cap, 0, size);
+	}
+}
+
+
+void Core_module_ds::initialize(Genode::List<Module> &modules)
+{
+	Module *module = modules.first();
+	while (!_ds_module && module) {
+		_ds_module = dynamic_cast<Dataspace_module*>(module);
+		module = module->next();
+	}
+
+	if(!_ds_module)
+		Genode::error("No Dataspace_module loaded! ");
+}
+
+
+void Core_module_ds::_checkpoint()
+{
+#ifdef DEBUG
+	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+	/* empty the list after checkpointing, otherwise the next checkpoint
+	 * exclude some dataspaces */
+	_destroy_list(_dataspace_translations);		
+}
+
+
+Core_module_ds::~Core_module_ds()
+{
+	_destroy_list(_dataspace_translations);	
+
+}
+
+void Core_module_ds::_destroy_list(Genode::List<Dataspace_translation_info> &list)
+{
+	while(Dataspace_translation_info *elem = list.first()) {
+		list.remove(elem);
+		Genode::destroy(_alloc, elem);
+	}
+}

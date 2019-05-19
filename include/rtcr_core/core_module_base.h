@@ -81,12 +81,16 @@ protected:
 					  Genode::List<Region_map_component> &child_infos) = 0;
 
 	/**
-	 * Get the Dataspace module
+	 * Calls the method for copying a dataspace
 	 *
-	 * \return Dataspace Module
+	 * \param ckpt_ds_cap capability of source dataspace
+	 * \param resto_ds_cap capability of destination datapace
+	 * \param size
 	 */ 
-	virtual Dataspace_module &ds_module() = 0;
-
+	virtual void checkpoint_dataspace(Genode::Ram_dataspace_capability ckpt_ds_cap,
+					  Genode::Dataspace_capability resto_ds_cap,
+					  Genode::size_t size) = 0;
+	
 	/**
 	 * Get the module state
 	 *
@@ -102,6 +106,8 @@ protected:
 	virtual Cpu_root &cpu_root() = 0;
 	virtual Rm_root &rm_root() = 0;
 	virtual Rom_root &rom_root() = 0;
+
+
 };
 
 #endif /* _RTCR_CORE_MODULE_BASE_H_ */

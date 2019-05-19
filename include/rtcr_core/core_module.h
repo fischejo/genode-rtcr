@@ -24,7 +24,7 @@
 #include <rtcr_core/core_module_pd.h>
 #include <rtcr_core/core_module_rm.h>
 #include <rtcr_core/core_module_rom.h>
-#include <rtcr_ds/dataspace_module.h>
+#include <rtcr_core/core_module_ds.h>
 
 namespace Rtcr {
 	class Core_module;
@@ -44,10 +44,11 @@ class Rtcr::Core_module : public virtual Core_module_base,
 			  public Core_module_cpu,
 			  public Core_module_ram,
 			  public Core_module_rm,
-                          public Core_module_rom
+                          public Core_module_rom,
+                          public Core_module_ds
 {
 private:
-	Dataspace_module *_ds_module;
+
 	Core_state &_state;
 
 protected:
@@ -56,14 +57,6 @@ protected:
 	 * Create a Module_state object with the given allocator
 	 */
 	Core_state &_initialize_state(Genode::Allocator &alloc);
-
-	/**
-	 * Provide a reference to the loaded dataspace module
-	 *
-	 * \return Reference to Dataspace Module
-	 */    
-	virtual Dataspace_module &ds_module() override { return *_ds_module; }
-
     
 public:  
 
@@ -75,13 +68,6 @@ public:
 		    Genode::Xml_node *config);
 
 	~Core_module();
-
-	/**
-	 * Called by the Target_child when all modules are initialized.
-	 *
-	 * \param modules which were loaded. 
-	 */
-	void initialize(Genode::List<Module> &modules) override;
 
 	/**
 	 * Checkpoint PD,RAM,ROM,RM,CPU sessions

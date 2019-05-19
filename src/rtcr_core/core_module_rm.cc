@@ -250,10 +250,10 @@ void Core_module_rm::_prepare_attached_regions(Genode::List<Stored_attached_regi
 		/* dataspace should not be part of the region map list */	
 		if(!badge_info) {
 			/* then remeber this dataspace for checkpoint. if the dataspace is
-			   already in list, the ds_module does not add it again. */
-			ds_module().register_dataspace(stored_info->memory_content,
-						       child_info->attached_ds_cap,
-						       child_info->size);
+			   already in list, the Core_module_ds does not add it again. */
+			checkpoint_dataspace(stored_info->memory_content,
+					     child_info->attached_ds_cap,
+					     child_info->size);
 		}
 
 		child_info = child_info->next();
