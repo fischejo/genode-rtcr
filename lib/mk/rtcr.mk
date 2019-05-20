@@ -11,7 +11,7 @@ LIBS   = config rtcr_core rtcr_ds
 LIBS += rtcr_timer rtcr_log
 
 # optional incremental extension
-#LIBS += rtcr_inc
+LIBS += rtcr_inc
 
 # optional fpga extension
 #LIBS += rtcr_fpga

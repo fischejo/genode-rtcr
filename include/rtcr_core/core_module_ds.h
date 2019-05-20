@@ -35,14 +35,14 @@ private:
 	Genode::Env        &_env;
 	Genode::Allocator  &_alloc;
 	Genode::Entrypoint &_ep;
-	Dataspace_module *_ds_module;
-
-	/* list of dataspaces which should be checkpointed */
-	Genode::List<Dataspace_translation_info> _dataspace_translations;
 
 	void _destroy_list(Genode::List<Dataspace_translation_info> &list);
 	
 protected:
+	/* list of dataspaces which should be checkpointed */
+	Genode::List<Dataspace_translation_info> _dataspace_translations;
+	Dataspace_module *_ds_module;
+	
 	/**
 	 * Call the method for copying a dataspace
 	 *
@@ -62,6 +62,8 @@ protected:
 	void initialize(Genode::List<Module> &modules) override;
 
 	void _checkpoint();
+
+	Dataspace_module &ds_module() { return *_ds_module; };
 	
 public:
 	Core_module_ds(Genode::Env &env, Genode::Allocator &alloc, Genode::Entrypoint &ep);

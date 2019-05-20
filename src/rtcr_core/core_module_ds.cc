@@ -33,15 +33,8 @@ void Core_module_ds::checkpoint_dataspace(Genode::Ram_dataspace_capability ckpt_
 		trans_info = new (_alloc) Dataspace_translation_info(ckpt_ds_cap,
 								     resto_ds_cap,
 								     size);
-#ifdef DEBUG		
-		Genode::log("Dataspaces to checkpoint:");  
-		Genode::log(" ", trans_info);
-#endif
 		/* add dataspace to the list of checkpointed dataspaces */
 		_dataspace_translations.insert(trans_info);
-
-		/* let the dataspace module copy it */
-		_ds_module->checkpoint_dataspace(ckpt_ds_cap, resto_ds_cap, 0, size);
 	}
 }
 
@@ -64,6 +57,24 @@ void Core_module_ds::_checkpoint()
 #ifdef DEBUG
 	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
+	Dataspace_translation_info *memory_info = _dataspace_translations.first();
+
+#ifdef DEBUG
+	Genode::log("Dataspaces to checkpoint:");  
+	while(memory_info) {
+		Genode::log(" ", *memory_info);
+		memory_info = memory_info->next();
+	}
+	memory_info = _dataspace_translations.first();	
+#endif
+	while(memory_info) {		
+		_ds_module->checkpoint_dataspace(memory_info->ckpt_ds_cap,
+						 memory_info->resto_ds_cap,
+						 0,
+						 memory_info->size);		
+		memory_info = memory_info->next();
+	}
+
 	/* empty the list after checkpointing, otherwise the next checkpoint
 	 * exclude some dataspaces */
 	_destroy_list(_dataspace_translations);		

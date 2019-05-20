@@ -67,7 +67,7 @@ public:
 		    bool &bootstrap,
 		    Genode::Xml_node *config);
 
-	~Core_module();
+	~Core_module() {};
 
 	/**
 	 * Checkpoint PD,RAM,ROM,RM,CPU sessions
