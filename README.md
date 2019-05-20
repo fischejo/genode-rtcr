@@ -6,10 +6,11 @@ All documentation is in directory `doc`.
 
 ## Modules
 
----
-| Module | Description | Optional |
----
-| core | Minimal implementation for a successfull checkpoint/restore | No |
-| ds | Default memory Copying implementation | No |
-| log | Module for checkpointing/restoring a Log session | Yes |
-| timer | Module for checkpointing/restoring a Timer session | Yes |
+
+| **Module** | **Description** | **Optional** | **Dependencies** |
+| --- | --- | --- | --- |
+| `core` | Minimal implementation for a successfull checkpoint/restore | | `ds` |
+| `ds` | Default memory Copying implementation | | |
+| `log` | Module for checkpointing/restoring a Log session | Yes | |
+| `timer` | Module for checkpointing/restoring a Timer session | Yes | |
+
