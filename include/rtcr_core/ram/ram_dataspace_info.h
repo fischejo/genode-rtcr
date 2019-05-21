@@ -28,6 +28,12 @@ struct Rtcr::Ram_dataspace_info : Normal_obj_info, private Simple_counter<Ram_da
 	    Genode::List<Ram_dataspace_info>::Element
 {
 	/**
+	 * Pointer to extra data. This can be used by an extending
+	 * implementation in order to prevent an inheritance of this class.
+	 */
+	void *storage;
+
+	/**
 	 * Allocated Ram dataspace
 	 */
 	Genode::Ram_dataspace_capability const cap;
@@ -40,9 +46,22 @@ struct Rtcr::Ram_dataspace_info : Normal_obj_info, private Simple_counter<Ram_da
 		Normal_obj_info (bootstrapped),
 		cap      (ds_cap),
 		size     (size),
-		cached   (cached)
+		cached   (cached),
+		storage (nullptr)
 	{ }
 
+	Ram_dataspace_info(Genode::Ram_dataspace_capability ds_cap, Genode::size_t size, Genode::Cache_attribute cached,
+			   bool bootstrapped, void *storage)
+		:
+		Normal_obj_info (bootstrapped),
+		cap      (ds_cap),
+		size     (size),
+		cached   (cached),
+		storage (storage)
+		
+	{ }
+
+	
 	/* one method should be virtual, otherwise this class is not polymorphic
 	 * and therefore dynamic_cast can't be applied. */
 	virtual ~Ram_dataspace_info() {};

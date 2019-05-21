@@ -48,10 +48,10 @@ protected:
 
 	Ram_session_component *_find_ram_session(const char *label, Ram_root &ram_root);
 
-	void _prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_info> &stored_infos,
+	virtual void _prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_info> &stored_infos,
 				     Genode::List<Ram_dataspace_info> &child_infos);
 
-	Stored_ram_dataspace_info &_create_stored_ram_dataspace(Ram_dataspace_info &child_info);
+	virtual Stored_ram_dataspace_info &_create_stored_ram_dataspace(Ram_dataspace_info &child_info);
     
 	void _destroy_stored_ram_session(Stored_ram_session_info &stored_info);
 
