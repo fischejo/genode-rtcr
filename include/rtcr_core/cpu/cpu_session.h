@@ -28,6 +28,7 @@ namespace Rtcr {
 }
 
 
+
 /**
  * This custom Cpu session intercepts the creation and destruction of threads by the client
  */
@@ -121,7 +122,14 @@ public:
 	void deploy_queue(Genode::Dataspace_capability ds) override;
 	void rq(Genode::Dataspace_capability ds) override;
 	void dead(Genode::Dataspace_capability ds) override;
+
 	void killed() override;
+
+
+		
+	
+	static Cpu_session_component* current_session;
+
 };
 
 
