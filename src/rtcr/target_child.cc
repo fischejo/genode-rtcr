@@ -7,6 +7,11 @@
 #include <rtcr/target_child.h>
 #include <rtcr/core_module_abstract.h>
 
+#include <base/rpc_server.h>
+#include <base/session_label.h>
+#include <util/arg_string.h>
+#include <base/session_label.h>
+
 using namespace Rtcr;
 
 
@@ -241,5 +246,15 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 
 void Target_child::filter_session_args(const char *service, char *args, Genode::size_t args_len)
 {
-	Genode::Arg_string::set_arg_string(args, args_len, "label", _name.string());
+#ifdef DEBUG
+	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#endif
+	Genode::Session_label const old_label = Genode::label_from_args(args);
+	if (old_label == "") {
+		Genode::Arg_string::set_arg_string(args, args_len, "label", _name.string());
+	} else {
+		Genode::Session_label const name(_name.string());
+		Genode::Session_label const new_label = prefixed_label(name, old_label);
+		Genode::Arg_string::set_arg_string(args, args_len, "label", new_label.string());
+	}
 }
