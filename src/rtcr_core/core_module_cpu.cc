@@ -6,26 +6,36 @@
 
 #include <rtcr_core/core_module_cpu.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("blue");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
 using namespace Rtcr;
 
 
 Core_module_cpu::Core_module_cpu(Genode::Env &env,
-								 Genode::Allocator &alloc,
-								 Genode::Entrypoint &ep)
+				 Genode::Allocator &alloc,
+				 Genode::Entrypoint &ep)
 	:
 	_env(env),
 	_alloc(alloc),
 	_ep(ep)
-{
-
-}
+{}
 
 
 void Core_module_cpu::_initialize_cpu_session(const char* label, bool &bootstrap)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	_cpu_root = new (_alloc) Cpu_root(_env, _alloc, _ep, pd_root(), bootstrap);
 	_cpu_service = new (_alloc) Genode::Local_service("CPU", _cpu_root);
 	_cpu_session = _find_cpu_session(label, cpu_root());  
@@ -34,9 +44,7 @@ void Core_module_cpu::_initialize_cpu_session(const char* label, bool &bootstrap
 
 Cpu_session_component *Core_module_cpu::_find_cpu_session(const char *label, Cpu_root &cpu_root)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
   
 	/* Preparing argument string */
 	char args_buf[160];
@@ -61,6 +69,7 @@ Cpu_session_component *Core_module_cpu::_find_cpu_session(const char *label, Cpu
 
 
 Core_module_cpu::~Core_module_cpu() {
+	DEBUG_THIS_CALL
 	Genode::destroy(_alloc, _cpu_root);
 	Genode::destroy(_alloc, _cpu_service);
 }
@@ -68,9 +77,8 @@ Core_module_cpu::~Core_module_cpu() {
 
 void Core_module_cpu::_checkpoint()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	Genode::List<Cpu_session_component> &child_infos =  cpu_root().session_infos();
 	Genode::List<Stored_cpu_session_info> &stored_infos = state()._stored_cpu_sessions;
 	Cpu_session_component *child_info = nullptr;
@@ -122,9 +130,8 @@ void Core_module_cpu::_checkpoint()
 
 void Core_module_cpu::_destroy_stored_cpu_session(Stored_cpu_session_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	while(Stored_cpu_thread_info *info = stored_info.stored_cpu_thread_infos.first()) {
 		stored_info.stored_cpu_thread_infos.remove(info);
 		_destroy_stored_cpu_thread(*info);
@@ -136,9 +143,8 @@ void Core_module_cpu::_destroy_stored_cpu_session(Stored_cpu_session_info &store
 void Core_module_cpu::_prepare_cpu_threads(Genode::List<Stored_cpu_thread_info> &stored_infos,
 										   Genode::List<Cpu_thread_component> &child_infos)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	Cpu_thread_component *child_info = nullptr;
 	Stored_cpu_thread_info *stored_info = nullptr;
 
@@ -193,15 +199,14 @@ void Core_module_cpu::_prepare_cpu_threads(Genode::List<Stored_cpu_thread_info> 
 
 void Core_module_cpu::_destroy_stored_cpu_thread(Stored_cpu_thread_info &stored_info)
 {
+	DEBUG_THIS_CALL
 	Genode::destroy(_alloc, &stored_info);
 }
 
 
 void Core_module_cpu::pause()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	/* Iterate through every session */
 	Cpu_session_component *cpu_session = _cpu_root->session_infos().first();
 	while(cpu_session) {
@@ -222,9 +227,8 @@ void Core_module_cpu::pause()
 
 void Core_module_cpu::resume()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	/* Iterate through every session */
 	Cpu_session_component *cpu_session = _cpu_root->session_infos().first();
 	while(cpu_session) {
@@ -236,11 +240,14 @@ void Core_module_cpu::resume()
 			client.resume();
 
 			cpu_thread = cpu_thread->next();
-			Genode::log("\033[36m", __PRETTY_FUNCTION__, " cpu_thread=",cpu_thread, "\033[0m");    	    
+#ifdef DEBUG			
+			Genode::log("\033[36m", __PRETTY_FUNCTION__, " cpu_thread=",cpu_thread, "\033[0m");
+#endif			
 		}
 
 		cpu_session = cpu_session->next();
-		Genode::log("\033[36m", __PRETTY_FUNCTION__, " cpu_session=",cpu_session, "\033[0m");    	    	
+#ifdef DEBUG		
+		Genode::log("\033[36m", __PRETTY_FUNCTION__, " cpu_session=",cpu_session, "\033[0m");
+#endif		
 	}
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, " finished", "\033[0m");    
 }

@@ -12,10 +12,6 @@
  * under the terms of the GNU General Public License version 2.
  */
 
-
-//#include <rtcr/session_handler_factory.h>
-
-
 #include <base/component.h>
 #include <base/log.h>
 #include <base/component.h>
@@ -47,8 +43,8 @@ struct Rtcr::Main
 
   	Main(Genode::Env &env_) : env(env_)
 	{
-	  Timer::Connection timer(env);	  
-	  
+	  Timer::Connection timer(env);
+
 	  Target_child child (env,
 			      heap,
 			      parent_services);
@@ -61,7 +57,9 @@ struct Rtcr::Main
 	  Target_state state(env, heap);
 
 	  child.checkpoint(state);
+
 	  Genode::log(state);
+
 
 	  Genode::sleep_forever();
 	}

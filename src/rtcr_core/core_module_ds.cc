@@ -6,6 +6,20 @@
 
 #include <rtcr_core/core_module_ds.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("blue");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 using namespace Rtcr;
 
 
@@ -18,9 +32,7 @@ void Core_module_ds::checkpoint_dataspace(Genode::Ram_dataspace_capability ckpt_
 					  Genode::Dataspace_capability resto_ds_cap,
 					  Genode::size_t size)
 {
-#ifdef DEBUG
-	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
 	Dataspace_translation_info *trans_info = _dataspace_translations.first();
 	if(trans_info)
@@ -54,9 +66,8 @@ void Core_module_ds::initialize(Genode::List<Module> &modules)
 
 void Core_module_ds::_checkpoint()
 {
-#ifdef DEBUG
-	Genode::log("\e[38;5;204m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
+
 	Dataspace_translation_info *memory_info = _dataspace_translations.first();
 
 #ifdef DEBUG
@@ -83,12 +94,14 @@ void Core_module_ds::_checkpoint()
 
 Core_module_ds::~Core_module_ds()
 {
+	DEBUG_THIS_CALL
 	_destroy_list(_dataspace_translations);	
 
 }
 
 void Core_module_ds::_destroy_list(Genode::List<Dataspace_translation_info> &list)
 {
+	DEBUG_THIS_CALL	
 	while(Dataspace_translation_info *elem = list.first()) {
 		list.remove(elem);
 		Genode::destroy(_alloc, elem);

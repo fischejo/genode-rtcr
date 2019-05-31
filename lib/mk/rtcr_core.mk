@@ -15,9 +15,10 @@ vpath % $(REP_DIR)/src/rtcr_core/rom
 vpath % $(REP_DIR)/src/rtcr_core/ram
 vpath % $(REP_DIR)/src/rtcr_core/ds
 
-
+# enable debugging log
 CC_OPT += -DVERBOSE
 CC_OPT += -DDEBUG
 
 LIBS   += base config
 INC_DIR += $(BASE_DIR)/../base-foc/src/include
+

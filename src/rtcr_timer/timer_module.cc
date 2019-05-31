@@ -7,6 +7,19 @@
 
 #include <rtcr_timer/timer_module.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("blue");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
 using namespace Rtcr;
 
 /* Create a static instance of the Core_module_factory. This registers the module */
@@ -35,9 +48,7 @@ Timer_module::~Timer_module()
 
 void Timer_module::initialize(Genode::List<Module> &modules)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL
   
 	Module *module = modules.first();
 	while (!_core_module && module) {
@@ -58,9 +69,7 @@ Timer_state &Timer_module::_initialize_state(Genode::Allocator &_alloc)
 
 Module_state *Timer_module::checkpoint()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
 	Genode::List<Stored_timer_session_info> &stored_infos = _timer_state._stored_timer_sessions;
 	Genode::List<Timer_session_component> &child_infos = _timer_root->session_infos();
@@ -114,9 +123,8 @@ Module_state *Timer_module::checkpoint()
 
 void Timer_module::_destroy_stored_timer_session(Stored_timer_session_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif  
+	DEBUG_THIS_CALL
+
 	Genode::destroy(_alloc, &stored_info);
 }
 
@@ -124,19 +132,15 @@ void Timer_module::_destroy_stored_timer_session(Stored_timer_session_info &stor
 
 void Timer_module::restore(Module_state *state)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
+	DEBUG_THIS_CALL
 }
 
 
 Genode::Service *Timer_module::resolve_session_request(const char *service_name,
 						       const char *args)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL
+
   
 	if(!Genode::strcmp(service_name, "Timer")) {
 		if(!_timer_root) {

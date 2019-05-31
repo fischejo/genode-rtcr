@@ -8,6 +8,20 @@
 #include <base/internal/cap_map.h>
 #include <base/internal/cap_alloc.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("blue");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 using namespace Rtcr;
 
 
@@ -23,9 +37,8 @@ Core_module_pd::Core_module_pd(Genode::Env &env,
 
 void Core_module_pd::_initialize_pd_session(const char* label, bool &bootstrap)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	_pd_root = new (_alloc) Pd_root(_env, _alloc, _ep, bootstrap);
 	_pd_service = new (_alloc) Genode::Local_service("PD", _pd_root);
 	_pd_session = _find_pd_session(label, pd_root());
@@ -34,9 +47,7 @@ void Core_module_pd::_initialize_pd_session(const char* label, bool &bootstrap)
 
 Pd_session_component *Core_module_pd::_find_pd_session(const char *label, Pd_root &pd_root)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
   
 	/* Preparing argument string */
 	char args_buf[160];
@@ -58,6 +69,7 @@ Pd_session_component *Core_module_pd::_find_pd_session(const char *label, Pd_roo
 
 Core_module_pd::~Core_module_pd()
 {
+	DEBUG_THIS_CALL
 	// this should be cleaned right after a checkpoint.
 	_destroy_list(_kcap_mappings);
 	Genode::destroy(_alloc, _pd_root);
@@ -72,9 +84,7 @@ Pd_root &Core_module_pd::pd_root() {
 
 void Core_module_pd::_create_kcap_mappings()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
   
 	using Genode::log;
 	using Genode::Hex;
@@ -189,9 +199,7 @@ void Core_module_pd::_create_kcap_mappings()
 
 void Core_module_pd::_checkpoint()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
   
 	Genode::List<Stored_pd_session_info> &stored_infos = state()._stored_pd_sessions;
 	Genode::List<Pd_session_component> &child_infos = pd_root().session_infos();
@@ -271,9 +279,7 @@ void Core_module_pd::_checkpoint()
 
 void Core_module_pd::_destroy_stored_pd_session(Stored_pd_session_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
 	while(Stored_signal_context_info *info = stored_info.stored_context_infos.first()) {
 		stored_info.stored_context_infos.remove(info);
@@ -300,10 +306,8 @@ void Core_module_pd::_destroy_stored_pd_session(Stored_pd_session_info &stored_i
 
 void Core_module_pd::_destroy_stored_region_map(Stored_region_map_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	while(Stored_attached_region_info *info = stored_info.stored_attached_region_infos.first()) {
 		stored_info.stored_attached_region_infos.remove(info);
 		_destroy_stored_attached_region(*info);
@@ -314,9 +318,8 @@ void Core_module_pd::_destroy_stored_region_map(Stored_region_map_info &stored_i
 
 void Core_module_pd::_destroy_stored_attached_region(Stored_attached_region_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	/* Pre-condition: This stored object is removed from its list, thus, a
 	 * search for a stored dataspace will not return its memory content
 	 * dataspace */
@@ -334,9 +337,7 @@ void Core_module_pd::_destroy_stored_attached_region(Stored_attached_region_info
 void Core_module_pd::_prepare_native_caps(Genode::List<Stored_native_capability_info> &stored_infos,
 					  Genode::List<Native_capability_info> &child_infos)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
     
 	Native_capability_info *child_info = nullptr;
 	Stored_native_capability_info *stored_info = nullptr;
@@ -383,10 +384,7 @@ void Core_module_pd::_prepare_native_caps(Genode::List<Stored_native_capability_
 
 void Core_module_pd::_destroy_stored_native_cap(Stored_native_capability_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
+	DEBUG_THIS_CALL
 	Genode::destroy(_alloc, &stored_info);
 }
 
@@ -394,10 +392,8 @@ void Core_module_pd::_destroy_stored_native_cap(Stored_native_capability_info &s
 void Core_module_pd::_prepare_signal_sources(Genode::List<Stored_signal_source_info> &stored_infos,
 					     Genode::List<Signal_source_info> &child_infos)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	Signal_source_info *child_info = nullptr;
 	Stored_signal_source_info *stored_info = nullptr;
 
@@ -443,9 +439,7 @@ void Core_module_pd::_prepare_signal_sources(Genode::List<Stored_signal_source_i
 
 void Core_module_pd::_destroy_stored_signal_source(Stored_signal_source_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL
 	Genode::destroy(_alloc, &stored_info);
 }
 
@@ -453,9 +447,7 @@ void Core_module_pd::_destroy_stored_signal_source(Stored_signal_source_info &st
 void Core_module_pd::_prepare_signal_contexts(Genode::List<Stored_signal_context_info> &stored_infos,
 					      Genode::List<Signal_context_info> &child_infos)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	Signal_context_info *child_info = nullptr;
 	Stored_signal_context_info *stored_info = nullptr;
 
@@ -501,7 +493,8 @@ void Core_module_pd::_prepare_signal_contexts(Genode::List<Stored_signal_context
 
 
 void Core_module_pd::_destroy_stored_signal_context(Stored_signal_context_info &stored_info)
-{  
+{
+	DEBUG_THIS_CALL
 	Genode::destroy(_alloc, &stored_info);
 }
 
@@ -520,6 +513,7 @@ Genode::addr_t Core_module_pd::find_kcap_by_badge(Genode::uint16_t badge)
 
 void Core_module_pd::_destroy_list(Genode::List<Kcap_badge_info> &list)
 {
+	DEBUG_THIS_CALL	
 	while(Kcap_badge_info *elem = list.first()) {
 		list.remove(elem);
 		Genode::destroy(_alloc, elem);
@@ -528,6 +522,7 @@ void Core_module_pd::_destroy_list(Genode::List<Kcap_badge_info> &list)
 
 void Core_module_pd::_destroy_list(Genode::List<Ref_badge_info> &list)
 {
+	DEBUG_THIS_CALL	
 	while(Ref_badge_info *elem = list.first())
 	{
 		list.remove(elem);

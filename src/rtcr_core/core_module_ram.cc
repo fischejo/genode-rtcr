@@ -6,6 +6,20 @@
 
 #include <rtcr_core/core_module_ram.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("blue");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 using namespace Rtcr;
 
 
@@ -21,6 +35,7 @@ Core_module_ram::Core_module_ram(Genode::Env &env,
 
 void Core_module_ram::_initialize_ram_session(const char* label, bool &bootstrap)
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	_ram_root = new (_alloc) Ram_root(_env, _alloc, _ep, bootstrap);
 	_ram_service = new (_alloc) Genode::Local_service("RAM", _ram_root);
 	_ram_session = _find_ram_session(label, ram_root());
@@ -36,10 +51,7 @@ void Core_module_ram::_initialize_ram_session(const char* label, bool &bootstrap
 
 Ram_session_component *Core_module_ram::_find_ram_session(const char *label, Ram_root &ram_root)
 { 
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-   
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	/* Preparing argument string */
 	char args_buf[160];
 	Genode::snprintf(args_buf, sizeof(args_buf),
@@ -63,6 +75,7 @@ Ram_session_component *Core_module_ram::_find_ram_session(const char *label, Ram
 
 Core_module_ram::~Core_module_ram()
 {
+	DEBUG_THIS_CALL	
 	Genode::destroy(_alloc, _ram_root);
 	Genode::destroy(_alloc, _ram_service);    
 }
@@ -70,9 +83,8 @@ Core_module_ram::~Core_module_ram()
 
 void Core_module_ram::_checkpoint()
 { 
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	Genode::List<Ram_session_component> &child_infos =  _ram_root->session_infos();
 	Genode::List<Stored_ram_session_info> &stored_infos = state()._stored_ram_sessions;    
 	Ram_session_component *child_info = nullptr;
@@ -121,6 +133,7 @@ void Core_module_ram::_checkpoint()
 
 void Core_module_ram::_destroy_stored_ram_session(Stored_ram_session_info &stored_info)
 {
+	DEBUG_THIS_CALL	
 	while(Stored_ram_dataspace_info *info = stored_info.stored_ramds_infos.first()) {
 		stored_info.stored_ramds_infos.remove(info);
 		_destroy_stored_ram_dataspace(*info);
@@ -132,9 +145,7 @@ void Core_module_ram::_destroy_stored_ram_session(Stored_ram_session_info &store
 void Core_module_ram::_prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_info> &stored_infos,
 					      Genode::List<Ram_dataspace_info> &child_infos)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
 	Ram_dataspace_info *child_info = nullptr;
 	Stored_ram_dataspace_info *stored_info = nullptr;
@@ -183,9 +194,8 @@ void Core_module_ram::_prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_
 
 Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Ram_dataspace_info &child_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		
 	/* The dataspace with the memory content of the ram dataspace will be
 	 * referenced by the stored ram dataspace */
 	Genode::Ram_dataspace_capability ramds_cap;
@@ -217,9 +227,7 @@ Stored_ram_dataspace_info &Core_module_ram::_create_stored_ram_dataspace(Ram_dat
 
 void Core_module_ram::_destroy_stored_ram_dataspace(Stored_ram_dataspace_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL	
 	/* Pre-condition: This stored object is removed from its list, thus, a
 	 * search for a stored dataspace will not return its memory content
 	 * dataspace */

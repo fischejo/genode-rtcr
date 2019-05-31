@@ -6,6 +6,18 @@
 
 #include <rtcr_core/core_module_rm.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("blue");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
 
 using namespace Rtcr;
 
@@ -22,9 +34,7 @@ Core_module_rm::Core_module_rm(Genode::Env &env,
 
 void Core_module_rm::_initialize_rm_session(const char* label, bool &bootstrap)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 	_rm_root = new (_alloc) Rm_root(_env, _alloc, _ep, bootstrap);
 	_rm_service = new (_alloc) Genode::Local_service("RM", _rm_root);
 }
@@ -32,6 +42,7 @@ void Core_module_rm::_initialize_rm_session(const char* label, bool &bootstrap)
 
 Core_module_rm::~Core_module_rm()
 {
+	DEBUG_THIS_CALL
 	_destroy_list(_region_maps);
 	Genode::destroy(_alloc, _rm_root);
 	Genode::destroy(_alloc, _rm_service);        
@@ -41,15 +52,12 @@ Core_module_rm::~Core_module_rm()
 void Core_module_rm::_create_region_map_dataspaces_list()
 
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 	/* Create a list of region map dataspaces which are known to child
 	 * These dataspaces are ignored when creating copy dataspaces
 	 * For new intercepted sessions which trade managed dataspaces between child and themselves,
 	 * the region map dataspace capability has to be inserted into this list
 	 */
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
 	Genode::List<Rm_session_component> &rm_sessions = rm_root().session_infos();
 	Genode::List<Pd_session_component> &pd_sessions = pd_root().session_infos();
     
@@ -107,9 +115,8 @@ void Core_module_rm::_create_region_map_dataspaces_list()
 
 void Core_module_rm::_checkpoint()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+	
 	Genode::List<Stored_rm_session_info> &stored_infos = state()._stored_rm_sessions;
 	Genode::List<Rm_session_component> &child_infos = _rm_root->session_infos();    
 	Rm_session_component *child_info = nullptr;
@@ -161,9 +168,7 @@ void Core_module_rm::_checkpoint()
 void Core_module_rm::_prepare_region_maps(Genode::List<Stored_region_map_info> &stored_infos,
 					  Genode::List<Region_map_component> &child_infos)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	Region_map_component *child_info = nullptr;
 	Stored_region_map_info *stored_info = nullptr;
 
@@ -218,9 +223,7 @@ void Core_module_rm::_prepare_region_maps(Genode::List<Stored_region_map_info> &
 void Core_module_rm::_prepare_attached_regions(Genode::List<Stored_attached_region_info> &stored_infos,
 					       Genode::List<Attached_region_info> &child_infos)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL				
 	Attached_region_info *child_info = nullptr;
 	Stored_attached_region_info *stored_info = nullptr;
 
@@ -281,10 +284,7 @@ void Core_module_rm::_prepare_attached_regions(Genode::List<Stored_attached_regi
 
 Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(Attached_region_info &child_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	/* The dataspace with the memory content of the ram dataspace will be
 	 * referenced by the stored ram dataspace */
 	Genode::Ram_dataspace_capability ramds_cap;
@@ -323,9 +323,8 @@ Stored_attached_region_info &Core_module_rm::_create_stored_attached_region(Atta
 
 void Core_module_rm::_destroy_stored_rm_session(Stored_rm_session_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL
+		
 	while(Stored_region_map_info *info = stored_info.stored_region_map_infos.first()) {
 		stored_info.stored_region_map_infos.remove(info);
 		_destroy_stored_region_map(*info);
@@ -336,10 +335,8 @@ void Core_module_rm::_destroy_stored_rm_session(Stored_rm_session_info &stored_i
 
 void Core_module_rm::_destroy_stored_region_map(Stored_region_map_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-  
+	DEBUG_THIS_CALL
+		
 	while(Stored_attached_region_info *info = stored_info.stored_attached_region_infos.first()) {
 		stored_info.stored_attached_region_infos.remove(info);
 		_destroy_stored_attached_region(*info);
@@ -350,10 +347,8 @@ void Core_module_rm::_destroy_stored_region_map(Stored_region_map_info &stored_i
 
 void Core_module_rm::_destroy_stored_attached_region(Stored_attached_region_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-  
+	DEBUG_THIS_CALL
+		
 	/* Pre-condition: This stored object is removed from its list, thus, a
 	 * search for a stored dataspace will not return its memory content
 	 * dataspace */
@@ -378,6 +373,8 @@ Ref_badge_info *Core_module_rm::find_region_map_by_badge(Genode::uint16_t badge)
 
 void Core_module_rm::_destroy_list(Genode::List<Ref_badge_info> &list)
 {
+	DEBUG_THIS_CALL
+		
 	while(Ref_badge_info *elem = list.first())
 	{
 		list.remove(elem);

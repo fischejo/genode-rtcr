@@ -7,6 +7,19 @@
 
 #include <rtcr_log/log_module.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("blue");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
 using namespace Rtcr;
 
 /* Create a static instance of the Log_module_factory. This registers the module */
@@ -42,9 +55,7 @@ Log_state &Log_module::_initialize_state(Genode::Allocator &alloc)
 
 void Log_module::initialize(Genode::List<Module> &modules)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL
   
 	Module *module = modules.first();
 	while (!_core_module && module) {
@@ -59,9 +70,7 @@ void Log_module::initialize(Genode::List<Module> &modules)
 
 Module_state *Log_module::checkpoint()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
 	Genode::List<Stored_log_session_info> &stored_infos = _log_state._stored_log_sessions;
 	Genode::List<Log_session_component> &child_infos = _log_root->session_infos();
@@ -114,9 +123,8 @@ Module_state *Log_module::checkpoint()
 
 void Log_module::_destroy_stored_log_session(Stored_log_session_info &stored_info)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL 
+
 	Genode::destroy(_alloc, &stored_info);
 }
 
@@ -124,19 +132,14 @@ void Log_module::_destroy_stored_log_session(Stored_log_session_info &stored_inf
 
 void Log_module::restore(Module_state *state)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-
+	DEBUG_THIS_CALL 	
 }
 
 
 Genode::Service *Log_module::resolve_session_request(const char *service_name,
 						     const char *args)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL
   
 	if(!Genode::strcmp(service_name, "LOG")) {
 		if(!_log_root) {
