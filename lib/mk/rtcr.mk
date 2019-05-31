@@ -13,5 +13,11 @@ LIBS += rtcr_timer rtcr_log
 # optional incremental extension
 LIBS += rtcr_inc
 
-# optional fpga extension
-#LIBS += rtcr_fpga
+# optional dma memory copying extension
+LIBS += rtcr_cdma
+
+# optional fpga capability parsing extension
+LIBS += rtcr_kcap
+
+# optional redundant memory extension
+LIBS += rtcr_red
