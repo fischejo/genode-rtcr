@@ -25,9 +25,9 @@ void Component::construct(Genode::Env &env)
 	log("Creating Timer session.");
 	Timer::Connection timer(env);
 
+	Dataspace_capability ds_cap = env.ram().alloc(20*4096);
+	Genode::uint8_t* ds_addr = env.rm().attach(ds_cap);	
 
-	//	env.parent().upgrade(timer, "ram_quota=8K");
-	//	env.parent().upgrade(env.ram_session_cap(), "ram_quota=24K");
 	int n  = 0;
 	while(1) {
 		log("1 sheep. zzZ");
