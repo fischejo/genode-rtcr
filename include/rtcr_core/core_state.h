@@ -52,7 +52,7 @@ protected:
     
 public:
 	Core_state(Genode::Allocator &alloc);
-	~Core_state();
+	virtual ~Core_state();
     
 	/**
 	 * States internally used by the Core module
