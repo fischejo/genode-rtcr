@@ -45,7 +45,8 @@ protected:
 	Ram_session_component *_ram_session;
 
 	void _initialize_ram_session(const char* label, bool &bootstrap);
-
+	void _transfer_quota(Genode::Xml_node *config);
+	
 	Ram_session_component *_find_ram_session(const char *label, Ram_root &ram_root);
 
 	virtual void _prepare_ram_dataspaces(Genode::List<Stored_ram_dataspace_info> &stored_infos,

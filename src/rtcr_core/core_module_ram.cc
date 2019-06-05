@@ -36,16 +36,30 @@ Core_module_ram::Core_module_ram(Genode::Env &env,
 void Core_module_ram::_initialize_ram_session(const char* label, bool &bootstrap)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
+
 	_ram_root = new (_alloc) Ram_root(_env, _alloc, _ep, bootstrap);
 	_ram_service = new (_alloc) Genode::Local_service("RAM", _ram_root);
 	_ram_session = _find_ram_session(label, ram_root());
 
-	// Donate ram quota to child
-	// TODO Replace static quota donation with the amount of quota, the child needs
-	Genode::size_t donate_quota = 512*1024;
+}
+
+
+void Core_module_ram::_transfer_quota(Genode::Xml_node *config)
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+
+	Genode::size_t quota = 512*1024; // 512 kB
+	try {
+			config->sub_node("quota").value(&quota);
+			Genode::log("Config Quota: ", quota);
+	} catch(...) {
+		Genode::warning("No quota configured. Set default value: 512 kB.");
+	}
+
+	/* Donate ram quota to child */
 	_ram_session->ref_account(_env.ram_session_cap());
 	// Note: transfer goes directly to parent's ram session
-	_env.ram().transfer_quota(_ram_session->parent_cap(), donate_quota);
+	_env.ram().transfer_quota(_ram_session->parent_cap(), quota);
 }
 
 

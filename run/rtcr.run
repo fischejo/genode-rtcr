@@ -39,7 +39,9 @@ install_config {
                     <module name="ds" />    
                     <module name="timer" />
                     <module name="log" />
-                    <module name="core" />
+                    <module name="core">
+                      <quota>1048576</quota>
+                    </module>
                 </config>
 	</start>
 </config>}

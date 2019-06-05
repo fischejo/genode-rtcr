@@ -33,6 +33,7 @@ Core_module::Core_module(Genode::Env &env,
 	_initialize_rm_session(label, bootstrap);
 	_initialize_ram_session(label, bootstrap);
 	_initialize_rom_session(label, bootstrap);
+	_transfer_quota(config);
 }
 
 
