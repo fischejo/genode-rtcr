@@ -1,11 +1,11 @@
-# **R**eal**T**ime **C**heckpoint **R**estore 
+# Rtcr - *Real Time Checkpoint Restore*
 
-## Documentation
-All documentation is in directory `doc`.
+## Genode Repository Dependencies
+This Genode repository depends on following repositories
+1. `profiler`
 
 
 ## Modules
-
 
 | **Module** | **Description** | **Optional** | **Dependencies** |
 | --- | --- | --- | --- |
@@ -14,3 +14,6 @@ All documentation is in directory `doc`.
 | `log` | Module for checkpointing/restoring a Log session | Yes | |
 | `timer` | Module for checkpointing/restoring a Timer session | Yes | |
 
+
+## Documentation
+All documentation is in directory [doc](doc).
