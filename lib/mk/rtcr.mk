@@ -21,3 +21,6 @@ LIBS += rtcr_kcap
 
 # optional redundant memory extension
 LIBS += rtcr_red
+
+# optional parallized memory copying
+LIBS += rtcr_para
