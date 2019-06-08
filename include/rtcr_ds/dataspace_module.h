@@ -58,7 +58,7 @@ public:
 	 * \param dst_offset copy start position in source dataspce
 	 * \param size
 	 */
-	void checkpoint_dataspace(Genode::Dataspace_capability dst_ds_cap,
+	virtual void checkpoint_dataspace(Genode::Dataspace_capability dst_ds_cap,
 				   Genode::Dataspace_capability src_ds_cap,
 				   Genode::addr_t dst_offset,
 				   Genode::size_t size);
