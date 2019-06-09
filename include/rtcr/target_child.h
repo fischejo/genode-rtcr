@@ -22,6 +22,7 @@
 #include <rtcr/module.h>
 #include <rtcr/module_factory.h>
 #include <rtcr/target_state.h>
+#include <rtcr/module_thread.h>
 
 namespace Rtcr {
 	class Target_child;
@@ -86,6 +87,7 @@ private:
 	 * list of all currently loaded modules.
 	 */
 	Genode::List<Module> modules;
+	Genode::List<Module_thread> module_threads;
 
 	/**
 	 * Parse name of child component from XML configuration. 

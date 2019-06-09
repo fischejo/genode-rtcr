@@ -1,4 +1,4 @@
-SRC_CC = target_child.cc target_state.cc module_factory.cc
+SRC_CC = target_child.cc target_state.cc module_factory.cc module_thread.cc
 vpath % $(REP_DIR)/src/rtcr
 
 CC_OPT += -DVERBOSE

@@ -91,7 +91,8 @@ void Core_module_pd::_create_kcap_mappings()
 	using Genode::addr_t;
 	using Genode::size_t;
 	using Genode::uint16_t;
-	
+
+	/* TODO FJO: the list is just on the stack!!! */
 	Genode::List<Kcap_badge_info> result;
 
 	/* Retrieve cap_idx_alloc_addr */
@@ -192,8 +193,8 @@ void Core_module_pd::_create_kcap_mappings()
 	}
 #endif
 
-	// FJO: not sure if this might work...
 	_kcap_mappings = result;
+	_kcap_mappings_prepared.set();
 }
 
 
@@ -501,6 +502,10 @@ void Core_module_pd::_destroy_stored_signal_context(Stored_signal_context_info &
 
 Genode::addr_t Core_module_pd::find_kcap_by_badge(Genode::uint16_t badge)
 {
+	/* block calling thread until the core_module thread prepared the
+	 * `_kcap_mapping` list */
+	_kcap_mappings_prepared.wait();
+	
 	Genode::addr_t kcap = 0;
 
 	Kcap_badge_info *info = _kcap_mappings.first();

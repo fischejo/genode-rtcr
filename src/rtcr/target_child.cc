@@ -18,7 +18,9 @@ using namespace Rtcr;
 Target_child::Target_child(Genode::Env &env,
 			   Genode::Allocator &alloc,
 			   Genode::Service_registry &parent_services)
-	: Target_child(env, alloc, parent_services, _child_name_from_xml()) {}
+	: Target_child(env, alloc, parent_services, _child_name_from_xml()) {
+	Event e();
+}
 
 
 Child_name Target_child::_child_name_from_xml()
@@ -105,9 +107,29 @@ Target_child::Target_child(Genode::Env &env,
 
 	/* inform every module about each other */
 	Module *module = modules.first();
+
+	Genode::Affinity::Space aff_space = env.cpu().affinity_space();
+
+	int i = 0;
+	/* insert module thread at the same position as the module can be found in the
+	 * module list. This is necessary in order to keep the module enumeration */
+	Module_thread *preceding_thread = nullptr;
+	
 	while (module) {
-		Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),  "\e[0m\e[38;5;214m","]->initialize()", "\033[0m");      	  
+		Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),  "\e[0m\e[38;5;214m","]->initialize()", "\033[0m");
+
+		/* initialize every module */
 		module->initialize(modules);
+
+		
+		Module_thread *thread = new (alloc) Module_thread(env,
+								  *module,
+								  aff_space.location_of_index(i+1),
+								  env.cpu());
+		i++;
+		thread->start();
+		module_threads.insert(thread, preceding_thread);
+		preceding_thread = thread;
 		module = module->next();
 	}
 
@@ -119,7 +141,8 @@ Target_child::Target_child(Genode::Env &env,
 		core->cpu_session(),
 		core->pd_session().cap(),
 		_name.string());
-	Genode::log("\e[1m\e[38;5;199m", "After Initial_thread", "\033[0m");	
+	Genode::log("\e[1m\e[38;5;199m", "After Initial_thread", "\033[0m");
+	
 }
 
 
@@ -165,17 +188,21 @@ void Target_child::checkpoint(Target_state &target_state, bool resume)
 	core->pause();
 
 	/* checkpoint every module */
-	Module *module = modules.first();
-	while (module) {
-		Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),  "\e[0m\e[38;5;214m","]->checkpoint()", "\033[0m");      
-		Module_state *module_state = module->checkpoint();
-
-		/* store current module state in the target state */
-		if(module_state)
-			target_state.store(module->name(), *module_state);
-		module = module->next();
+	Module_thread *thread = module_threads.first();
+	while (thread) {
+		Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->_module.name(),  "\e[0m\e[38;5;214m","]->checkpoint()", "\033[0m");
+		
+		thread->checkpoint(target_state);
+		thread = thread->next();
 	}
 
+	thread = module_threads.first();
+	while (thread) {
+		Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->_module.name(),  "\e[0m\e[38;5;214m","]->wait_until_finished()", "\033[0m");
+		thread->wait_until_finished();
+		thread = thread->next();
+	}
+	
 	/* resume child */
 	if(resume)
 		core->resume();
@@ -187,17 +214,23 @@ void Target_child::restore(Target_state &target_state)
 #ifdef DEBUG
 	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-  
-	Module *module = modules.first();
-	while (module) {
-		/* lookup if target_state stores a state of the module */
-		Module_state *module_state = target_state.state(module->name());
 
-		/* restore module with this state */
-		module->restore(module_state);
 
-		module = module->next();
-	}    
+	/* restore every module */
+	Module_thread *thread = module_threads.first();
+	while (thread) {
+		Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->_module.name(),  "\e[0m\e[38;5;214m","]->restore()", "\033[0m");
+		
+		thread->restore(target_state);
+		thread = thread->next();
+	}
+
+	thread = module_threads.first();
+	while (thread) {
+		Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->_module.name(),  "\e[0m\e[38;5;214m","]->wait_until_finished()", "\033[0m");
+		thread->wait_until_finished();
+		thread = thread->next();
+	}
 }
 
 

@@ -31,7 +31,10 @@ public:
 	 * from `checkpointer.h` Return the kcap for a given badge. If there is no,
 	 * return 0.
 	 *
-	 * As every module requires this method, it is public to othe rmodules.
+	 * As every module requires this method, it is public to other modules.
+	 *
+	 * If an external module call this method, it's thread will be blocked
+	 * until the core module can response to the query.
 	 */
 	virtual Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge) = 0;
 

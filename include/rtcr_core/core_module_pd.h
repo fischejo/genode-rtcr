@@ -18,6 +18,7 @@
 #include <util/list.h>
 
 /* Rtcr includes */
+#include <util/event.h>
 #include <rtcr/kcap_badge_info.h>
 #include <foc_native_pd/client.h>
 
@@ -46,13 +47,14 @@ protected:
 	Pd_session_component *_pd_session;
 
 	/**
-	 * Capability map in a condensed form
-	 * Refactored from `checkpointer.h`
+	 * Capability map in a condensed form Refactored from `checkpointer.h`
 	 */
 	Genode::List<Kcap_badge_info> _kcap_mappings;
-
+	Event _kcap_mappings_prepared;
+	
 	/**
-	 * Refactored from `target.child.h`. Previously `Target_child::Resources::_init_pd()`
+	 * Refactored from `target.child.h`. Previously
+	 * `Target_child::Resources::_init_pd()`
 	 */
 	Pd_session_component *_find_pd_session(const char *label, Pd_root &pd_root);
 	void _initialize_pd_session(const char* label, bool &bootstrap);
