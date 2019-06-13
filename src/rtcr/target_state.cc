@@ -27,6 +27,7 @@ Target_state::~Target_state()
 
 void Target_state::store(Module_name name, Module_state &state)
 {
+	_write_lock.lock();
 	/* if state is already stored, search for it and update it. */
 	Module_state_container *container = _containers.first();
 	while(container) {
@@ -39,6 +40,7 @@ void Target_state::store(Module_name name, Module_state &state)
 
 	/* otherwise register new container */
 	_containers.insert(new(_alloc) Module_state_container(state, name));
+	_write_lock.unlock();
 }
 
 

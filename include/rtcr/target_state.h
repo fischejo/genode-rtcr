@@ -13,6 +13,7 @@
 /* Rtcr includes */
 #include <rtcr/module_state.h>
 #include <rtcr/module.h>
+#include <base/lock.h>
 
 namespace Rtcr {
 	class Target_state;
@@ -27,7 +28,8 @@ using namespace Rtcr;
 class Rtcr::Target_state
 {
 private:
-
+	Genode::Lock _write_lock;
+	
 	/** 
 	 * This class is an internal container which links the name to a state of a
 	 * module. So it is possible to find a stored state of a module by its
