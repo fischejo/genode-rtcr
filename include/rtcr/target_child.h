@@ -35,6 +35,8 @@ namespace Rtcr {
 class Rtcr::Target_child : public Genode::Child_policy
 {
 private:
+	const static unsigned int MAX_PRIORITY = 10;
+	
 	/**
 	 * Child's unique name and filename of child's rom module
 	 */
@@ -87,8 +89,12 @@ private:
 	 * list of all currently loaded modules.
 	 */
 	Genode::List<Module> modules;
-	Genode::List<Module_thread> module_threads;
 
+	/**
+	 * list of module threads
+	 */
+	Genode::List<Module_thread> module_threads[MAX_PRIORITY];
+	
 	/**
 	 * Parse name of child component from XML configuration. 
 	 *

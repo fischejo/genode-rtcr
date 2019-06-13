@@ -43,7 +43,7 @@ private:
 	bool _running;
 	Target_state *_target_state;
 public:
-	Module &_module;
+	Module &module;
 	
 	Module_thread(Genode::Env &env,
 		      Module &module,
