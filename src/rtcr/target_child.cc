@@ -18,9 +18,7 @@ using namespace Rtcr;
 Target_child::Target_child(Genode::Env &env,
 			   Genode::Allocator &alloc,
 			   Genode::Service_registry &parent_services)
-	: Target_child(env, alloc, parent_services, _child_name_from_xml()) {
-	Event e();
-}
+	: Target_child(env, alloc, parent_services, _child_name_from_xml()) {}
 
 
 Child_name Target_child::_child_name_from_xml()
@@ -51,14 +49,15 @@ Target_child::Target_child(Genode::Env &env,
 #ifdef DEBUG
 	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
 #endif
-	
+
+#ifdef VERBOSE	
 	/* print all registered session handlers */
 	Module_factory* factory = Module_factory::first();
 	while(factory) {
 		Genode::log("\e[38;5;214m", "Found Linked Module: \e[1m", factory->name(), "\033[0m");
 		factory = factory->next();
 	}    
-
+#endif
 	/* get xml node object of configuration */
 	const Genode::Xml_node& config_node = Genode::config()->xml_node();
 	
@@ -72,8 +71,10 @@ Target_child::Target_child(Genode::Env &env,
 	while(! last_node) {
 		/* ignore modules which are manually disabled */
 		if (!module_node.attribute_value("disabled", false)) {
-			/* parse module name and provide string */
+			/* parse module `name` */
 			Module_name const name = module_node.attribute_value("name", Module_name());
+
+			/* parse optional `priority` attribute */
 			unsigned int priority = module_node.attribute_value<unsigned int>("priority", 0);
 			if(priority >= MAX_PRIORITY) {
 				Genode::error("Priority of module ", name, "is out of range.");
@@ -92,6 +93,7 @@ Target_child::Target_child(Genode::Env &env,
 							 _in_bootstrap,
 							 &module_node);
 
+			/* create a thread for each module */
 			Module_thread *thread = new (alloc) Module_thread(env,
 									  *module,
 									  aff_space.location_of_index(i++),
@@ -103,13 +105,16 @@ Target_child::Target_child(Genode::Env &env,
 			module_threads[priority].insert(thread, preceding_thread[priority]);
 			preceding_module = module;
 			preceding_thread[priority] = thread;
-				
+#ifdef VERBOSE				
 			Genode::log("\e[38;5;214m", "Module loaded: \e[1m", name, "\033[0m");
-
+#endif
 			Core_module_abstract *core_module = dynamic_cast<Core_module_abstract*>(module);
 			if (!core && core_module) {
 				core = core_module;
-				Genode::log("\e[38;5;214m", "Module \e[1m" , name, "\e[0m\e[38;5;214m chosen as core module", "\033[0m");
+#ifdef VERBOSE
+				Genode::log("\e[38;5;214m", "Module \e[1m" , name, "\e[0m\e[38;5;214m ",
+					    "chosen as core module", "\033[0m");
+#endif				
 			}
 
 			/* if this is not the last module node, go to next */
@@ -129,9 +134,10 @@ Target_child::Target_child(Genode::Env &env,
 	/* inform every module about each other */
 	Module *module = modules.first();
 	while (module) {
+#ifdef DEBUG
 		Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),
 			    "\e[0m\e[38;5;214m","]->initialize()", "\033[0m");
-
+#endif
 		/* initialize every module */
 		module->initialize(modules);
 		
@@ -151,7 +157,7 @@ Target_child::~Target_child()
 {
 	if(_child) Genode::destroy(_alloc, _child);
 	Genode::destroy(_alloc, _address_space);
-	Genode::destroy(_alloc, _initial_thread);	
+	Genode::destroy(_alloc, _initial_thread);
 }
 
 
@@ -192,18 +198,24 @@ void Target_child::checkpoint(Target_state &target_state, bool resume)
 	for(unsigned int priority = 0; priority < MAX_PRIORITY; priority++ ) {
 		Module_thread *thread = module_threads[priority].first();
 		if(thread) {
-			Genode::log("\e[38;5;214m", "Checkpoint modules with priority \e[1m", priority);		
+#ifdef DEBUG
+			Genode::log("\e[38;5;214m", "Checkpoint modules with priority \e[1m", priority);
+#endif
 			while (thread) {
+#ifdef DEBUG
 				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
 					    "\e[0m\e[38;5;214m","]->checkpoint()", "\033[0m");
+#endif
 				thread->checkpoint(target_state);
 				thread = thread->next();
 			}
 
 			thread = module_threads[priority].first();
 			while (thread) {
-				Genode::log("\e[38;5;214m", "thread[", "\e[1m",
-					    thread->module.name(),  "\e[0m\e[38;5;214m","]->wait_until_finished()", "\033[0m");
+#ifdef DEBUG
+				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
+					    "\e[0m\e[38;5;214m","]->wait_until_finished()", "\033[0m");
+#endif				
 				thread->wait_until_finished();
 				thread = thread->next();
 			}
@@ -226,20 +238,24 @@ void Target_child::restore(Target_state &target_state)
 	for(unsigned int priority = 0; priority < MAX_PRIORITY; priority++ ) {
 		Module_thread *thread = module_threads[priority].first();
 		if(thread) {
+#ifdef DEBUG			
 			Genode::log("\e[38;5;214m", "Restore modules with priority \e[1m", priority);					
-
+#endif
 			while (thread) {
+#ifdef DEBUG				
 				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
 					    "\e[0m\e[38;5;214m","]->restore()", "\033[0m");
-		
+#endif		
 				thread->restore(target_state);
 				thread = thread->next();
 			}
 
 			thread = module_threads[priority].first();
 			while (thread) {
+#ifdef DEBUG				
 				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
 					    "\e[0m\e[38;5;214m","]->wait_until_finished()", "\033[0m");
+#endif
 				thread->wait_until_finished();
 				thread = thread->next();
 			}
@@ -248,8 +264,7 @@ void Target_child::restore(Target_state &target_state)
 }
 
 
-Genode::Service *Target_child::resolve_session_request(const char *service_name,
-						       const char *args)
+Genode::Service *Target_child::resolve_session_request(const char *service_name, const char *args)
 {
 #ifdef DEBUG
 	Genode::log("\033[36m", __func__,"(",service_name, ", ", args, ")", "\033[0m");
@@ -257,30 +272,30 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 
 
 	if(!Genode::strcmp(service_name, "LOG") && _in_bootstrap) {
+#ifdef DEBUG		
 		Genode::log("  Unsetting bootstrap_phase");
+#endif		
 		_in_bootstrap = false;
 	}
 	
-	// Service known from parent?
+	/* Service known from parent? */
 	Genode::Service *service = _parent_services.find(service_name);
 	if(service) {
 		return service;
-		Genode::log("parent service");
 	}
 
-	// ask all modules
+	/* ask all modules */
 	Module *module = modules.first();
 	while (module) {
 		service = module->resolve_session_request(service_name, args);
 		if(service) {
-			Genode::log("module service: ", module->name());
 			return service;	    
 		}
 
 		module = module->next();
 	}
 
-	// Service not known, cannot intercept it
+	/* Service not known, cannot intercept it */
 	if(!service) {
 		service = new (_alloc) Genode::Parent_service(service_name);
 		_parent_services.insert(service);
