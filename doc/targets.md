@@ -29,8 +29,11 @@ This repository provides several libraries:
 
 # Run Scripte
 
-* [run/rtcr](run/rtcr.run) provides an Run Script including `rtcr_test` and
+* [run/rtcr_seq](run/rtcr_seq.run) provides an Run Script including `rtcr_test` and
   `sheep_counter`. This exmaple checkpoints and restores the application
-  `sheep_counter`.
-  
+  `sheep_counter`. All modules are executed sequentially.
+
+* [run/rtcr](run/rtcr.run) Same as `run/rtcr` but all modules are
+  executed in parallel.
+
   

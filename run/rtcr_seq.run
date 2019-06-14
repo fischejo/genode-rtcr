@@ -1,5 +1,5 @@
 #
-# brief: Simple checkpoint/restore example with multi-threaded modules
+# brief: Simple checkpoint/restore example without multi-threaded modules
 # author: Fischer Johannes
 # date: 2019-06-14
 #
@@ -42,10 +42,10 @@ install_config {
     		<resource name="RAM" quantum="256M"/>
                 <config>
                     <child name="sheep_counter" />
-                    <module name="ds"/>
-                    <module name="timer"/>
-                    <module name="log"/>
-                    <module name="core">
+                    <module name="ds" priority="3"/>
+                    <module name="timer" priority="2"/>
+                    <module name="log" priority="1"/>
+                    <module name="core" priority="0">
                       <quota>1048576</quota>
                     </module>
                 </config>
