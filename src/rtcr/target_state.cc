@@ -33,6 +33,7 @@ void Target_state::store(Module_name name, Module_state &state)
 	while(container) {
 		if(!Genode::strcmp(container->name.string(), name.string())) {
 			container->state = state;
+			_write_lock.unlock();
 			return;
 		}
 		container = container->next();
