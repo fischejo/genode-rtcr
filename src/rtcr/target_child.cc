@@ -96,9 +96,9 @@ Target_child::Target_child(Genode::Env &env,
 			/* create a thread for each module */
 			Module_thread *thread = new (alloc) Module_thread(env,
 									  *module,
+									  modules,
 									  aff_space.location_of_index(i++),
 									  env.cpu());
-			thread->start();
 			
 			/* insert module & thread in the same order as XML nodes */
 			modules.insert(module, preceding_module);
@@ -114,7 +114,7 @@ Target_child::Target_child(Genode::Env &env,
 #ifdef VERBOSE
 				Genode::log("\e[38;5;214m", "Module \e[1m" , name, "\e[0m\e[38;5;214m ",
 					    "chosen as core module", "\033[0m");
-#endif				
+#endif
 			}
 
 			/* if this is not the last module node, go to next */
@@ -130,20 +130,33 @@ Target_child::Target_child(Genode::Env &env,
 	if(!core) {
 		Genode::error("No module found which provides `core`!");
 	}
-	
-	/* inform every module about each other */
-	Module *module = modules.first();
-	while (module) {
+
+	/* initialize all threads & modules */
+	for(unsigned int priority = 0; priority < MAX_PRIORITY; priority++ ) {
+		Module_thread *thread = module_threads[priority].first();
+		if(thread) {
+			while(thread) {
 #ifdef DEBUG
-		Genode::log("\e[38;5;214m", "module[", "\e[1m", module->name(),
-			    "\e[0m\e[38;5;214m","]->initialize()", "\033[0m");
+				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->name(),
+					    "\e[0m\e[38;5;214m","]->initialize()", "\033[0m");
 #endif
-		/* initialize every module */
-		module->initialize(modules);
-		
-		module = module->next();
+				thread->initialize();
+				thread = thread->next();				
+			}
+		}
 	}
 
+	/* wait until all threads are initialized */
+	for(unsigned int priority = 0; priority < MAX_PRIORITY; priority++ ) {
+		Module_thread *thread = module_threads[priority].first();
+		if(thread) {
+			while(thread) {
+				thread->wait_until_finished();
+				thread = thread->next();				
+			}
+		}
+	}
+	
 	_address_space = new(alloc) Genode::Region_map_client(core->pd_session().address_space());
 
 	_initial_thread = new(alloc) Genode::Child::Initial_thread(
@@ -203,7 +216,7 @@ void Target_child::checkpoint(Target_state &target_state, bool resume)
 #endif
 			while (thread) {
 #ifdef DEBUG
-				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
+				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->name(),
 					    "\e[0m\e[38;5;214m","]->checkpoint()", "\033[0m");
 #endif
 				thread->checkpoint(target_state);
@@ -213,7 +226,7 @@ void Target_child::checkpoint(Target_state &target_state, bool resume)
 			thread = module_threads[priority].first();
 			while (thread) {
 #ifdef DEBUG
-				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
+				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->name(),
 					    "\e[0m\e[38;5;214m","]->wait_until_finished()", "\033[0m");
 #endif				
 				thread->wait_until_finished();
@@ -243,7 +256,7 @@ void Target_child::restore(Target_state &target_state)
 #endif
 			while (thread) {
 #ifdef DEBUG				
-				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
+				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->name(),
 					    "\e[0m\e[38;5;214m","]->restore()", "\033[0m");
 #endif		
 				thread->restore(target_state);
@@ -253,7 +266,7 @@ void Target_child::restore(Target_state &target_state)
 			thread = module_threads[priority].first();
 			while (thread) {
 #ifdef DEBUG				
-				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->module.name(),
+				Genode::log("\e[38;5;214m", "thread[", "\e[1m", thread->name(),
 					    "\e[0m\e[38;5;214m","]->wait_until_finished()", "\033[0m");
 #endif
 				thread->wait_until_finished();
