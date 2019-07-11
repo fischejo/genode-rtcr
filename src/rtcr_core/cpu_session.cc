@@ -62,19 +62,23 @@ Cpu_session_component::Cpu_session_component(Genode::Env &env,
 					     Pd_root &pd_root,
 					     const char *label,
 					     const char *creation_args,
-					     bool &bootstrap_phase)
+					     bool &bootstrap_phase,
+					     Genode::Affinity &affinity)
 	:
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
 	_bootstrap_phase (bootstrap_phase),
 	_pd_root         (pd_root),
-	_parent_cpu      (env, label),
+	_parent_cpu      (env, label, DEFAULT_PRIORITY, 0, affinity),
 	_parent_state    (creation_args, bootstrap_phase)
 
 {
 	if(verbose_debug) Genode::log("\033[33m", "Cpu", "\033[0m(parent ", _parent_cpu,")");
 
+	Genode::log("\e[1m\e[38;5;199m affinity of cpu_session: xpos=", affinity.location().xpos(),
+		    " ypos=", affinity.location().ypos(),"\e[1m");
+	
 	current_session = this;
 }
 
@@ -311,10 +315,16 @@ Cpu_session_component *Cpu_root::_create_session(const char *args)
 
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
-
+	
 	/* Create custom Rm_session */
-	Cpu_session_component *new_session =
-		new (md_alloc()) Cpu_session_component(_env, _md_alloc, _ep, _pd_root, label_buf, readjusted_args, _bootstrap_phase);
+	Cpu_session_component *new_session = new (md_alloc()) Cpu_session_component(_env,
+										    _md_alloc,
+										    _ep,
+										    _pd_root,
+										    label_buf,
+										    readjusted_args,
+										    _bootstrap_phase,
+										    _affinity);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -355,7 +365,7 @@ void Cpu_root::_destroy_session(Cpu_session_component *session)
 
 
 Cpu_root::Cpu_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep,
-		   Pd_root &pd_root, bool &bootstrap_phase)
+		   Pd_root &pd_root, bool &bootstrap_phase, Genode::Affinity &affinity)
 	:
 	Root_component<Cpu_session_component>(session_ep, md_alloc),
 	_env              (env),
@@ -364,7 +374,8 @@ Cpu_root::Cpu_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entryp
 	_bootstrap_phase  (bootstrap_phase),
 	_pd_root          (pd_root),
 	_objs_lock        (),
-	_session_rpc_objs ()
+	_session_rpc_objs (),
+	_affinity (affinity)
 {
 	if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
 }

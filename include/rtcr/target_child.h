@@ -15,6 +15,7 @@
 #include <base/snprintf.h>
 #include <rom_session/connection.h>
 #include <cpu_session/cpu_session.h>
+#include <cap_session/connection.h>
 #include <util/list.h>
 
 /* Local includes */
@@ -41,22 +42,34 @@ private:
 	 * Child's unique name and filename of child's rom module
 	 */
 	Child_name  _name;
+
 	/**
 	 * Local environment
 	 */
 	Genode::Env        &_env;
+
 	/**
 	 * Local allocator
 	 */
 	Genode::Allocator  &_alloc;
+
 	/**
 	 * Entrypoint for managing child's resource-sessions (PD, CPU, RAM)
 	 */
 	Genode::Entrypoint  _resources_ep;
+
 	/**
 	 * Entrypoint for child's creation
+	 *
+	 * Entry point used for serving the parent interface and the
+	 * locally provided ROM sessions for the 'config' and 'binary'
+	 * files.
 	 */
-	Genode::Entrypoint  _child_ep;
+	enum { ENTRYPOINT_STACK_SIZE = 12*1024 };
+	Genode::Cap_connection _cap_session;
+	Genode::Affinity::Location _affinity_location;
+	Genode::Rpc_entrypoint _entrypoint;
+
 	/**
 	 * Indicator whether child was bootstraped or not
 	 */
@@ -104,7 +117,9 @@ private:
 	 *   <child name="sheep_counter" />
 	 * </config>
 	 */
-	Child_name _child_name_from_xml();
+	inline Child_name _read_name();
+
+	inline Genode::Affinity::Location _read_affinity_location();
 	
 public:
 

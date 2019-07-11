@@ -11,13 +11,14 @@ using namespace Rtcr;
 Module_thread::Module_thread(Genode::Env &env,
 			     Module &module,
 			     Genode::List<Module> &modules,
-			     Genode::Affinity::Location location,
+			     Genode::Xml_node *config,
 			     Genode::Cpu_session &cpu)
 	:
+	_affinity_location(_affinity_location_from_config(config)),
 	Thread(env,
 	       module.name().string(),
 	       64*1024,
-	       location,
+	       _affinity_location,
 	       Genode::Thread::Weight(),
 	       cpu),
 	_module(module),
@@ -25,6 +26,17 @@ Module_thread::Module_thread(Genode::Env &env,
 	_running(true),
 	_next_job(NONE)
 {}
+
+
+Genode::Affinity::Location Module_thread::_affinity_location_from_config(Genode::Xml_node *config)
+{
+	try {
+		long const xpos = config->attribute_value<long>("xpos", 0);
+		long const ypos = config->attribute_value<long>("ypos", 0);
+		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
+	}
+	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}	
+}
 
 
 void Module_thread::initialize()
@@ -85,7 +97,6 @@ void Module_thread::entry()
 		_job_finished.set();
 	}
 }
-
 
 
 void Module_thread::checkpoint(Target_state &target_state)

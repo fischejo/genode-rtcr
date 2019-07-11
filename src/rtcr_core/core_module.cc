@@ -22,7 +22,7 @@ Core_module::Core_module(Genode::Env &env,
 	:
 	_state(_initialize_state(alloc)),
 	Core_module_pd(env, alloc, ep),
-	Core_module_cpu(env, alloc, ep ), /* depends on Core_module_pd::Core_module_pd() */
+	Core_module_cpu(env, alloc, ep, config), /* depends on Core_module_pd::Core_module_pd() */
 	Core_module_rm(env, alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
 	Core_module_ram(env, alloc, ep), /* depends on Core_module_pd::Core_module_pd() */
 	Core_module_rom(env, alloc, ep),

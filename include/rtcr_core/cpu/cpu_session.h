@@ -79,12 +79,25 @@ private:
 	/*
 	 * KIA4SM method
 	 */
-	Cpu_thread_component &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap, Genode::Pd_session_capability parent_pd_cap,
-						    Name const &name, Genode::Affinity::Location affinity, Weight weight, Genode::addr_t utcb, unsigned priority, unsigned deadline);
+	Cpu_thread_component &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap,
+						    Genode::Pd_session_capability parent_pd_cap,
+						    Name const &name,
+						    Genode::Affinity::Location affinity,
+						    Weight weight,
+						    Genode::addr_t utcb,
+						    unsigned priority,
+						    unsigned deadline);
 
 public:
-	Cpu_session_component(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &ep,
-			      Pd_root &pd_root, const char *label, const char *creation_args, bool &bootstrap_phase);
+	Cpu_session_component(Genode::Env &env,
+			      Genode::Allocator &md_alloc,
+			      Genode::Entrypoint &ep,
+			      Pd_root &pd_root,
+			      const char *label,
+			      const char *creation_args,
+			      bool &bootstrap_phase,
+			      Genode::Affinity &affinity);
+	
 	~Cpu_session_component();
 
 	Genode::Cpu_session_capability parent_cap() { return _parent_cpu.cap(); }
@@ -178,14 +191,24 @@ private:
 	 */
 	Genode::List<Cpu_session_component> _session_rpc_objs;
 
+	/**
+	 * Affinity of new Cpu session.
+	 */
+	Genode::Affinity &_affinity;
+	
 protected:
 	Cpu_session_component *_create_session(const char *args);
 	void _upgrade_session(Cpu_session_component *session, const char *upgrade_args);
 	void _destroy_session(Cpu_session_component *session);
 
 public:
-	Cpu_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep,
-		 Pd_root &pd_root, bool &bootstrap_phase);
+	Cpu_root(Genode::Env &env,
+		 Genode::Allocator &md_alloc,
+		 Genode::Entrypoint &session_ep,
+		 Pd_root &pd_root,
+		 bool &bootstrap_phase,
+		 Genode::Affinity &affinity);
+	
 	~Cpu_root();
 
 	Genode::List<Cpu_session_component> &session_infos() { return _session_rpc_objs; }

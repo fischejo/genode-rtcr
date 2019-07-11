@@ -18,6 +18,7 @@ create_boot_directory
 
 install_config {
 <config>
+        <affinity-space width="2" height="1"/>
 	<parent-provides>
 		<service name="PD"/>
 		<service name="CPU"/>
@@ -41,12 +42,14 @@ install_config {
 	<start name="rtcr_app">
     		<resource name="RAM" quantum="256M"/>
                 <config>
-                    <child name="sheep_counter" />
+                    <child name="sheep_counter">
+                    </child>
                     <module name="ds"/>
                     <module name="timer"/>
                     <module name="log"/>
                     <module name="core">
-                      <quota>1048576</quota>
+                        <quota>1048576</quota>
+                        <affinity xpos="1"/>    
                     </module>
                 </config>
 	</start>
@@ -59,6 +62,6 @@ install_config {
 
 build_boot_image { core init timer rtcr_app sheep_counter }
 
-append qemu_args " -nographic "
+append qemu_args " -nographic -smp 2,cores=2 "
 
 run_genode_until "hello test completed.*\n" 60

@@ -19,6 +19,7 @@
 #include <rtcr/target_state.h>
 #include <rtcr/module.h>
 #include <util/event.h>
+#include <util/xml_node.h>
 
 
 namespace Rtcr {
@@ -75,20 +76,24 @@ private:
 	 * The module which is wrapped by this class.
 	 */
 	Module &_module;
+
+	Genode::Affinity::Location _affinity_location;
 	
+	inline Genode::Affinity::Location _affinity_location_from_config(Genode::Xml_node *config);
+
 public:
 
 
 	/**
 	 * \param env reference to a Genode environment 
 	 * \param module which should be wrapped and executed in a separate thread
-	 * \param affinity of the thread
+	 * \param optional XML config of module (necessary to parse affinity of thread)
 	 * \param cpu of the thread
 	 */
 	Module_thread(Genode::Env &env,
 		      Module &module,
 		      Genode::List<Module> &modules,
-		      Genode::Affinity::Location location,
+		      Genode::Xml_node *config,
 		      Genode::Cpu_session &cpu);
 
 	/**

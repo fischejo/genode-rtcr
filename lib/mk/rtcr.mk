@@ -11,16 +11,16 @@ LIBS   = config rtcr_core rtcr_ds
 LIBS += rtcr_timer rtcr_log
 
 # optional incremental extension
-LIBS += rtcr_inc
+#LIBS += rtcr_inc
 
 # optional dma memory copying extension
-LIBS += rtcr_cdma
+#LIBS += rtcr_cdma
 
 # optional fpga capability parsing extension
-LIBS += rtcr_kcap
+#LIBS += rtcr_kcap
 
 # optional redundant memory extension
-LIBS += rtcr_red
+#LIBS += rtcr_red
 
 # optional parallized memory copying
-LIBS += rtcr_para
+#LIBS += rtcr_para

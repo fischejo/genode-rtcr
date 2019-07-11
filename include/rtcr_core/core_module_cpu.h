@@ -44,6 +44,10 @@ protected:
 	Genode::Local_service *_cpu_service = nullptr;
 	Cpu_session_component *_cpu_session = nullptr;
 
+	Genode::Affinity::Location _affinity_location;
+	Genode::Affinity::Space _affinity_space;
+	Genode::Affinity _affinity;
+	
 	Cpu_session_component *_find_cpu_session(const char *label, Cpu_root &cpu_root);      
 	void _initialize_cpu_session(const char* label, bool &bootstrap);
 
@@ -56,10 +60,12 @@ protected:
 
 	void _checkpoint();
 
+	inline Genode::Affinity::Location _affinity_location_from_config(Genode::Xml_node *config);
 public:    
 	Core_module_cpu(Genode::Env &env,
 			Genode::Allocator &alloc,
-			Genode::Entrypoint &ep);
+			Genode::Entrypoint &ep,
+			Genode::Xml_node *config);
 
 	~Core_module_cpu();
     
