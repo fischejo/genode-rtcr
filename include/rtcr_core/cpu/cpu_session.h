@@ -76,6 +76,14 @@ private:
 					     Name const &name, Genode::Affinity::Location affinity, Weight weight, Genode::addr_t utcb);
 	void _kill_thread(Cpu_thread_component &cpu_thread);
 
+
+	/**
+	 * Each child thread is directly assigned to a core. This affinity
+	 * defines the core.
+	 */
+	Genode::Affinity::Location &_affinity;	
+
+
 	/*
 	 * KIA4SM method
 	 */
@@ -96,7 +104,7 @@ public:
 			      const char *label,
 			      const char *creation_args,
 			      bool &bootstrap_phase,
-			      Genode::Affinity &affinity);
+			      Genode::Affinity::Location &affinity);
 	
 	~Cpu_session_component();
 
@@ -194,7 +202,7 @@ private:
 	/**
 	 * Affinity of new Cpu session.
 	 */
-	Genode::Affinity &_affinity;
+	Genode::Affinity::Location &_affinity;
 	
 protected:
 	Cpu_session_component *_create_session(const char *args);
@@ -207,7 +215,7 @@ public:
 		 Genode::Entrypoint &session_ep,
 		 Pd_root &pd_root,
 		 bool &bootstrap_phase,
-		 Genode::Affinity &affinity);
+		 Genode::Affinity::Location &affinity);
 	
 	~Cpu_root();
 

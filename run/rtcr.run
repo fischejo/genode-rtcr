@@ -18,7 +18,7 @@ create_boot_directory
 
 install_config {
 <config>
-        <affinity-space width="2" height="1"/>
+        <affinity-space width="2"/>
 	<parent-provides>
 		<service name="PD"/>
 		<service name="CPU"/>
@@ -49,7 +49,7 @@ install_config {
                     <module name="log"/>
                     <module name="core">
                         <quota>1048576</quota>
-                        <affinity xpos="1"/>    
+                        <affinity xpos="1"/>
                     </module>
                 </config>
 	</start>

@@ -33,9 +33,12 @@ Genode::Affinity::Location Module_thread::_affinity_location_from_config(Genode:
 	try {
 		long const xpos = config->attribute_value<long>("xpos", 0);
 		long const ypos = config->attribute_value<long>("ypos", 0);
-		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
+		long const width = config->attribute_value<long>("width", 0);
+		long const height = config->attribute_value<long>("height", 0);
+		
+		return Genode::Affinity::Location(xpos, ypos, width ,height);
 	}
-	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}	
+	catch (...) { return Genode::Affinity::Location(0, 0, 0, 0);}	
 }
 
 

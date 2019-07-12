@@ -30,9 +30,7 @@ Core_module_cpu::Core_module_cpu(Genode::Env &env,
 	_env(env),
 	_alloc(alloc),
 	_ep(ep),
-	_affinity_location(_affinity_location_from_config(config)),
-	_affinity_space(1,1),
-	_affinity(_affinity_space, _affinity_location)
+	_affinity_location(_affinity_location_from_config(config))
 {}
 
 
@@ -43,9 +41,11 @@ Genode::Affinity::Location Core_module_cpu::_affinity_location_from_config(Genod
 
 		long const xpos = node.attribute_value<long>("xpos", 0);
 		long const ypos = node.attribute_value<long>("ypos", 0);
-		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
+		long const width = node.attribute_value<long>("width", 0);
+		long const height = node.attribute_value<long>("height", 0);
+		return Genode::Affinity::Location(xpos, ypos, width ,height);
 	}
-	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
+	catch (...) { return Genode::Affinity::Location(0, 0, 0, 0);}
 }
 
 
@@ -53,7 +53,7 @@ void Core_module_cpu::_initialize_cpu_session(const char* label, bool &bootstrap
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 		
-	_cpu_root = new (_alloc) Cpu_root(_env, _alloc, _ep, pd_root(), bootstrap, _affinity);
+	_cpu_root = new (_alloc) Cpu_root(_env, _alloc, _ep, pd_root(), bootstrap, _affinity_location);
 	_cpu_service = new (_alloc) Genode::Local_service("CPU", _cpu_root);
 	_cpu_session = _find_cpu_session(label, cpu_root());  
 }
@@ -68,10 +68,9 @@ Cpu_session_component *Core_module_cpu::_find_cpu_session(const char *label, Cpu
 	Genode::snprintf(args_buf, sizeof(args_buf),
 					 "priority=0x%x, ram_quota=%u, label=\"%s\"",
 					 Genode::Cpu_session::DEFAULT_PRIORITY, 128*1024, label);
-
 	
 	/* Issuing session method of Cpu_root */
-	Genode::Session_capability cpu_cap = cpu_root.session(args_buf, _affinity);
+	Genode::Session_capability cpu_cap = cpu_root.session(args_buf, Genode::Affinity());
 
 	/* Find created RPC object in Cpu_root's list */
 	Cpu_session_component *cpu_session = cpu_root.session_infos().first();

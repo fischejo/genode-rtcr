@@ -19,7 +19,7 @@ Cpu_thread_component &Cpu_session_component::_create_thread(Genode::Pd_session_c
 							    Genode::addr_t utcb)
 {
 	/* Create real CPU thread from parent */
-	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap, name, affinity, weight, utcb);
+	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap, name, _affinity, weight, utcb);
 
 	/* Create custom CPU thread */
 	Cpu_thread_component *new_cpu_thread =
@@ -63,21 +63,19 @@ Cpu_session_component::Cpu_session_component(Genode::Env &env,
 					     const char *label,
 					     const char *creation_args,
 					     bool &bootstrap_phase,
-					     Genode::Affinity &affinity)
+					     Genode::Affinity::Location &affinity)
 	:
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
 	_bootstrap_phase (bootstrap_phase),
 	_pd_root         (pd_root),
-	_parent_cpu      (env, label, DEFAULT_PRIORITY, 0, affinity),
-	_parent_state    (creation_args, bootstrap_phase)
+	_parent_cpu      (env, label),
+	_parent_state    (creation_args, bootstrap_phase),
+	_affinity (affinity)
 
 {
 	if(verbose_debug) Genode::log("\033[33m", "Cpu", "\033[0m(parent ", _parent_cpu,")");
-
-	Genode::log("\e[1m\e[38;5;199m affinity of cpu_session: xpos=", affinity.location().xpos(),
-		    " ypos=", affinity.location().ypos(),"\e[1m");
 	
 	current_session = this;
 }
@@ -97,6 +95,7 @@ Cpu_session_component *Cpu_session_component::find_by_badge(Genode::uint16_t bad
 {
 	if(badge == cap().local_name())
 		return this;
+	
 	Cpu_session_component *obj = next();
 	return obj ? obj->find_by_badge(badge) : 0;
 }
@@ -117,12 +116,12 @@ Genode::Thread_capability Cpu_session_component::create_thread(Genode::Pd_sessio
 		Genode::error("Thread creation failed: PD session ", child_pd_cap, " is unknown.");
 		throw Genode::Exception();
 	}
-
+	
 	// Create custom CPU thread
 	Cpu_thread_component &new_cpu_thread = _create_thread(child_pd_cap,
 							      pd_session->parent_cap(),
 							      name,
-							      affinity,
+							      _affinity,
 							      weight,
 							      utcb);
 
@@ -169,9 +168,6 @@ Genode::Affinity::Space Cpu_session_component::affinity_space() const
 	if(verbose_debug) Genode::log("Cpu::\033[33m", __func__, "\033[0m()");
 
 	auto result = _parent_cpu.affinity_space();
-
-	if(verbose_debug) Genode::log("  result: ", result.width(), "x", result.height(), " (", result.total(), ")");
-
 	return result;
 }
 
@@ -365,7 +361,7 @@ void Cpu_root::_destroy_session(Cpu_session_component *session)
 
 
 Cpu_root::Cpu_root(Genode::Env &env, Genode::Allocator &md_alloc, Genode::Entrypoint &session_ep,
-		   Pd_root &pd_root, bool &bootstrap_phase, Genode::Affinity &affinity)
+		   Pd_root &pd_root, bool &bootstrap_phase, Genode::Affinity::Location &affinity)
 	:
 	Root_component<Cpu_session_component>(session_ep, md_alloc),
 	_env              (env),
