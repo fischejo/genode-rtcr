@@ -78,3 +78,23 @@ and provide an consistent configuration of a module.
 	<quota>1048576</quota>
 </module>
 ```
+
+## Affinity of a Module Thread Component
+
+A module thread runs on Core 1 by default. But it is also possible to run the
+module thread on another Core. The `module` node has following attributes:
+
+* `xpos` Sets the x position in the affinity map. For example: `xpos="1"`
+  assigns the module to core `2`. `xpos="0"` is default, if no affinity node is defined.
+* `ypos` Sets the y position in the affinity map. Due to patching of the
+  Fiasco.OC kernel, only an affinity map with height 1 is possible. Default
+  value is `ypos="0"`.
+* `width` of the affinity location. Default is `0`. 
+* `height` of the affinity location. Default is `0`.
+
+```xml
+<module name="core" xpos="1">
+   ...
+</module>
+```
+
