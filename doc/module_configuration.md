@@ -67,20 +67,6 @@ Run all modules in parallel:
 <module name="ds" />
 ```
 
-## Custom Configuration
-
-XML Sub-nodes of `module` node are passed to the module during construction time
-and provide an consistent configuration of a module.
-
-```xml
-<module name="core_inc">
-	<granularity>120</granularity>
-	<quota>1048576</quota>
-</module>
-```
-
-## Affinity of a Module Thread Component
-
 A module thread runs on Core 1 by default. But it is also possible to run the
 module thread on another Core. The `module` node has following attributes:
 
@@ -95,6 +81,18 @@ module thread on another Core. The `module` node has following attributes:
 ```xml
 <module name="core" xpos="1">
    ...
+</module>
+```
+
+## Custom Configuration
+
+XML Sub-nodes of `module` node are passed to the module during construction time
+and provide an consistent configuration of a module.
+
+```xml
+<module name="core_inc">
+	<granularity>120</granularity>
+	<quota>1048576</quota>
 </module>
 ```
 
