@@ -1,5 +1,5 @@
 #
-# brief: Simple checkpoint/restore example with multi-threaded modules
+# brief: Simple checkpoint/restore example without multi-threaded modules
 # author: Fischer Johannes
 # date: 2019-06-14
 #
@@ -18,7 +18,6 @@ create_boot_directory
 
 install_config {
 <config>
-        <affinity-space width="2"/>
 	<parent-provides>
 		<service name="PD"/>
 		<service name="CPU"/>
@@ -42,14 +41,12 @@ install_config {
 	<start name="rtcr_app">
     		<resource name="RAM" quantum="256M"/>
                 <config>
-                    <child name="sheep_counter">
-                    </child>
-                    <module name="ds"/>
-                    <module name="timer"/>
-                    <module name="log"/>
-                    <module name="core">
-                        <quota>1048576</quota>
-                        <affinity xpos="1"/>
+                    <child name="sheep_counter" />
+                    <module name="ds" priority="3"/>
+                    <module name="timer" priority="2"/>
+                    <module name="log" priority="1"/>
+                    <module name="core" priority="0">
+                      <quota>1048576</quota>
                     </module>
                 </config>
 	</start>
@@ -62,6 +59,6 @@ install_config {
 
 build_boot_image { core init timer rtcr_app sheep_counter }
 
-append qemu_args " -nographic -smp 2,cores=2 "
+append qemu_args " -nographic "
 
 run_genode_until "hello test completed.*\n" 60
