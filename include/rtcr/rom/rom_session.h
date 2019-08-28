@@ -19,16 +19,16 @@
 #include <rtcr/checkpointable.h>
 
 namespace Rtcr {
-	class Rom_session_component;
+	class Rom_session;
 	class Rom_root;
 
 	constexpr bool rom_verbose_debug = false;
 	constexpr bool rom_root_verbose_debug = false;
 }
 
-class Rtcr::Rom_session_component : public Rtcr::Checkpointable,
+class Rtcr::Rom_session : public Rtcr::Checkpointable,
 				    public Genode::Rpc_object<Genode::Rom_session>,
-                                    public Genode::List<Rom_session_component>::Element
+                                    public Genode::List<Rom_session>::Element
 {
 public:
   using Genode::Rpc_object<Genode::Rom_session>::cap;
@@ -87,7 +87,7 @@ private:
 	 */
 public:
 
-  Rom_session_component(Genode::Env &env,
+  Rom_session(Genode::Env &env,
 			Genode::Allocator &md_alloc,
 			Genode::Entrypoint &ep,
 			const char *label,
@@ -95,11 +95,11 @@ public:
 			bool &bootstrap_phase,
 			Genode::Xml_node *config);
 
-  ~Rom_session_component();
+  ~Rom_session();
 
 	Genode::Rom_session_capability parent_cap() { return _parent_rom.cap(); }
 
-	Rom_session_component *find_by_badge(Genode::uint16_t badge);
+	Rom_session *find_by_badge(Genode::uint16_t badge);
 
 	/*******************************
 	 ** Rom session Rpc interface **
@@ -113,7 +113,7 @@ public:
 /**
  * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
  */
-class Rtcr::Rom_root : public Genode::Root_component<Rom_session_component>
+class Rtcr::Rom_root : public Genode::Root_component<Rom_session>
 {
 private:
 	/**
@@ -144,14 +144,14 @@ private:
 	/**
 	 * List for monitoring session objects
 	 */
-	Genode::List<Rom_session_component> _session_rpc_objs;
+	Genode::List<Rom_session> _session_rpc_objs;
 
 protected:
-	Rom_session_component *_create_session(const char *args);
+	Rom_session *_create_session(const char *args);
 
-  void _upgrade_session(Rom_session_component *session, const char *upgrade_args);
+  void _upgrade_session(Rom_session *session, const char *upgrade_args);
 
-  void _destroy_session(Rom_session_component *session);
+  void _destroy_session(Rom_session *session);
 
   Genode::Xml_node *_config;
 public:
@@ -164,8 +164,8 @@ public:
 
   ~Rom_root();
   
-  Rom_session_component *find_by_badge(Genode::uint16_t badge);
-  Genode::List<Rom_session_component> &session_infos() { return _session_rpc_objs; }
+  Rom_session *find_by_badge(Genode::uint16_t badge);
+  Genode::List<Rom_session> &session_infos() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_ROM_SESSION_COMPONENT_H_ */

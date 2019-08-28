@@ -9,7 +9,7 @@
 using namespace Rtcr;
 
 
-Rtcr::Rom_session_component::Rom_session_component(Genode::Env& env,
+Rtcr::Rom_session::Rom_session(Genode::Env& env,
 						   Genode::Allocator& md_alloc,
 						   Genode::Entrypoint& ep,
 						   const char *label,
@@ -29,13 +29,13 @@ Rtcr::Rom_session_component::Rom_session_component(Genode::Env& env,
 }
 
 
-Rtcr::Rom_session_component::~Rom_session_component()
+Rtcr::Rom_session::~Rom_session()
 {
 	if(verbose_debug) Genode::log("\033[33m", "~Rom", "\033[0m ", _parent_rom);
 }
 
 
-void Rom_session_component::checkpoint()
+void Rom_session::checkpoint()
 {
   ck_badge = cap().local_name();
   ck_bootstrapped = _bootstrapped;
@@ -50,7 +50,7 @@ void Rom_session_component::checkpoint()
 
 
 
-Genode::Rom_dataspace_capability Rtcr::Rom_session_component::dataspace()
+Genode::Rom_dataspace_capability Rtcr::Rom_session::dataspace()
 {
 	if(verbose_debug) Genode::log("Rom::\033[33m", __func__, "\033[0m()");
 	auto result = _parent_rom.dataspace();
@@ -62,7 +62,7 @@ Genode::Rom_dataspace_capability Rtcr::Rom_session_component::dataspace()
 }
 
 
-bool Rtcr::Rom_session_component::update()
+bool Rtcr::Rom_session::update()
 {
 	if(verbose_debug) Genode::log("Rom::\033[33m", __func__, "\033[0m()");
 	auto result = _parent_rom.update();
@@ -72,7 +72,7 @@ bool Rtcr::Rom_session_component::update()
 }
 
 
-void Rtcr::Rom_session_component::sigh(Genode::Signal_context_capability sigh)
+void Rtcr::Rom_session::sigh(Genode::Signal_context_capability sigh)
 {
 	if(verbose_debug) Genode::log("Rom::\033[33m", __func__, "\033[0m()");
 	_sigh = sigh;
@@ -80,7 +80,7 @@ void Rtcr::Rom_session_component::sigh(Genode::Signal_context_capability sigh)
 }
 
 
-Rom_session_component *Rom_root::_create_session(const char *args)
+Rom_session *Rom_root::_create_session(const char *args)
 {
 	if(verbose_debug) Genode::log("Rom_root::\033[33m", __func__, "\033[0m(", args,")");
 
@@ -96,14 +96,14 @@ Rom_session_component *Rom_root::_create_session(const char *args)
 	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
 
 	Genode::size_t readjusted_ram_quota = Genode::Arg_string::find_arg(readjusted_args, "ram_quota").ulong_value(0);
-	readjusted_ram_quota = readjusted_ram_quota + sizeof(Rom_session_component) + md_alloc()->overhead(sizeof(Rom_session_component));
+	readjusted_ram_quota = readjusted_ram_quota + sizeof(Rom_session) + md_alloc()->overhead(sizeof(Rom_session));
 
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
 	/* Create custom Rom_session */
-	Rom_session_component *new_session =
-		new (md_alloc()) Rom_session_component(_env,
+	Rom_session *new_session =
+		new (md_alloc()) Rom_session(_env,
 						       _md_alloc,
 						       _ep,
 						       label_buf,
@@ -118,7 +118,7 @@ Rom_session_component *Rom_root::_create_session(const char *args)
 }
 
 
-void Rom_root::_upgrade_session(Rom_session_component *session, const char *upgrade_args)
+void Rom_root::_upgrade_session(Rom_session *session, const char *upgrade_args)
 {
 	if(verbose_debug) Genode::log("Rom_root::\033[33m", __func__, "\033[0m(session ", session->cap(),", args=", upgrade_args,")");
 
@@ -141,7 +141,7 @@ void Rom_root::_upgrade_session(Rom_session_component *session, const char *upgr
 }
 
 
-void Rom_root::_destroy_session(Rom_session_component *session)
+void Rom_root::_destroy_session(Rom_session *session)
 {
 	if(verbose_debug) Genode::log("Rom_root::\033[33m", __func__, "\033[0m(session ", session->cap(),")");
 
@@ -156,7 +156,7 @@ Rom_root::Rom_root(Genode::Env &env,
 		   bool &bootstrap_phase,
 		   Genode::Xml_node *config)
 	:
-	Root_component<Rom_session_component>(session_ep, md_alloc),
+	Root_component<Rom_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
@@ -171,7 +171,7 @@ Rom_root::Rom_root(Genode::Env &env,
 
 Rom_root::~Rom_root()
 {
-	while(Rom_session_component *obj = _session_rpc_objs.first())
+	while(Rom_session *obj = _session_rpc_objs.first())
 	{
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
@@ -181,9 +181,9 @@ Rom_root::~Rom_root()
 }
 
 
-Rom_session_component *Rom_root::find_by_badge(Genode::uint16_t badge)
+Rom_session *Rom_root::find_by_badge(Genode::uint16_t badge)
 {
-  Rom_session_component *obj = _session_rpc_objs.first();
+  Rom_session *obj = _session_rpc_objs.first();
   while(obj) { 
     if(badge == obj->cap().local_name())
       return obj;

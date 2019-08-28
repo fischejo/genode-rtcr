@@ -4,12 +4,12 @@
  * \date   2016-08-09
  */
 
-#include <rtcr/rm/region_map_component.h>
+#include <rtcr/rm/region_map.h>
 
 using namespace Rtcr;
 
 
-Region_map_component::Region_map_component(Genode::Allocator &md_alloc,
+Region_map::Region_map(Genode::Allocator &md_alloc,
 					   Genode::Capability<Genode::Region_map> region_map_cap,
 					   Genode::size_t size,
 					   const char *label,
@@ -28,7 +28,7 @@ Region_map_component::Region_map_component(Genode::Allocator &md_alloc,
 }
 
 
-Region_map_component::~Region_map_component()
+Region_map::~Region_map()
 {
 	while(Attached_region_info *obj = ck_attached_regions.first()) {
 		ck_attached_regions.remove(obj);
@@ -41,7 +41,7 @@ Region_map_component::~Region_map_component()
 }
 
 
-void Region_map_component::checkpoint()
+void Region_map::checkpoint()
 {
   ck_badge = cap().local_name();
   ck_bootstrapped = _bootstrap_phase;
@@ -74,16 +74,16 @@ void Region_map_component::checkpoint()
 }
 
 
-Region_map_component *Region_map_component::find_by_badge(Genode::uint16_t badge)
+Region_map *Region_map::find_by_badge(Genode::uint16_t badge)
 {
 	if(badge == cap().local_name())
 		return this;
-	Region_map_component *obj = next();
+	Region_map *obj = next();
 	return obj ? obj->find_by_badge(badge) : 0;
 }
 
 
-Genode::Region_map::Local_addr Region_map_component::attach(Genode::Dataspace_capability ds_cap,
+Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability ds_cap,
 							    Genode::size_t size,
 							    Genode::off_t offset,
 							    bool use_local_addr,
@@ -150,7 +150,7 @@ Genode::Region_map::Local_addr Region_map_component::attach(Genode::Dataspace_ca
 }
 
 
-void Region_map_component::detach(Region_map::Local_addr local_addr)
+void Region_map::detach(Region_map::Local_addr local_addr)
 {
 	if(verbose_debug) Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
 				      "\033[33m", __func__, "\033[0m(", "local_addr=", Genode::Hex(local_addr), ")");
@@ -182,7 +182,7 @@ void Region_map_component::detach(Region_map::Local_addr local_addr)
 }
 
 
-void Region_map_component::fault_handler(Genode::Signal_context_capability handler)
+void Region_map::fault_handler(Genode::Signal_context_capability handler)
 {
 	if(verbose_debug)Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
 				     "\033[33m", __func__, "\033[0m(", handler, ")");
@@ -191,7 +191,7 @@ void Region_map_component::fault_handler(Genode::Signal_context_capability handl
 }
 
 
-Genode::Region_map::State Region_map_component::state()
+Genode::Region_map::State Region_map::state()
 {
 	if(verbose_debug) Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
 				      "\033[33m", __func__, "\033[0m()");
@@ -205,7 +205,7 @@ Genode::Region_map::State Region_map_component::state()
 }
 
 
-Genode::Dataspace_capability Region_map_component::dataspace()
+Genode::Dataspace_capability Region_map::dataspace()
 {
 	if(verbose_debug) Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
 				      "\033[33m", __func__, "\033[0m()");

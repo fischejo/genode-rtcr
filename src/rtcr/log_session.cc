@@ -9,7 +9,7 @@
 using namespace Rtcr;
 
 
-Log_session_component::Log_session_component(Genode::Env &env,
+Log_session::Log_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
 					     Genode::Entrypoint &ep,
 					     const char *label,
@@ -29,7 +29,7 @@ Log_session_component::Log_session_component(Genode::Env &env,
 }
 
 
-Log_session_component::~Log_session_component()
+Log_session::~Log_session()
 {
 	if(verbose_debug) Genode::log("\033[33m", "~Log", "\033[0m ", _parent_log);
 }
@@ -37,7 +37,7 @@ Log_session_component::~Log_session_component()
 
 
 
-Genode::size_t Log_session_component::write(String const &string)
+Genode::size_t Log_session::write(String const &string)
 {
 	if(verbose_debug) Genode::log("Log::\033[33m", __func__, "\033[0m(", string.string(),")");
 	auto result = _parent_log.write(string);
@@ -47,7 +47,7 @@ Genode::size_t Log_session_component::write(String const &string)
 }
 
 
-void Log_session_component::checkpoint()
+void Log_session::checkpoint()
 {
   ck_badge = cap().local_name();
   ck_bootstrapped = _bootstrapped;
@@ -59,9 +59,9 @@ void Log_session_component::checkpoint()
 
 
 
-Log_session_component *Log_root::find_by_badge(Genode::uint16_t badge)
+Log_session *Log_root::find_by_badge(Genode::uint16_t badge)
 {
-  Log_session_component *obj = _session_rpc_objs.first();
+  Log_session *obj = _session_rpc_objs.first();
   while(obj) { 
     if(badge == obj->cap().local_name())
       return obj;
@@ -71,7 +71,7 @@ Log_session_component *Log_root::find_by_badge(Genode::uint16_t badge)
 }
 
 
-Log_session_component *Log_root::_create_session(const char *args)
+Log_session *Log_root::_create_session(const char *args)
 {
 	if(verbose_debug) Genode::log("Log_root::\033[33m", __func__, "\033[0m(args='", args, "')");
 
@@ -87,14 +87,14 @@ Log_session_component *Log_root::_create_session(const char *args)
 	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
 
 	Genode::size_t readjusted_ram_quota = Genode::Arg_string::find_arg(readjusted_args, "ram_quota").ulong_value(0);
-	readjusted_ram_quota = readjusted_ram_quota + sizeof(Log_session_component) + md_alloc()->overhead(sizeof(Log_session_component));
+	readjusted_ram_quota = readjusted_ram_quota + sizeof(Log_session) + md_alloc()->overhead(sizeof(Log_session));
 
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
 	/* Create virtual session object */
-	Log_session_component *new_session =
-	  new (md_alloc()) Log_session_component(_env,
+	Log_session *new_session =
+	  new (md_alloc()) Log_session(_env,
 						 _md_alloc,
 						 _ep,
 						 label_buf,
@@ -109,7 +109,7 @@ Log_session_component *Log_root::_create_session(const char *args)
 }
 
 
-void Log_root::_upgrade_session(Log_session_component *session, const char *upgrade_args)
+void Log_root::_upgrade_session(Log_session *session, const char *upgrade_args)
 {
 	if(verbose_debug) Genode::log("Log_root::\033[33m", __func__, "\033[0m(session ", session->cap(),", args=", upgrade_args,")");
 
@@ -133,7 +133,7 @@ void Log_root::_upgrade_session(Log_session_component *session, const char *upgr
 }
 
 
-void Log_root::_destroy_session(Log_session_component *session)
+void Log_root::_destroy_session(Log_session *session)
 {
 	if(verbose_debug) Genode::log("Log_root::\033[33m", __func__, "\033[0m(ptr=", session,")");
 
@@ -149,7 +149,7 @@ Log_root::Log_root(Genode::Env &env,
 		   bool &bootstrap_phase,
 		   Genode::Xml_node *config)
 	:
-	Root_component<Log_session_component>(session_ep, md_alloc),
+	Root_component<Log_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
@@ -165,7 +165,7 @@ Log_root::Log_root(Genode::Env &env,
 Log_root::~Log_root()
 {
 
-	while(Log_session_component *obj = _session_rpc_objs.first()) {
+	while(Log_session *obj = _session_rpc_objs.first()) {
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}

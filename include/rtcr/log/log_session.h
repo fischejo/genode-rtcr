@@ -17,7 +17,7 @@
 #include <rtcr/checkpointable.h>
 
 namespace Rtcr {
-	class Log_session_component;
+	class Log_session;
 	class Log_root;
 
 	constexpr bool log_verbose_debug = false;
@@ -27,9 +27,9 @@ namespace Rtcr {
 /**
  * Custom RPC session object to intercept its creation, modification, and destruction through its interface
  */
-class Rtcr::Log_session_component : public Rtcr::Checkpointable,
+class Rtcr::Log_session : public Rtcr::Checkpointable,
 				    public Genode::Rpc_object<Genode::Log_session>,
-                                    public Genode::List<Log_session_component>::Element
+                                    public Genode::List<Log_session>::Element
 {
 public:
   Genode::String<160> ck_creation_args;
@@ -65,7 +65,7 @@ private:
 
 
 public:
-	Log_session_component(Genode::Env &env,
+	Log_session(Genode::Env &env,
 			      Genode::Allocator &md_alloc,
 			      Genode::Entrypoint &ep,
 			      const char *label,
@@ -73,7 +73,7 @@ public:
 			      bool bootstrapped,
 			      Genode::Xml_node *config);
 
-  ~Log_session_component();
+  ~Log_session();
 
 	Genode::Log_session_capability parent_cap() { return _parent_log.cap(); }
 
@@ -98,7 +98,7 @@ public:
 /**
  * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
  */
-class Rtcr::Log_root : public Genode::Root_component<Log_session_component>
+class Rtcr::Log_root : public Genode::Root_component<Log_session>
 {
 private:
 	/**
@@ -129,13 +129,13 @@ private:
 	/**
 	 * List for monitoring session RPC objects
 	 */
-	Genode::List<Log_session_component> _session_rpc_objs;
+	Genode::List<Log_session> _session_rpc_objs;
 
   Genode::Xml_node *_config;
 protected:
-	Log_session_component *_create_session(const char *args);
-	void _upgrade_session(Log_session_component *session, const char *upgrade_args);
-	void _destroy_session(Log_session_component *session);
+	Log_session *_create_session(const char *args);
+	void _upgrade_session(Log_session *session, const char *upgrade_args);
+	void _destroy_session(Log_session *session);
 
 public:
 	Log_root(Genode::Env &env,
@@ -145,9 +145,9 @@ public:
 		 Genode::Xml_node *config);
 	~Log_root();
 
-	Log_session_component *find_by_badge(Genode::uint16_t badge);
+	Log_session *find_by_badge(Genode::uint16_t badge);
   
-	Genode::List<Log_session_component> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Log_session> &session_infos() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_LOG_SESSION_H_ */

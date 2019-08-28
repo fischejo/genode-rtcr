@@ -14,7 +14,7 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/cap/kcap_badge_info.h>
 #include <rtcr/pd/pd_session.h>
-#include <rtcr/rm/region_map_component.h>
+#include <rtcr/rm/region_map.h>
 #include <rtcr/rm/attached_region_info.h>
 
 namespace Rtcr {
@@ -32,14 +32,14 @@ protected:
 
   Genode::List<Kcap_badge_info> _kcap_mapping;
   Genode::addr_t _cap_idx_alloc_addr;
-  Pd_session_component &_pd_session;
+  Pd_session &_pd_session;
   
   void checkpoint() override;
   
 public:
         Capability_mapping(Genode::Env &env,
 			   Genode::Allocator &alloc,
-			   Pd_session_component &pd_session,
+			   Pd_session &pd_session,
 			   Genode::Xml_node *config);
 
 

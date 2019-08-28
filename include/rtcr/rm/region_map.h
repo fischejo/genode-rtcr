@@ -17,7 +17,7 @@
 #include <rtcr/rm/attached_region_info.h>
 
 namespace Rtcr {
-	class Region_map_component;
+	class Region_map;
 
 	constexpr bool region_map_verbose_debug = false;
 }
@@ -25,8 +25,8 @@ namespace Rtcr {
 /**
  * Custom Region map intercepting RPC methods
  */
-class Rtcr::Region_map_component : public Genode::Rpc_object<Genode::Region_map>,
-                                   public Genode::List<Region_map_component>::Element
+class Rtcr::Region_map : public Genode::Rpc_object<Genode::Region_map>,
+                                   public Genode::List<Region_map>::Element
 {
 public:
   bool ck_bootstrapped;
@@ -98,19 +98,19 @@ private:
 
 public:
 
-  Region_map_component(Genode::Allocator &md_alloc,
+  Region_map(Genode::Allocator &md_alloc,
 		       Genode::Capability<Genode::Region_map>
 		       region_map_cap,
 		       Genode::size_t size,
 		       const char *label,
 		       bool &bootstrap_phase);
 
-  ~Region_map_component();
+  ~Region_map();
 
   Genode::Capability<Genode::Region_map> parent_cap() { return _parent_region_map; }
 
   
-	Region_map_component *find_by_badge(Genode::uint16_t badge);
+	Region_map *find_by_badge(Genode::uint16_t badge);
 
 	/******************************
 	 ** Region map Rpc interface **

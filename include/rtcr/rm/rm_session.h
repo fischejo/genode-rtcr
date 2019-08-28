@@ -15,11 +15,11 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
-#include <rtcr/rm/region_map_component.h>
+#include <rtcr/rm/region_map.h>
 #include <rtcr/ram/ram_session.h>
 
 namespace Rtcr {
-	class Rm_session_component;
+	class Rm_session;
 	class Rm_root;
 
 	constexpr bool rm_verbose_debug = true;
@@ -30,9 +30,9 @@ namespace Rtcr {
  * Custom RPC session object to intercept its creation, modification, and
  * destruction through its interface
  */
-class Rtcr::Rm_session_component : public Rtcr::Checkpointable,
+class Rtcr::Rm_session : public Rtcr::Checkpointable,
 				   public Genode::Rpc_object<Genode::Rm_session>,
-                                   public Genode::List<Rm_session_component>::Element
+                                   public Genode::List<Rm_session>::Element
 {
 
   
@@ -44,7 +44,7 @@ public:
   bool ck_bootstrapped;
   Genode::uint16_t ck_badge;
   Genode::addr_t ck_kcap;
-  Genode::List<Region_map_component> ck_region_maps;
+  Genode::List<Region_map> ck_region_maps;
   
   void checkpoint() override;
 
@@ -64,8 +64,8 @@ protected:
    */  
   Genode::Lock _new_region_maps_lock;
   Genode::Lock _destroyed_region_maps_lock;  
-  Genode::List<Region_map_component> _new_region_maps;
-  Genode::List<Region_map_component> _destroyed_region_maps;
+  Genode::List<Region_map> _new_region_maps;
+  Genode::List<Region_map> _destroyed_region_maps;
 
 
 
@@ -93,22 +93,22 @@ private:
 	Genode::Rm_connection  _parent_rm;
 
 
-	Region_map_component &_create(Genode::size_t size);
-	void _destroy(Region_map_component &region_map);
+	Region_map &_create(Genode::size_t size);
+	void _destroy(Region_map &region_map);
 
-	Ram_session_component &_ram_session;	
+	Ram_session &_ram_session;	
 
 public:
 
-  Rm_session_component(Genode::Env &env,
+  Rm_session(Genode::Env &env,
 		       Genode::Allocator &md_alloc,
 		       Genode::Entrypoint &ep,
 		       const char *creation_args,
-		       Ram_session_component &ram_session,
+		       Ram_session &ram_session,
 		       bool &bootstrap_phase,
 		       Genode::Xml_node *config);
   
-	~Rm_session_component();
+	~Rm_session();
 
 	Genode::Rm_session_capability parent_cap() { return _parent_rm.cap(); }
 
@@ -136,7 +136,7 @@ public:
 /**
  * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
  */
-class Rtcr::Rm_root : public Genode::Root_component<Rm_session_component>
+class Rtcr::Rm_root : public Genode::Root_component<Rm_session>
 {
 private:
 	/**
@@ -167,14 +167,14 @@ private:
 	/**
 	 * List for monitoring session objects
 	 */
-	Genode::List<Rm_session_component> _session_rpc_objs;
+	Genode::List<Rm_session> _session_rpc_objs;
 
 protected:
-	Rm_session_component *_create_session(const char *args);
-	void _upgrade_session(Rm_session_component *session, const char *upgrade_args);
-	void _destroy_session(Rm_session_component *session);
+	Rm_session *_create_session(const char *args);
+	void _upgrade_session(Rm_session *session, const char *upgrade_args);
+	void _destroy_session(Rm_session *session);
 
-	Ram_session_component &_ram_session;
+	Ram_session &_ram_session;
 
   Genode::Xml_node *_config;
   
@@ -182,13 +182,13 @@ public:
 	Rm_root(Genode::Env &env,
 		Genode::Allocator &md_alloc,
 		Genode::Entrypoint &session_ep,
-		Ram_session_component &ram_session,		
+		Ram_session &ram_session,		
 		bool &bootstrap_phase,
 		Genode::Xml_node *config);
   
 	~Rm_root();
-	Rm_session_component *find_by_badge(Genode::uint16_t badge);
-	Genode::List<Rm_session_component> &session_infos() { return _session_rpc_objs; }
+	Rm_session *find_by_badge(Genode::uint16_t badge);
+	Genode::List<Rm_session> &session_infos() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_RM_SESSION_H_ */

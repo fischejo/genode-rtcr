@@ -16,7 +16,7 @@
 #include <rtcr/checkpointable.h>
 
 namespace Rtcr {
-  class Timer_session_component;
+  class Timer_session;
   class Timer_root;
   constexpr bool timer_root_verbose_debug = false;
   constexpr bool timer_verbose_debug = false;
@@ -25,9 +25,9 @@ namespace Rtcr {
 /**
  * Custom RPC session object to intercept its creation, modification, and destruction through its interface
  */
-class Rtcr::Timer_session_component : public Rtcr::Checkpointable,
+class Rtcr::Timer_session : public Rtcr::Checkpointable,
 				      public Genode::Rpc_object<Timer::Session>,
-                                      public Genode::List<Timer_session_component>::Element
+                                      public Genode::List<Timer_session>::Element
 {
 public:
   using Genode::Rpc_object<Timer::Session>::cap;
@@ -82,14 +82,14 @@ protected:
 
 public:
 
-  Timer_session_component(Genode::Env &env,
+  Timer_session(Genode::Env &env,
 			  Genode::Allocator &md_alloc,
 			  Genode::Entrypoint &ep,
 			  const char *creation_args,
 			  bool bootstrapped,
 			  Genode::Xml_node *config);
 
-  ~Timer_session_component();
+  ~Timer_session();
 
   Timer::Session_capability parent_cap() { return _parent_timer.cap(); }
 
@@ -115,7 +115,7 @@ public:
 };
 
 
-class Rtcr::Timer_root : public Genode::Root_component<Timer_session_component>
+class Rtcr::Timer_root : public Genode::Root_component<Timer_session>
 {
 private:
   /**
@@ -151,15 +151,15 @@ private:
   /**
    * List for monitoring session objects
    */
-  Genode::List<Timer_session_component> _session_rpc_objs;
+  Genode::List<Timer_session> _session_rpc_objs;
 
  protected:
 
-  Timer_session_component *_create_session(const char *args);
+  Timer_session *_create_session(const char *args);
 
-  void _upgrade_session(Timer_session_component *session, const char *upgrade_args);
+  void _upgrade_session(Timer_session *session, const char *upgrade_args);
 
-  void _destroy_session(Timer_session_component *session);
+  void _destroy_session(Timer_session *session);
   Genode::Xml_node *_config;
  public:
   
@@ -171,10 +171,10 @@ private:
 
   ~Timer_root();
 
-  Timer_session_component *find_by_badge(Genode::uint16_t badge);
+  Timer_session *find_by_badge(Genode::uint16_t badge);
 
   
-  Genode::List<Timer_session_component> &session_infos() { return _session_rpc_objs;  }
+  Genode::List<Timer_session> &session_infos() { return _session_rpc_objs;  }
 };
 
 

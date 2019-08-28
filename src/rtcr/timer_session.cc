@@ -9,7 +9,7 @@
 using namespace Rtcr;
 
 
-Timer_session_component::Timer_session_component(Genode::Env &env,
+Timer_session::Timer_session(Genode::Env &env,
 						 Genode::Allocator &md_alloc,
 						 Genode::Entrypoint &ep,
 						 const char *creation_args,
@@ -30,14 +30,14 @@ Timer_session_component::Timer_session_component(Genode::Env &env,
 }
 
 
-Timer_session_component::~Timer_session_component()
+Timer_session::~Timer_session()
 {
 	if(verbose_debug)
 	  Genode::log("\033[33m", "~Timer", "\033[0m ", _parent_timer);
 }
 
 
-void Timer_session_component::checkpoint()
+void Timer_session::checkpoint()
 {
   ck_badge = cap().local_name();
   ck_bootstrapped = _bootstrapped;
@@ -51,7 +51,7 @@ void Timer_session_component::checkpoint()
 }
 
 
-void Timer_session_component::trigger_once(unsigned us)
+void Timer_session::trigger_once(unsigned us)
 {
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m(us=", us, ")");
 	_timeout = us;
@@ -60,7 +60,7 @@ void Timer_session_component::trigger_once(unsigned us)
 }
 
 
-void Timer_session_component::trigger_periodic(unsigned us)
+void Timer_session::trigger_periodic(unsigned us)
 {
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m(us=", us, ")");
 	_timeout = us;
@@ -70,7 +70,7 @@ void Timer_session_component::trigger_periodic(unsigned us)
 }
 
 
-void Timer_session_component::sigh(Genode::Signal_context_capability sigh)
+void Timer_session::sigh(Genode::Signal_context_capability sigh)
 {
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m(", sigh, ")");
 
@@ -79,7 +79,7 @@ void Timer_session_component::sigh(Genode::Signal_context_capability sigh)
 }
 
 
-unsigned long Timer_session_component::elapsed_ms() const
+unsigned long Timer_session::elapsed_ms() const
 {
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m()");
 	auto result = _parent_timer.elapsed_ms();
@@ -89,7 +89,7 @@ unsigned long Timer_session_component::elapsed_ms() const
 }
 
 
-unsigned long Timer_session_component::now_us() const
+unsigned long Timer_session::now_us() const
 {
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m()");
 	auto result = _parent_timer.now_us();
@@ -99,7 +99,7 @@ unsigned long Timer_session_component::now_us() const
 }
 
 
-void Timer_session_component::msleep(unsigned ms)
+void Timer_session::msleep(unsigned ms)
 {
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m(ms=", ms, ")");
 	_timeout = 1000*ms;
@@ -108,7 +108,7 @@ void Timer_session_component::msleep(unsigned ms)
 }
 
 
-void Timer_session_component::usleep(unsigned us)
+void Timer_session::usleep(unsigned us)
 {
 	if(verbose_debug) Genode::log("Timer::\033[33m", __func__, "\033[0m(us=", us, ")");
 	_timeout = us;
@@ -116,7 +116,7 @@ void Timer_session_component::usleep(unsigned us)
 	_parent_timer.usleep(us);
 }
 
-Timer_session_component *Timer_root::_create_session(const char *args)
+Timer_session *Timer_root::_create_session(const char *args)
 {
 	if(verbose_debug) Genode::log("Timer_root::\033[33m", __func__, "\033[0m(", args,")");
 
@@ -130,8 +130,8 @@ Timer_session_component *Timer_root::_create_session(const char *args)
 		       readjusted_args, "ram_quota").ulong_value(0);
 
 	readjusted_ram_quota = readjusted_ram_quota
-	  + sizeof(Timer_session_component)
-	  + md_alloc()->overhead(sizeof(Timer_session_component));
+	  + sizeof(Timer_session)
+	  + md_alloc()->overhead(sizeof(Timer_session));
 
 	Genode::snprintf(ram_quota_buf,
 			 sizeof(ram_quota_buf),
@@ -144,8 +144,8 @@ Timer_session_component *Timer_root::_create_session(const char *args)
 				    ram_quota_buf);
 
 	/* Create virtual session object */
-	Timer_session_component *new_session =
-	  new (md_alloc()) Timer_session_component(_env,
+	Timer_session *new_session =
+	  new (md_alloc()) Timer_session(_env,
 						   _md_alloc,
 						   _ep,
 						   readjusted_args,
@@ -159,7 +159,7 @@ Timer_session_component *Timer_root::_create_session(const char *args)
 }
 
 
-void Timer_root::_upgrade_session(Timer_session_component *session, const char *upgrade_args)
+void Timer_root::_upgrade_session(Timer_session *session, const char *upgrade_args)
 {
 	if(verbose_debug) Genode::log("Timer_root::\033[33m", __func__, "\033[0m(session ", session->cap(),", args=", upgrade_args,")");
 
@@ -191,7 +191,7 @@ void Timer_root::_upgrade_session(Timer_session_component *session, const char *
 }
 
 
-void Timer_root::_destroy_session(Timer_session_component *session)
+void Timer_root::_destroy_session(Timer_session *session)
 {
 	if(verbose_debug) Genode::log("Timer_root::\033[33m", __func__,
 				      "\033[0m(session ", session->cap(),")");
@@ -208,7 +208,7 @@ Timer_root::Timer_root(Genode::Env &env,
 		       bool &bootstrap_phase,
 		       Genode::Xml_node *config)
 	:
-	Root_component<Timer_session_component>(session_ep, md_alloc),
+	Root_component<Timer_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
@@ -223,7 +223,7 @@ Timer_root::Timer_root(Genode::Env &env,
 
 Timer_root::~Timer_root()
 {
-	while(Timer_session_component *obj = _session_rpc_objs.first()) {
+	while(Timer_session *obj = _session_rpc_objs.first()) {
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}
@@ -231,9 +231,9 @@ Timer_root::~Timer_root()
 	if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
 }
 
-Timer_session_component *Timer_root::find_by_badge(Genode::uint16_t badge)
+Timer_session *Timer_root::find_by_badge(Genode::uint16_t badge)
 {
-  Timer_session_component *obj = _session_rpc_objs.first();
+  Timer_session *obj = _session_rpc_objs.first();
   while(obj) { 
     if(badge == obj->cap().local_name())
       return obj;

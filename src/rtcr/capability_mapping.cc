@@ -15,7 +15,7 @@ using namespace Rtcr;
 
 Capability_mapping::Capability_mapping(Genode::Env &env,
 				       Genode::Allocator &alloc,
-				       Pd_session_component &pd_session,			   				     Genode::Xml_node *config)
+				       Pd_session &pd_session,			   				     Genode::Xml_node *config)
   :
   Checkpointable(env, config, "capability_mapping"),
   _env(env),
@@ -55,7 +55,7 @@ void Capability_mapping::checkpoint()
 	
 	/* Find child's dataspace containing the capability map
 	 * It is found via cap_idx_alloc_addr */
-	Region_map_component &addr_space = _pd_session.address_space_component();
+	Region_map &addr_space = _pd_session.address_space_component();
 
 	/* This lock is necessary as the rm_session is also moving items from
 	   new_attached_regions to ck_attached_regions during checkpointing */

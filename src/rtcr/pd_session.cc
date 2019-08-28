@@ -9,12 +9,12 @@
 using namespace Rtcr;
 
 
-Pd_session_component::Pd_session_component(Genode::Env &env,
+Pd_session::Pd_session(Genode::Env &env,
 					   Genode::Allocator &md_alloc,
 					   Genode::Entrypoint &ep,
 					   const char *label,
 					   const char *creation_args,
-					   Ram_session_component &ram_session,
+					   Ram_session &ram_session,
 					   bool &bootstrap_phase,
 					   Genode::Xml_node *config)
 	:
@@ -54,7 +54,7 @@ Pd_session_component::Pd_session_component(Genode::Env &env,
 }
 
 
-Pd_session_component::~Pd_session_component()
+Pd_session::~Pd_session()
 {
 	if(verbose_debug) Genode::log("\033[33m", "~Pd", "\033[0m ", _parent_pd);
 
@@ -64,7 +64,7 @@ Pd_session_component::~Pd_session_component()
 }
 
 
-void Pd_session_component::_checkpoint_signal_contexts()
+void Pd_session::_checkpoint_signal_contexts()
 {
   Signal_context_info *sc_info = nullptr;
   while(sc_info = _new_signal_contexts.first()) {
@@ -85,7 +85,7 @@ void Pd_session_component::_checkpoint_signal_contexts()
   }  
 }
 
-void Pd_session_component::_checkpoint_signal_sources()
+void Pd_session::_checkpoint_signal_sources()
 {
   Signal_source_info *ss_info = nullptr;
   while(ss_info = _new_signal_sources.first()) {
@@ -106,7 +106,7 @@ void Pd_session_component::_checkpoint_signal_sources()
   }  
 }
 
-void Pd_session_component::_checkpoint_native_capabilities()
+void Pd_session::_checkpoint_native_capabilities()
 {
   Native_capability_info *nc_info = nullptr;
   while(nc_info = _new_native_caps.first()) {
@@ -128,7 +128,7 @@ void Pd_session_component::_checkpoint_native_capabilities()
 }
  
 
-void Pd_session_component::checkpoint()
+void Pd_session::checkpoint()
 {
   ck_badge = cap().local_name();
   ck_bootstrapped = _bootstrapped;
@@ -146,16 +146,16 @@ void Pd_session_component::checkpoint()
   _checkpoint_signal_contexts();
 }
 
-Pd_session_component *Pd_session_component::find_by_badge(Genode::uint16_t badge)
+Pd_session *Pd_session::find_by_badge(Genode::uint16_t badge)
 {
 	if(badge == cap().local_name())
 		return this;
-	Pd_session_component *obj = next();
+	Pd_session *obj = next();
 	return obj ? obj->find_by_badge(badge) : 0;
 }
 
 
-void Pd_session_component::assign_parent(Genode::Capability<Genode::Parent> parent)
+void Pd_session::assign_parent(Genode::Capability<Genode::Parent> parent)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(", parent,")");
 
@@ -163,7 +163,7 @@ void Pd_session_component::assign_parent(Genode::Capability<Genode::Parent> pare
 }
 
 
-bool Pd_session_component::assign_pci(Genode::addr_t addr, Genode::uint16_t bdf)
+bool Pd_session::assign_pci(Genode::addr_t addr, Genode::uint16_t bdf)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(addr=", addr,", bdf=", bdf,")");
 
@@ -175,7 +175,7 @@ bool Pd_session_component::assign_pci(Genode::addr_t addr, Genode::uint16_t bdf)
 }
 
 
-Genode::Capability<Genode::Signal_source> Pd_session_component::alloc_signal_source()
+Genode::Capability<Genode::Signal_source> Pd_session::alloc_signal_source()
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m()");
 
@@ -192,7 +192,7 @@ Genode::Capability<Genode::Signal_source> Pd_session_component::alloc_signal_sou
 }
 
 
-void Pd_session_component::free_signal_source(Genode::Capability<Genode::Signal_source> cap)
+void Pd_session::free_signal_source(Genode::Capability<Genode::Signal_source> cap)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(", cap, ")");
 
@@ -225,7 +225,7 @@ void Pd_session_component::free_signal_source(Genode::Capability<Genode::Signal_
 }
 
 
-Genode::Signal_context_capability Pd_session_component::alloc_context(
+Genode::Signal_context_capability Pd_session::alloc_context(
 	    Signal_source_capability source, unsigned long imprint)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(source ",
@@ -245,7 +245,7 @@ Genode::Signal_context_capability Pd_session_component::alloc_context(
 }
 
 
-void Pd_session_component::free_context(Genode::Signal_context_capability cap)
+void Pd_session::free_context(Genode::Signal_context_capability cap)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(", cap, ")");
 
@@ -276,7 +276,7 @@ void Pd_session_component::free_context(Genode::Signal_context_capability cap)
 }
 
 
-void Pd_session_component::submit(Genode::Signal_context_capability context, unsigned cnt)
+void Pd_session::submit(Genode::Signal_context_capability context, unsigned cnt)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(context ", context, ", cnt=", cnt,")");
 
@@ -284,7 +284,7 @@ void Pd_session_component::submit(Genode::Signal_context_capability context, uns
 }
 
 
-Genode::Native_capability Pd_session_component::alloc_rpc_cap(Genode::Native_capability ep)
+Genode::Native_capability Pd_session::alloc_rpc_cap(Genode::Native_capability ep)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", "alloc_rpc_cap", "\033[0m(", ep, ")");
 
@@ -301,7 +301,7 @@ Genode::Native_capability Pd_session_component::alloc_rpc_cap(Genode::Native_cap
 }
 
 
-void Pd_session_component::free_rpc_cap(Genode::Native_capability cap)
+void Pd_session::free_rpc_cap(Genode::Native_capability cap)
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m(", cap,")");
 
@@ -334,7 +334,7 @@ void Pd_session_component::free_rpc_cap(Genode::Native_capability cap)
 }
 
 
-Genode::Capability<Genode::Region_map> Pd_session_component::address_space()
+Genode::Capability<Genode::Region_map> Pd_session::address_space()
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m()");
 
@@ -346,7 +346,7 @@ Genode::Capability<Genode::Region_map> Pd_session_component::address_space()
 }
 
 
-Genode::Capability<Genode::Region_map> Pd_session_component::stack_area()
+Genode::Capability<Genode::Region_map> Pd_session::stack_area()
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m()");
 
@@ -358,7 +358,7 @@ Genode::Capability<Genode::Region_map> Pd_session_component::stack_area()
 }
 
 
-Genode::Capability<Genode::Region_map> Pd_session_component::linker_area()
+Genode::Capability<Genode::Region_map> Pd_session::linker_area()
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m()");
 
@@ -370,7 +370,7 @@ Genode::Capability<Genode::Region_map> Pd_session_component::linker_area()
 }
 
 
-Genode::Capability<Genode::Pd_session::Native_pd> Pd_session_component::native_pd()
+Genode::Capability<Genode::Pd_session::Native_pd> Pd_session::native_pd()
 {
 	if(verbose_debug) Genode::log("Pd::\033[33m", __func__, "\033[0m()");
 
@@ -382,7 +382,7 @@ Genode::Capability<Genode::Pd_session::Native_pd> Pd_session_component::native_p
 }
 
 
-Pd_session_component *Pd_root::_create_session(const char *args)
+Pd_session *Pd_root::_create_session(const char *args)
 {
 	if(verbose_debug) Genode::log("Pd_root::\033[33m", __func__, "\033[0m(", args,")");
 
@@ -398,14 +398,14 @@ Pd_session_component *Pd_root::_create_session(const char *args)
 	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
 
 	Genode::size_t readjusted_ram_quota = Genode::Arg_string::find_arg(readjusted_args, "ram_quota").ulong_value(0);
-	readjusted_ram_quota = readjusted_ram_quota + sizeof(Pd_session_component) + md_alloc()->overhead(sizeof(Pd_session_component));
+	readjusted_ram_quota = readjusted_ram_quota + sizeof(Pd_session) + md_alloc()->overhead(sizeof(Pd_session));
 
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
 	/* Create custom Pd_session */
-	Pd_session_component *new_session =
-	  new (md_alloc()) Pd_session_component(_env,
+	Pd_session *new_session =
+	  new (md_alloc()) Pd_session(_env,
 						_md_alloc,
 						_ep,
 						label_buf,
@@ -421,7 +421,7 @@ Pd_session_component *Pd_root::_create_session(const char *args)
 }
 
 
-void Pd_root::_upgrade_session(Pd_session_component *session, const char *upgrade_args)
+void Pd_root::_upgrade_session(Pd_session *session, const char *upgrade_args)
 {
 	if(verbose_debug) Genode::log("Pd_root::\033[33m", __func__, "\033[0m(session ", session->cap(),", args=", upgrade_args,")");
 
@@ -444,7 +444,7 @@ void Pd_root::_upgrade_session(Pd_session_component *session, const char *upgrad
 }
 
 
-void Pd_root::_destroy_session(Pd_session_component *session)
+void Pd_root::_destroy_session(Pd_session *session)
 {
 	if(verbose_debug) Genode::log("Pd_root::\033[33m", __func__, "\033[0m(session ", session->cap(),")");
 
@@ -456,11 +456,11 @@ void Pd_root::_destroy_session(Pd_session_component *session)
 Pd_root::Pd_root(Genode::Env &env,
 		 Genode::Allocator &md_alloc,
 		 Genode::Entrypoint &session_ep,
-		 Ram_session_component &ram_session,		 
+		 Ram_session &ram_session,		 
 		 bool &bootstrap_phase,
 		 Genode::Xml_node *config)
 	:
-	Root_component<Pd_session_component>(session_ep, md_alloc),
+	Root_component<Pd_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
@@ -476,7 +476,7 @@ Pd_root::Pd_root(Genode::Env &env,
 
 Pd_root::~Pd_root()
 {
-	while(Pd_session_component *obj = _session_rpc_objs.first()) {
+	while(Pd_session *obj = _session_rpc_objs.first()) {
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}

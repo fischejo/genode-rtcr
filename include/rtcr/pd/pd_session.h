@@ -15,14 +15,14 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
-#include <rtcr/rm/region_map_component.h>
+#include <rtcr/rm/region_map.h>
 #include <rtcr/pd/native_capability_info.h>
 #include <rtcr/pd/signal_context_info.h>
 #include <rtcr/pd/signal_source_info.h>
 #include <rtcr/ram/ram_session.h>
 
 namespace Rtcr {
-	class Pd_session_component;
+	class Pd_session;
 	class Pd_root;
 
 	constexpr bool pd_verbose_debug = true;
@@ -32,9 +32,9 @@ namespace Rtcr {
 /**
  * Custom RPC session object to intercept its creation, modification, and destruction through its interface
  */
-class Rtcr::Pd_session_component : public Rtcr::Checkpointable,
+class Rtcr::Pd_session : public Rtcr::Checkpointable,
 				   public Genode::Rpc_object<Genode::Pd_session>,
-                                   public Genode::List<Pd_session_component>::Element
+                                   public Genode::List<Pd_session>::Element
 {
 public:
   using Genode::Rpc_object<Genode::Pd_session>::cap;
@@ -55,15 +55,15 @@ public:
   /**
    * Custom address space for monitoring the attachments of the Region map
    */
-  Region_map_component   _address_space;
+  Region_map   _address_space;
   /**
    * Custom stack area for monitoring the attachments of the Region map
    */
-  Region_map_component   _stack_area;
+  Region_map   _stack_area;
   /**
    * Custom linker area for monitoring the attachments of the Region map
    */
-  Region_map_component   _linker_area;
+  Region_map   _linker_area;
 
 
 
@@ -131,30 +131,30 @@ private:
 
 
 public:
-	Pd_session_component(Genode::Env &env,
+	Pd_session(Genode::Env &env,
 			     Genode::Allocator &md_alloc,
 			     Genode::Entrypoint &ep,
 			     const char *label,
 			     const char *creation_args,
-			     Ram_session_component &ram_session,
+			     Ram_session &ram_session,
 			     bool &bootstrap_phase,
 			     Genode::Xml_node *config);
   
-	~Pd_session_component();
+	~Pd_session();
 
 	Genode::Pd_session_capability parent_cap() { return _parent_pd.cap(); }
 
-  Region_map_component &address_space_component() { return _address_space; }
-	// Region_map_component const &address_space_component() const { return _address_space; }
+  Region_map &address_space_component() { return _address_space; }
+	// Region_map const &address_space_component() const { return _address_space; }
 
-	// Region_map_component &stack_area_component() { return _stack_area; }
-	// Region_map_component const &stack_area_component() const { return _stack_area; }
+	// Region_map &stack_area_component() { return _stack_area; }
+	// Region_map const &stack_area_component() const { return _stack_area; }
 
-	// Region_map_component &linker_area_component() { return _linker_area; }
-	// Region_map_component const &linker_area_component() const { return _linker_area; }
+	// Region_map &linker_area_component() { return _linker_area; }
+	// Region_map const &linker_area_component() const { return _linker_area; }
 
 
-	Pd_session_component *find_by_badge(Genode::uint16_t badge);
+	Pd_session *find_by_badge(Genode::uint16_t badge);
 
 	/**************************
 	 ** Pd_session interface **
@@ -196,7 +196,7 @@ public:
 /**
  * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
  */
-class Rtcr::Pd_root : public Genode::Root_component<Pd_session_component>
+class Rtcr::Pd_root : public Genode::Root_component<Pd_session>
 {
 private:
 	/**
@@ -227,15 +227,15 @@ private:
 	/**
 	 * List for monitoring session objects
 	 */
-	Genode::List<Pd_session_component> _session_rpc_objs;
+	Genode::List<Pd_session> _session_rpc_objs;
 
-        Ram_session_component &_ram_session;  
+        Ram_session &_ram_session;  
         Genode::Xml_node *_config;
   
 protected:
-	Pd_session_component *_create_session(const char *args);
-	void _upgrade_session(Pd_session_component *session, const char *upgrade_args);
-	void _destroy_session(Pd_session_component *session);
+	Pd_session *_create_session(const char *args);
+	void _upgrade_session(Pd_session *session, const char *upgrade_args);
+	void _destroy_session(Pd_session *session);
 
 
   
@@ -243,12 +243,12 @@ public:
 	Pd_root(Genode::Env &env,
 		Genode::Allocator &md_alloc,
 		Genode::Entrypoint &session_ep,
-		Ram_session_component &ram_session,
+		Ram_session &ram_session,
 		bool &bootstrap_phase,
 		Genode::Xml_node *config);
 	~Pd_root();
 
-	Genode::List<Pd_session_component> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Pd_session> &session_infos() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_PD_SESSION_H_ */

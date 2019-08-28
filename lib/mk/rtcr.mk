@@ -1,7 +1,7 @@
 SRC_CC = target_child.cc module_factory.cc base_module.cc checkpointable.cc
-SRC_CC += cpu_session.cc cpu_thread_component.cc
+SRC_CC += cpu_session.cc cpu_thread.cc
 SRC_CC += pd_session.cc
-SRC_CC += rm_session.cc region_map_component.cc
+SRC_CC += rm_session.cc region_map.cc
 SRC_CC += rom_session.cc
 SRC_CC += ram_session.cc
 SRC_CC += log_session.cc

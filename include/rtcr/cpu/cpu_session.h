@@ -15,12 +15,12 @@
 #include <cpu_thread/client.h>
 
 /* Rtcr includes */
-#include <rtcr/cpu/cpu_thread_component.h>
+#include <rtcr/cpu/cpu_thread.h>
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/checkpointable.h>
 
 namespace Rtcr {
-	class Cpu_session_component;
+	class Cpu_session;
 	class Cpu_root;
 
 	constexpr bool cpu_verbose_debug = true;
@@ -33,9 +33,9 @@ namespace Rtcr {
  * This custom Cpu session intercepts the creation and destruction of threads by
  * the client
  */
-class Rtcr::Cpu_session_component : public virtual Rtcr::Checkpointable,
+class Rtcr::Cpu_session : public virtual Rtcr::Checkpointable,
 				    public Genode::Rpc_object<Genode::Cpu_session>,
-                                    public Genode::List<Cpu_session_component>::Element
+                                    public Genode::List<Cpu_session>::Element
 {
 public:
   
@@ -44,7 +44,7 @@ public:
   bool ck_bootstrapped;
   Genode::uint16_t ck_badge;
   Genode::addr_t ck_kcap;
-  Genode::List<Cpu_thread_component> ck_cpu_threads;
+  Genode::List<Cpu_thread> ck_cpu_threads;
   Genode::uint16_t ck_sigh_badge;
 
   using Genode::Rpc_object<Genode::Cpu_session>::cap;
@@ -68,8 +68,8 @@ protected:
    */
   Genode::Lock _new_cpu_threads_lock;
   Genode::Lock _destroyed_cpu_threads_lock;  
-  Genode::List<Cpu_thread_component> _new_cpu_threads;
-  Genode::List<Cpu_thread_component> _destroyed_cpu_threads;  
+  Genode::List<Cpu_thread> _new_cpu_threads;
+  Genode::List<Cpu_thread> _destroyed_cpu_threads;  
 
 
 private:
@@ -105,14 +105,14 @@ private:
 	 */
 	Genode::Cpu_connection _parent_cpu;
 
-	Cpu_thread_component &_create_thread(Genode::Pd_session_capability child_pd_cap,
+	Cpu_thread &_create_thread(Genode::Pd_session_capability child_pd_cap,
 					     Genode::Pd_session_capability parent_pd_cap,
 					     Genode::Cpu_session::Name const &name,
 					     Genode::Affinity::Location affinity,
 					     Genode::Cpu_session::Weight weight,
 					     Genode::addr_t utcb);
 	
-	void _kill_thread(Cpu_thread_component &cpu_thread);
+	void _kill_thread(Cpu_thread &cpu_thread);
 
 
 	/**
@@ -126,7 +126,7 @@ private:
 	/*
 	 * KIA4SM method
 	 */
-	Cpu_thread_component &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap,
+	Cpu_thread &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap,
 						    Genode::Pd_session_capability parent_pd_cap,
 						    Genode::Cpu_session::Name const &name,
 						    Genode::Affinity::Location affinity,
@@ -136,7 +136,7 @@ private:
 						    unsigned deadline);
 
 public:
-	Cpu_session_component(Genode::Env &env,
+	Cpu_session(Genode::Env &env,
 			      Genode::Allocator &md_alloc,
 			      Genode::Entrypoint &ep,
 			      Pd_root &pd_root,
@@ -145,7 +145,7 @@ public:
 			      bool &bootstrap_phase,
 			      Genode::Xml_node *config);
 	
-	~Cpu_session_component();
+	~Cpu_session();
 
 	void pause();
 	void resume();
@@ -153,7 +153,7 @@ public:
 	
 	Genode::Cpu_session_capability parent_cap() { return _parent_cpu.cap(); }
 
-	Cpu_session_component *find_by_badge(Genode::uint16_t badge);
+	Cpu_session *find_by_badge(Genode::uint16_t badge);
 
 	/***************************
 	 ** Cpu_session interface **
@@ -192,7 +192,7 @@ public:
 
 		
 	
-	static Cpu_session_component* current_session;
+	static Cpu_session* current_session;
 
 };
 
@@ -200,7 +200,7 @@ public:
 /**
  * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
  */
-class Rtcr::Cpu_root : public Genode::Root_component<Cpu_session_component>
+class Rtcr::Cpu_root : public Genode::Root_component<Cpu_session>
 {
 private:
 	/**
@@ -240,14 +240,14 @@ private:
 	/**
 	 * List for monitoring session objects
 	 */
-	Genode::List<Cpu_session_component> _session_rpc_objs;
+	Genode::List<Cpu_session> _session_rpc_objs;
 
         Genode::Xml_node *_config;
   
 protected:
-	Cpu_session_component *_create_session(const char *args);
-	void _upgrade_session(Cpu_session_component *session, const char *upgrade_args);
-	void _destroy_session(Cpu_session_component *session);
+	Cpu_session *_create_session(const char *args);
+	void _upgrade_session(Cpu_session *session, const char *upgrade_args);
+	void _destroy_session(Cpu_session *session);
 
   inline Genode::Affinity::Location _read_child_affinity(Genode::Xml_node *config,
 							 const char* child_name);
@@ -264,7 +264,7 @@ public:
 	~Cpu_root();
 
 
-	Genode::List<Cpu_session_component> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Cpu_session> &session_infos() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_CPU_SESSION_H_ */

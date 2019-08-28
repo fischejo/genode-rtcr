@@ -16,13 +16,13 @@
 #include <pd_session/connection.h>
 
 namespace Rtcr {
-	class Cpu_thread_component;
+	class Cpu_thread;
 
 	constexpr bool cpu_thread_verbose_debug = true;
 }
 
-class Rtcr::Cpu_thread_component : public Genode::Rpc_object<Genode::Cpu_thread>,
-                                   public Genode::List<Cpu_thread_component>::Element
+class Rtcr::Cpu_thread : public Genode::Rpc_object<Genode::Cpu_thread>,
+                                   public Genode::List<Cpu_thread>::Element
 {
 
 public:
@@ -73,7 +73,7 @@ private:
 
 public:
 
-	Cpu_thread_component(Genode::Allocator &md_alloc,
+	Cpu_thread(Genode::Allocator &md_alloc,
 			     Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
 			     Genode::Pd_session_capability pd_session_cap,
 			     const char *name,
@@ -82,7 +82,7 @@ public:
 			     Genode::Affinity::Location affinity,
 			     bool &bootstrap_phase);
 
-  ~Cpu_thread_component();
+  ~Cpu_thread();
 
 
   void silent_pause();
@@ -90,8 +90,8 @@ public:
   
 	Genode::Capability<Genode::Cpu_thread> parent_cap() { return _parent_cpu_thread; }
 
-	Cpu_thread_component *find_by_badge(Genode::uint16_t badge);
-	Cpu_thread_component *find_by_name(const char* name);
+	Cpu_thread *find_by_badge(Genode::uint16_t badge);
+	Cpu_thread *find_by_name(const char* name);
 
 	/******************************
 	 ** Cpu thread Rpc interface **

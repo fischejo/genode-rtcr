@@ -4,12 +4,12 @@
  * \date   2016-10-21
  */
 
-#include <rtcr/cpu/cpu_thread_component.h>
+#include <rtcr/cpu/cpu_thread.h>
 
 using namespace Rtcr;
 
 
-Cpu_thread_component::Cpu_thread_component(Genode::Allocator &md_alloc,
+Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 					   Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
 					   Genode::Pd_session_capability pd_session_cap,
 					   const char *name,
@@ -32,13 +32,13 @@ Cpu_thread_component::Cpu_thread_component(Genode::Allocator &md_alloc,
 }
 
 
-Cpu_thread_component::~Cpu_thread_component()
+Cpu_thread::~Cpu_thread()
 {
 	if(verbose_debug) Genode::log("\033[33m", "~Thread", "\033[0m<\033[35m", ck_name,
 				      "\033[0m> ", _parent_cpu_thread);
 }
 
-void Cpu_thread_component::checkpoint()
+void Cpu_thread::checkpoint()
 {
   ck_badge = cap().local_name();
 
@@ -57,7 +57,7 @@ void Cpu_thread_component::checkpoint()
 }
 
 
-void Cpu_thread_component::print(Genode::Output &output) const
+void Cpu_thread::print(Genode::Output &output) const
 {
   using Genode::Hex;
 
@@ -95,25 +95,25 @@ void Cpu_thread_component::print(Genode::Output &output) const
 }
 
 
-Cpu_thread_component *Cpu_thread_component::find_by_badge(Genode::uint16_t badge)
+Cpu_thread *Cpu_thread::find_by_badge(Genode::uint16_t badge)
 {
 	if(badge == cap().local_name())
 		return this;
-	Cpu_thread_component *obj = next();
+	Cpu_thread *obj = next();
 	return obj ? obj->find_by_badge(badge) : 0;
 }
 
 
-Cpu_thread_component *Cpu_thread_component::find_by_name(const char* name)
+Cpu_thread *Cpu_thread::find_by_name(const char* name)
 {
 	if(!Genode::strcmp(name, ck_name.string()))
 		return this;
-	Cpu_thread_component *obj = next();
+	Cpu_thread *obj = next();
 	return obj ? obj->find_by_name(name) : 0;
 }
 
 
-Genode::Dataspace_capability Cpu_thread_component::utcb()
+Genode::Dataspace_capability Cpu_thread::utcb()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -124,7 +124,7 @@ Genode::Dataspace_capability Cpu_thread_component::utcb()
 }
 
 
-void Cpu_thread_component::start(Genode::addr_t ip, Genode::addr_t sp)
+void Cpu_thread::start(Genode::addr_t ip, Genode::addr_t sp)
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m(ip=",
@@ -135,7 +135,7 @@ void Cpu_thread_component::start(Genode::addr_t ip, Genode::addr_t sp)
 }
 
 
-void Cpu_thread_component::pause()
+void Cpu_thread::pause()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -144,7 +144,7 @@ void Cpu_thread_component::pause()
 }
 
 
-void Cpu_thread_component::resume()
+void Cpu_thread::resume()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -152,7 +152,7 @@ void Cpu_thread_component::resume()
 	_paused = false;
 }
 
-void Cpu_thread_component::silent_pause()
+void Cpu_thread::silent_pause()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -160,7 +160,7 @@ void Cpu_thread_component::silent_pause()
 }
 
 
-void Cpu_thread_component::silent_resume()
+void Cpu_thread::silent_resume()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -168,7 +168,7 @@ void Cpu_thread_component::silent_resume()
 }
 
 
-void Cpu_thread_component::cancel_blocking()
+void Cpu_thread::cancel_blocking()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -176,7 +176,7 @@ void Cpu_thread_component::cancel_blocking()
 }
 
 
-Genode::Thread_state Cpu_thread_component::state()
+Genode::Thread_state Cpu_thread::state()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -188,7 +188,7 @@ Genode::Thread_state Cpu_thread_component::state()
 }
 
 
-void Cpu_thread_component::state(const Genode::Thread_state& state)
+void Cpu_thread::state(const Genode::Thread_state& state)
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m(state<kcap=",
@@ -197,7 +197,7 @@ void Cpu_thread_component::state(const Genode::Thread_state& state)
 }
 
 
-void Cpu_thread_component::exception_sigh(Genode::Signal_context_capability handler)
+void Cpu_thread::exception_sigh(Genode::Signal_context_capability handler)
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m(sigh=", handler, ")");
@@ -206,7 +206,7 @@ void Cpu_thread_component::exception_sigh(Genode::Signal_context_capability hand
 }
 
 
-void Cpu_thread_component::single_step(bool enabled)
+void Cpu_thread::single_step(bool enabled)
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m(", enabled, ")");
@@ -215,7 +215,7 @@ void Cpu_thread_component::single_step(bool enabled)
 }
 
 
-void Cpu_thread_component::affinity(Genode::Affinity::Location location)
+void Cpu_thread::affinity(Genode::Affinity::Location location)
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m(loc<pos=",
@@ -226,7 +226,7 @@ void Cpu_thread_component::affinity(Genode::Affinity::Location location)
 }
 
 
-unsigned Cpu_thread_component::trace_control_index()
+unsigned Cpu_thread::trace_control_index()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -236,7 +236,7 @@ unsigned Cpu_thread_component::trace_control_index()
 }
 
 
-Genode::Dataspace_capability Cpu_thread_component::trace_buffer()
+Genode::Dataspace_capability Cpu_thread::trace_buffer()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");
@@ -246,7 +246,7 @@ Genode::Dataspace_capability Cpu_thread_component::trace_buffer()
 }
 
 
-Genode::Dataspace_capability Cpu_thread_component::trace_policy()
+Genode::Dataspace_capability Cpu_thread::trace_policy()
 {
 	if(verbose_debug) Genode::log("Thread<\033[35m", ck_name, "\033[0m>::\033[33m",
 				      __func__, "\033[0m()");

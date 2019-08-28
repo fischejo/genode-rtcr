@@ -24,7 +24,7 @@
 
 namespace Rtcr {
 
-	class Ram_session_component;
+	class Ram_session;
 	class Ram_root;
 
 	constexpr bool fh_verbose_debug = false;
@@ -38,9 +38,9 @@ namespace Rtcr {
  * Instead of providing ordinary RAM dataspaces, it can provide managed dataspaces,
  * which are used to monitor the access to the provided RAM dataspaces
  */
-class Rtcr::Ram_session_component : public Rtcr::Checkpointable,
+class Rtcr::Ram_session : public Rtcr::Checkpointable,
 				    public Genode::Rpc_object<Genode::Ram_session>,
-                                    public Genode::List<Ram_session_component>::Element
+                                    public Genode::List<Ram_session>::Element
 {
 public:
   using Genode::Rpc_object<Genode::Ram_session>::cap;
@@ -113,18 +113,18 @@ protected:
   Genode::Xml_node *_config;
 
 public:
-	Ram_session_component(Genode::Env &env,
+	Ram_session(Genode::Env &env,
 			      Genode::Allocator &md_alloc,
 			      const char *label,
 			      const char *creation_args,
 			      bool &bootstrap_phase,
 			      Genode::Xml_node *config);
   
-	~Ram_session_component();
+	~Ram_session();
 
 	Genode::Ram_session_capability parent_cap() { return _parent_ram.cap(); }
 
-	Ram_session_component *find_by_badge(Genode::uint16_t badge);
+	Ram_session *find_by_badge(Genode::uint16_t badge);
 
 	/***************************
 	 ** Ram_session interface **
@@ -154,7 +154,7 @@ public:
 /**
  * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
  */
-class Rtcr::Ram_root : public Genode::Root_component<Ram_session_component>
+class Rtcr::Ram_root : public Genode::Root_component<Ram_session>
 {
 protected:
 	/**
@@ -185,12 +185,12 @@ protected:
 	/**
 	 * List for monitoring session objects
 	 */
-	Genode::List<Ram_session_component> _session_rpc_objs;
+	Genode::List<Ram_session> _session_rpc_objs;
 
 
-	Ram_session_component *_create_session(const char *args);
-	void _upgrade_session(Ram_session_component *session, const char *upgrade_args);
-	void _destroy_session(Ram_session_component *session);
+	Ram_session *_create_session(const char *args);
+	void _upgrade_session(Ram_session *session, const char *upgrade_args);
+	void _destroy_session(Ram_session *session);
 
 	Genode::Xml_node *_config;
 public:
@@ -201,7 +201,7 @@ public:
 		 Genode::Xml_node *config);
 	~Ram_root();
 
-	Genode::List<Ram_session_component> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Ram_session> &session_infos() { return _session_rpc_objs; }
 };
 
 
