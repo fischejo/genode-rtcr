@@ -33,19 +33,12 @@ private:
 
 public:
 	Simple_counter() : current_id(get_id()) { }
-
-	/**
-	 * Do not use copy ctor, because Genode::print(Output&, HEAD const&, TAIL ...) uses pass-by-value
-	 * which copies the object inherited from Simple_counter for the function call
-	 */
-
+	// Do not use copy ctor, because Genode::print(Output&, HEAD const&, TAIL ...) uses pass-by-value
+	// which copies the object inherited from Simple_counter for the function call
 	//Simple_counter(const Simple_counter&) : current_id(get_id()) { }
 	//~Simple_counter() { }
 
-	Genode::size_t id() const
-	{
-		return current_id;
-	}
+	Genode::size_t id() const { return current_id; }
 };
 
 
@@ -53,9 +46,11 @@ struct Rtcr::General_info
 {
 	bool const bootstrapped;
 
-	General_info() : bootstrapped(false) { }
+	General_info() : bootstrapped(false)
+	{ }
 
-	General_info(bool bootstrapped) : bootstrapped(bootstrapped) { }
+	General_info(bool bootstrapped) : bootstrapped(bootstrapped)
+	{ }
 
 	void print(Genode::Output &output) const
 	{
@@ -77,9 +72,9 @@ struct Rtcr::Session_rpc_info : General_info
 
 	Session_rpc_info(const char* creation_args, const char* upgrade_args, bool bootstrapped)
 	:
-	General_info  (bootstrapped),
-	creation_args (creation_args),
-	upgrade_args  (upgrade_args)
+		General_info  (bootstrapped),
+		creation_args (creation_args),
+		upgrade_args  (upgrade_args)
 	{ }
 
 	void print(Genode::Output &output) const
@@ -95,9 +90,16 @@ struct Rtcr::Session_rpc_info : General_info
  */
 struct Rtcr::Normal_rpc_info : General_info
 {
-	Normal_rpc_info() : General_info() { }
+	// Insert common members
 
-	Normal_rpc_info(bool bootstrapped) : General_info(bootstrapped) { }
+	Normal_rpc_info() : General_info()
+	{ }
+
+	Normal_rpc_info(bool bootstrapped)
+	:
+		General_info(bootstrapped)
+	{ }
+
 };
 
 
@@ -106,9 +108,16 @@ struct Rtcr::Normal_rpc_info : General_info
  */
 struct Rtcr::Normal_obj_info : General_info
 {
-	Normal_obj_info() : General_info() { }
+	// Insert common members
 
-	Normal_obj_info(bool bootstrapped) : General_info(bootstrapped) { }
+	Normal_obj_info() : General_info()
+	{ }
+
+	Normal_obj_info(bool bootstrapped)
+	:
+		General_info(bootstrapped)
+	{ }
+
 };
 
 

@@ -5,24 +5,18 @@
  * \date   2019-03-21
  */
 
-#ifndef _RTCR_MODULE_H_
-#define _RTCR_MODULE_H_
+#ifndef _RTCR_MODULE_SET_H_
+#define _RTCR_MODULE_SET_H_
 
 /* Genode includes */
 #include <util/list.h>
 #include <base/heap.h>
 #include <util/list.h>
 #include <base/service.h>
-#include <rtcr/module_state.h>
-#include <rtcr/module.h>
 
 namespace Rtcr {
 	class Module;
 	typedef Genode::String<16> Module_name;
-
-/* forward declaration */
-	class Module_state;
-  
 }
 
 using namespace Rtcr;
@@ -36,7 +30,7 @@ using namespace Rtcr;
  *
  * In order to provide your own module, create a class and inherit from `Rtcr::Module`.
  */
-class Rtcr::Module : public Genode::List<Module>::Element
+class Rtcr::Module : public Genode::List<Module_name>::Element
 {
 public:
 	/**
@@ -47,27 +41,9 @@ public:
 	virtual Module_name name() = 0;
 
 	/**
-	 * Called when all modules are loaded. If your module depends on other
-	 * modules, this is the right place to search for them.
-	 * 
-	 * \param modules List of modules which are loaded.
-	 */
-	virtual void initialize(Genode::List<Module> &modules) {};
-
-	/**
 	 * Called when this module should run a checkpoint
-	 *
-	 * \return Module_state which stores the checkpointed data.
 	 */
-	virtual Module_state *checkpoint() = 0;
-
-	/**
-	 * Restore module from a checkpointed state.
-	 *
-	 * \param state A object of type Module_state which provides the
-	 *              checkpointed state.
-	 */
-	virtual void restore(Module_state *state) = 0;
+	virtual void checkpoint(bool resume) = 0;
 
 	/**
 	 * Resolves session requests for sessions which are provided by this module.
@@ -78,8 +54,26 @@ public:
 	 */
 	virtual Genode::Service *resolve_session_request(const char *service_name,
 							 const char *args) = 0;
+
+	/**
+	 * Methods required by Target_child for creating a Genode::Child
+	 *
+	 * These methods are implemented in derived classes. If a derived class
+	 * calls one of these methods, but does not implement it on its one, the
+	 * call is delegated to a sister class
+	 */
+	virtual Genode::Local_service &pd_service() = 0;
+	virtual Genode::Local_service &rm_service() = 0;
+	virtual Genode::Local_service &cpu_service() = 0;
+	virtual Genode::Local_service &ram_service() = 0;
+
+	virtual Genode::Rpc_object<Genode::Cpu_session> &cpu_session() = 0;
+	virtual Genode::Rpc_object<Genode::Ram_session> &ram_session() = 0;
+	virtual Genode::Rpc_object<Genode::Pd_session> &pd_session() = 0;
+
+	virtual Genode::Rom_connection &rom_connection() = 0;	
 };
 
 
 
-#endif /* _RTCR_MODULE_H_ */
+#endif /* _RTCR_MODULE_SET_H_ */

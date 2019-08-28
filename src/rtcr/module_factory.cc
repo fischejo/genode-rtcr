@@ -24,7 +24,7 @@ void Module_factory::print()
 {
 	Module_factory* r = Module_factory::first();
 	while(r) {
-		Genode::log("Register Module: ", r->name());
+		Genode::log("Register Module Set: ", r->name());
 		r = r->next();
 	}
 }

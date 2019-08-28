@@ -23,7 +23,6 @@
 #include <os/config.h>
 
 #include <rtcr/target_child.h>
-#include <rtcr/target_state.h>
 
 
 Genode::size_t Component::stack_size() { return 512*1024; }
@@ -54,11 +53,10 @@ struct Rtcr::Main
 
 	  timer.msleep(2000);
 
-	  Target_state state(env, heap);
 
-	  child.checkpoint(state);
+	  child.checkpoint();
 
-	  Genode::log(state);
+//	  Genode::log(state);
 
 
 	  Genode::sleep_forever();

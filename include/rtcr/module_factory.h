@@ -4,17 +4,19 @@
  * \date   2019-03-21
  */
 
-#ifndef _RTCR_MODULE_FACTORY_H_
-#define _RTCR_MODULE_FACTORY_H_
+#ifndef _RTCR_MODULE_SET_FACTORY_H_
+#define _RTCR_MODULE_SET_FACTORY_H_
 
 /* Genode includes */
 #include <util/list.h>
 #include <base/heap.h>
 #include <base/env.h>
 #include <os/config.h>
-/* Localn includes */
-#include <rtcr/module.h>
 #include <util/string.h>
+
+/* Rtcr includes */
+#include <rtcr/module.h>
+
 
 using namespace Rtcr;
 
@@ -63,11 +65,11 @@ public:
 	 * \return A instance of a Module class
 	 */
 	virtual Module* create(Genode::Env &env,
-			       Genode::Allocator &alloc,
-			       Genode::Entrypoint &ep,
-			       const char* label,
-			       bool &bootstrap,
-			       Genode::Xml_node *config) = 0;
+				   Genode::Allocator &alloc,
+				   Genode::Entrypoint &ep,
+				   const char* label,
+				   bool &bootstrap,
+				   Genode::Xml_node *config) = 0;
     
 	/**
 	 * Name of your module which you want to register.
@@ -91,4 +93,4 @@ public:
 };
 
 
-#endif /* _RTCR_MODULE_FACTORY_H_ */
+#endif /* _RTCR_MODULE_SET_FACTORY_H_ */

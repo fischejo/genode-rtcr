@@ -44,15 +44,16 @@ install_config {
 	<start name="rtcr_app">
     		<resource name="RAM" quantum="256M"/>
                 <config>
-                    <child name="sheep_counter">
-                    </child>
-                    <module name="ds"/>
-                    <module name="timer"/>
-                    <module name="log"/>
-                    <module name="core">
-                        <quota>1048576</quota>
-                        <affinity xpos="1"/>
-                    </module>
+                    <child name="sheep_counter" quota="1048576" xpos="0" />
+                    <module name="base" parallel="false" />
+                    <checkpointable name="cpu_session" xpos="1" />
+                    <checkpointable name="pd_session" xpos="1" />    
+                    <checkpointable name="ram_session" xpos="1" />    
+                     <checkpointable name="rm_session" xpos="1" />    
+                        <checkpointable name="rom_session" xpos="1" />    
+                        <checkpointable name="log_session" xpos="1" />    
+                        <checkpointable name="timer_session" xpos="1" />    
+                        <checkpointable name="capability_mapping" xpos="1" />    
                 </config>
 	</start>
 </config>}
