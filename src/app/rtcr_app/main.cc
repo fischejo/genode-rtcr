@@ -52,10 +52,7 @@ struct Rtcr::Main
 	  child.start();
 
 	  timer.msleep(2000);
-
-
-	  child.checkpoint();
-
+	  child.checkpoint(true);
 //	  Genode::log(state);
 
 

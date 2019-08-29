@@ -78,6 +78,9 @@ struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element
 		{ }
 
 	Attached_region_info *find_by_addr(Genode::addr_t addr) {
+		Genode::log("find_by_addr attached_ds_cap=", attached_ds_cap,
+					" rel_addr=", rel_addr,
+					" size=", size);
 		if((addr >= rel_addr) && (addr <= rel_addr + size))
 			return this;
 		Attached_region_info *info = next();

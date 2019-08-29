@@ -51,23 +51,24 @@ protected:
 	
 	/* pointer to the current XML configuration of this module */
 	Genode::Xml_node *_config;
+
+	/* intercepting RAM session. The order of following declarations defines the
+	 * order of initialization. _pd_root depends on _ram_session! */
+	Ram_root &_ram_root;
+	Genode::Local_service _ram_service;
+	Ram_session &_ram_session;
 	
 	/* intercepting PD session */
 	Pd_root &_pd_root;
 	Genode::Local_service _pd_service;
 	Pd_session &_pd_session;
 
-	/* intercepting CPU session */
+	/* intercepting CPU session. _cpu_root depends on _pd_root.*/
 	Cpu_root &_cpu_root;
 	Genode::Local_service _cpu_service;
 	Cpu_session &_cpu_session;
 
-	/* intercepting RAM session */
-	Ram_root &_ram_root;
-	Genode::Local_service _ram_service;
-	Ram_session &_ram_session;
-
-	/* intercepting RM session */
+	/* intercepting RM session. _rm_root depends on _ram_session.*/
 	Rm_root &_rm_root;
 	Genode::Local_service _rm_service;
 
@@ -84,7 +85,8 @@ protected:
 	Timer_root &_timer_root;
 	Genode::Local_service _timer_service;
 
-	/* Thread for creating the capability mapping */
+	/* Thread for creating the capability mapping. _capability_mapping depens on
+	 * _pd_session. */
 	Capability_mapping &_capability_mapping;
 	
 	/* Methods for initializing the intercepting session. In order to provide
@@ -159,7 +161,7 @@ public:
 				   const char* label,
 				   bool &bootstrap,
 				   Genode::Xml_node *config) override
-		{   
+		{
 			return new (alloc) Base_module(env, alloc, ep, label, bootstrap, config);
 		}
     

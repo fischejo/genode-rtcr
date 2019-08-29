@@ -12,6 +12,21 @@
 #include <util/arg_string.h>
 #include <base/session_label.h>
 
+
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("orange");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;214m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 using namespace Rtcr;
 
 
@@ -21,7 +36,10 @@ Target_child::Target_child(Genode::Env &env,
 	: Target_child(env,
 				   alloc,
 				   parent_services,
-				   _read_name()) {}
+				   _read_name())
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+}
 
 
 Child_name Target_child::_read_name()
@@ -37,6 +55,7 @@ Child_name Target_child::_read_name()
 
 Module_name Target_child::_read_module_name()
 {
+	DEBUG_THIS_CALL
 	/* parse name of child application from xml config */	
 	const Genode::Xml_node& config_node = Genode::config()->xml_node();
 	Genode::Xml_node module_node = config_node.sub_node("module");
@@ -47,8 +66,12 @@ Module_name Target_child::_read_module_name()
 
 Module &Target_child::_load_module(Module_name name)
 {
+	DEBUG_THIS_CALL
+
 	/* find factory for module */
 	Module_factory *factory = Module_factory::get(name);
+
+	Genode::Xml_node config_node = Genode::config()->xml_node();
 	if(!factory) {
 		Genode::error("Module '", name, "' is not linked!");
 	} else {
@@ -58,7 +81,7 @@ Module &Target_child::_load_module(Module_name name)
 										 _resources_ep,
 										 _name.string(),
 										 _in_bootstrap,
-										 nullptr);
+									     &config_node);
 
 		Genode::log("\e[38;5;214m", "Module loaded: \e[1m", name, "\033[0m");    
 		return *module;
@@ -78,65 +101,56 @@ Target_child::Target_child(Genode::Env &env,
 	_resources_ep (_env, 16*1024, "resources ep"),
 	_entrypoint(&_cap_session,
 				ENTRYPOINT_STACK_SIZE,
-				"dreikäsehoch",
+				"entrypoint",
 				false,
 				_affinity_location), /* TODO: FJO still necessary? */
 	_in_bootstrap    (true),
 	_parent_services (parent_services),
-	_module(_load_module(_read_module_name()))
+	_module(_load_module(_read_module_name())),
+	_address_space(_module.pd_session().address_space()),
+	_initial_thread(_module.cpu_session(),
+					_module.pd_session().cap(),
+					_name.string()),
+	_child(_module.rom_connection().dataspace(),
+		   Genode::Dataspace_capability(),
+		   _module.pd_session().cap(),
+		   _module.pd_session(),
+		   _module.ram_session().cap(),
+		   _module.ram_session(),
+		   _module.cpu_session().cap(),
+		   _initial_thread,
+		   _env.rm(),
+		   _address_space,
+		   _entrypoint,
+		   *this,
+		   _module.pd_service(),
+		   _module.ram_service(),
+		   _module.cpu_service())
+
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 
-	_address_space = new(alloc) Genode::Region_map_client(
-		_module.pd_session().address_space());
-
-	_initial_thread = new(alloc) Genode::Child::Initial_thread(
-		_module.cpu_session(),
-		_module.pd_session().cap(),
-		_name.string());
-
-	_child = new (_alloc) Genode::Child ( _module.rom_connection().dataspace(),
-										  Genode::Dataspace_capability(),
-										  _module.pd_session().cap(),
-										  _module.pd_session(),
-										  _module.ram_session().cap(),
-										  _module.ram_session(),
-										  _module.cpu_session().cap(),
-										  *_initial_thread,
-										  _env.rm(),
-										  *_address_space,
-										  _entrypoint,
-										  *this,
-										  _module.pd_service(),
-										  _module.ram_service(),
-										  _module.cpu_service());
 }
 
 
 Target_child::~Target_child()
 {
-	if(_child) Genode::destroy(_alloc, _child);
-	Genode::destroy(_alloc, _address_space);
-	Genode::destroy(_alloc, _initial_thread);
+//	if(_child) Genode::destroy(_alloc, _child);
+//	Genode::destroy(_alloc, _address_space);
+//	Genode::destroy(_alloc, _initial_thread);
 }
 
 
 void Target_child::start()
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
+	DEBUG_THIS_CALL PROFILE_THIS_CALL		
+
 	_entrypoint.activate();
 }
 
 
 void Target_child::checkpoint(bool resume)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
 	_module.checkpoint(resume);
 }
 

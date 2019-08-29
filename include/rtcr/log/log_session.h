@@ -34,7 +34,7 @@ public:
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
-	
+
 	Genode::String<160> ck_creation_args;
 	Genode::String<160> ck_upgrade_args;
 	bool ck_bootstrapped;
@@ -43,6 +43,9 @@ public:
 
 
 protected:
+	/*****************
+	 ** HOT STORAGE **
+	 *****************/
 
 	char* _upgrade_args;
 	bool _bootstrapped;
@@ -64,8 +67,10 @@ protected:
 	Genode::Log_connection _parent_log;
 
 
+
+
 public:
-    using Genode::Rpc_object<Genode::Log_session>::cap;
+    using Genode::Rpc_object<Genode::Log_session>::cap;	
 	
 	Log_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,

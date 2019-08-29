@@ -71,13 +71,19 @@ private:
 	bool _in_bootstrap;
 
 	/**
-	 * Needed for child's creation
+	 * In order to create a child process, a few sessions are necessary. These
+	 * are provided by a module implementation.
 	 */
-	Genode::Child::Initial_thread  *_initial_thread;
+	Module &_module;
+
 	/**
 	 * Needed for child's creation
 	 */
-	Genode::Region_map_client *_address_space;
+	Genode::Child::Initial_thread  _initial_thread;
+	/**
+	 * Needed for child's creation
+	 */
+	Genode::Region_map_client _address_space;
 	/**
 	 * Registry for parent's services (parent of RTCR component). It is shared between all children.
 	 */
@@ -85,13 +91,8 @@ private:
 	/**
 	 * Child object
 	 */
-	Genode::Child *_child;
+	Genode::Child _child;
 
-	/**
-	 * In order to create a child process, a few sessions are necessary. These
-	 * are provided by a module implementation.
-	 */
-	Module &_module;
 	
 	/**
 	 * Parse name of child component from XML configuration. 

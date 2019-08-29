@@ -7,6 +7,19 @@
 
 #include <rtcr/cpu/cpu_session.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("yellow");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;226m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
 using namespace Rtcr;
 
 Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_cap,
@@ -19,7 +32,7 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 	/* Create real CPU thread from parent */
 	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap,
 													name,
-													_child_affinity,
+													affinity, // TODO FJO: _child_affinity ?
 													weight,
 													utcb);
 
@@ -31,7 +44,7 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 								   name.string(),
 								   weight,
 								   utcb,
-								   _child_affinity,
+								   affinity,
 								   _bootstrap_phase);
 
 	/* Manage custom CPU thread */
@@ -80,7 +93,7 @@ Cpu_session::Cpu_session(Genode::Env &env,
 	_parent_cpu      (env, label),
 	_child_affinity (_read_child_affinity(config, label))
 {
-
+	DEBUG_THIS_CALL
 }
 
 
@@ -108,6 +121,7 @@ Genode::Affinity::Location Cpu_session::_read_child_affinity(Genode::Xml_node *c
 
 void Cpu_session::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
 	ck_upgrade_args = _upgrade_args;
@@ -119,13 +133,13 @@ void Cpu_session::checkpoint()
   
 	Cpu_thread *cpu_thread = nullptr;
 	while(cpu_thread = _new_cpu_threads.first()) {
+		_new_cpu_threads.remove(cpu_thread);		
 		ck_cpu_threads.insert(cpu_thread);
-		_new_cpu_threads.remove(cpu_thread);
 	}
 
 	while(cpu_thread = _destroyed_cpu_threads.first()) {
-		ck_cpu_threads.remove(cpu_thread);
 		_destroyed_cpu_threads.remove(cpu_thread);
+		ck_cpu_threads.remove(cpu_thread);
 		Genode::destroy(_md_alloc, &cpu_thread);
 	}
 
@@ -138,10 +152,11 @@ void Cpu_session::checkpoint()
 
 void Cpu_session::pause()
 {
-	Cpu_thread *cpu_thread = nullptr;
-	while(cpu_thread = _new_cpu_threads.first()) {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+	Cpu_thread *cpu_thread = _new_cpu_threads.first();
+	while(cpu_thread) {
 		cpu_thread->silent_pause();
-		cpu_thread = cpu_thread->next();    
+		cpu_thread = cpu_thread->next();
 	}
 
 	cpu_thread = ck_cpu_threads.first();
@@ -153,17 +168,19 @@ void Cpu_session::pause()
 
 void Cpu_session::resume()
 {
-	Cpu_thread *cpu_thread = nullptr;
-	while(cpu_thread = _new_cpu_threads.first()) {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+
+	Cpu_thread *cpu_thread = ck_cpu_threads.first();
+	while(cpu_thread) {
 		cpu_thread->silent_resume();
-		cpu_thread = cpu_thread->next();    
+		cpu_thread = cpu_thread->next();
 	}
 
-	cpu_thread = ck_cpu_threads.first();
+	cpu_thread = _new_cpu_threads.first();
 	while(cpu_thread) {
-		cpu_thread->silent_resume();    
+		cpu_thread->silent_resume();
 		cpu_thread = cpu_thread->next();
-	}    
+	}
 }
 
 
@@ -197,7 +214,7 @@ Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capabili
 	Cpu_thread &new_cpu_thread = _create_thread(child_pd_cap,
 												pd_session->parent_cap(),
 												name,
-												_child_affinity,
+												affinity,
 												weight,
 												utcb);
 

@@ -9,6 +9,20 @@
 
 using namespace Rtcr;
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("green");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;118m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 Log_session::Log_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
 					     Genode::Entrypoint &ep,
@@ -24,6 +38,7 @@ Log_session::Log_session(Genode::Env &env,
 	_bootstrapped (bootstrapped),
 	ck_creation_args (creation_args)
 {
+	DEBUG_THIS_CALL
 }
 
 
@@ -40,6 +55,7 @@ Genode::size_t Log_session::write(String const &string)
 
 void Log_session::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
 //  ck_upgrade_args = _upgrade_args;
@@ -64,6 +80,7 @@ Log_session *Log_root::find_by_badge(Genode::uint16_t badge)
 
 Log_session *Log_root::_create_session(const char *args)
 {
+	DEBUG_THIS_CALL
 	/* Extracting label from args */
 	char label_buf[128];
 	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
@@ -80,7 +97,7 @@ Log_session *Log_root::_create_session(const char *args)
 
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
-
+	Genode::log("here");
 	/* Create virtual session object */
 	Log_session *new_session =
 		new (md_alloc()) Log_session(_env,
@@ -90,7 +107,7 @@ Log_session *Log_root::_create_session(const char *args)
 									 readjusted_args,
 									 _bootstrap_phase,
 									 _config);
-
+	Genode::log("here 2");
 	Genode::Lock::Guard guard(_objs_lock);
 	_session_rpc_objs.insert(new_session);
 
@@ -148,7 +165,6 @@ Log_root::Log_root(Genode::Env &env,
 
 Log_root::~Log_root()
 {
-
 	while(Log_session *obj = _session_rpc_objs.first()) {
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);

@@ -7,6 +7,19 @@
 
 #include <rtcr/timer/timer_session.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("coral");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;209m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
 using namespace Rtcr;
 
 
@@ -23,8 +36,8 @@ Timer_session::Timer_session(Genode::Env &env,
 	_parent_timer (env),
 	_bootstrapped (bootstrapped),
 	ck_creation_args (creation_args)
-	 
 {
+	DEBUG_THIS_CALL
 }
 
 
@@ -35,6 +48,7 @@ Timer_session::~Timer_session()
 
 void Timer_session::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
 //  ck_upgrade_args = _upgrade_args.string();

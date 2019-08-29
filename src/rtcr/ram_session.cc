@@ -9,6 +9,19 @@
 
 using namespace Rtcr;
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("cyan");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;87m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
 
 void Ram_session::_destroy_ramds_info(Ram_dataspace_info &ramds_info)
 {
@@ -39,6 +52,7 @@ Ram_session::Ram_session(Genode::Env &env,
 	_parent_rm          (env),
 	ck_creation_args (creation_args)
 {
+	DEBUG_THIS_CALL
 }
 
 
@@ -65,6 +79,7 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 
 void Ram_session::copy_dataspace(Ram_dataspace_info &info)
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	char *dst_addr_start = _env.rm().attach(info.ck_dst_cap);
 	char *src_addr_start = _env.rm().attach(info.ck_cap);
 
@@ -76,6 +91,7 @@ void Ram_session::copy_dataspace(Ram_dataspace_info &info)
 
 void Ram_session::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();

@@ -54,6 +54,11 @@ protected:
 	Genode::size_t const _size;
 
 	/**
+	 * Wrapped region map from parent, usually core
+	 */
+	Genode::Region_map_client _parent_region_map;
+	
+	/**
 	 * Dataspace representation
 	 */
 	Genode::Dataspace_capability const _ds_cap;
@@ -83,11 +88,6 @@ protected:
 	 * Name of the Region map for debugging
 	 */
 	const char* _label;
-
-	/**
-	 * Wrapped region map from parent, usually core
-	 */
-	Genode::Region_map_client _parent_region_map;
 
 public:
 

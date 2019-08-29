@@ -73,6 +73,9 @@ protected:
 	 */
 	Genode::Rom_connection _parent_rom;
 
+
+
+	
 public:
 	using Genode::Rpc_object<Genode::Rom_session>::cap;
 	

@@ -82,6 +82,8 @@ protected:
 
 	Ram_session &_ram_session;	
 
+
+	
 public:
 	using Genode::Rpc_object<Genode::Rm_session>::cap;
 	

@@ -70,8 +70,7 @@ protected:
 	 * Parent's session connection which is used by the intercepted methods
 	 */
 	Timer::Connection   _parent_timer;
-
-
+	
 public:
 	using Genode::Rpc_object<Timer::Session>::cap;
 	

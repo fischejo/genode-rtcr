@@ -7,6 +7,20 @@
 
 #include <rtcr/cpu/cpu_thread.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("gold");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;215m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 using namespace Rtcr;
 
 Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
@@ -27,6 +41,7 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 	_bootstrapped(bootstrap_phase),
 	_affinity(affinity)
 {
+	DEBUG_THIS_CALL
 }
 
 
@@ -37,6 +52,7 @@ Cpu_thread::~Cpu_thread()
 
 void Cpu_thread::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 	ck_badge = cap().local_name();
 
 	// TODO
@@ -152,12 +168,14 @@ void Cpu_thread::resume()
 
 void Cpu_thread::silent_pause()
 {
+	DEBUG_THIS_CALL
 	_parent_cpu_thread.pause();
 }
 
 
 void Cpu_thread::silent_resume()
 {
+	DEBUG_THIS_CALL
 	_parent_cpu_thread.resume();
 }
 

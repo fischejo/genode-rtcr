@@ -108,8 +108,11 @@ protected:
 
 	Genode::Xml_node *_config;
 
-public:
+private:	
 	using Genode::Rpc_object<Genode::Ram_session>::cap;
+	
+public:
+
 	
 	Ram_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,

@@ -7,6 +7,20 @@
 
 #include <rtcr/rom/rom_session.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("lime");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;48m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 using namespace Rtcr;
 
 
@@ -26,6 +40,7 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 	_bootstrapped (bootstrapped),
 	ck_creation_args (creation_args)
 {
+	DEBUG_THIS_CALL
 }
 
 
@@ -36,6 +51,7 @@ Rtcr::Rom_session::~Rom_session()
 
 void Rom_session::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
 //  ck_upgrade_args = _upgrade_args.string();

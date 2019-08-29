@@ -125,8 +125,11 @@ protected:
 									  unsigned priority,
 									  unsigned deadline);
 
-public:
+private	:
 	using Genode::Rpc_object<Genode::Cpu_session>::cap;
+	
+public:
+
 	
 	Cpu_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,

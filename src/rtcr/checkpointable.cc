@@ -28,6 +28,9 @@ Checkpointable::Checkpointable(Genode::Env &env,
 Genode::Affinity::Location Checkpointable::_read_affinity(Genode::Xml_node *config,
 														  const char* node_name)
 {
+	// TODO FJO: fix that workaround
+	return Genode::Affinity::Location(0, 0, 1, 1);
+	
 	try {	
 		Genode::Xml_node affinity_node = config->sub_node(node_name);
 		long const xpos = affinity_node.attribute_value<long>("xpos", 0);

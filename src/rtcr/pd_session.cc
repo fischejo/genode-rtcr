@@ -7,6 +7,20 @@
 
 #include <rtcr/pd/pd_session.h>
 
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("red");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;196m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+
 using namespace Rtcr;
 
 
@@ -41,8 +55,8 @@ Pd_session::Pd_session(Genode::Env &env,
 				  0,
 				  "linker_area",
 				  _bootstrap_phase)
-
 {
+	DEBUG_THIS_CALL
 	_ep.manage(_address_space);
 	_ep.manage(_stack_area);
 	_ep.manage(_linker_area);
@@ -63,6 +77,7 @@ Pd_session::~Pd_session()
 
 void Pd_session::_checkpoint_signal_contexts()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 	Signal_context_info *sc_info = nullptr;
 	while(sc_info = _new_signal_contexts.first()) {
 		ck_signal_contexts.insert(sc_info);
@@ -85,6 +100,7 @@ void Pd_session::_checkpoint_signal_contexts()
 
 void Pd_session::_checkpoint_signal_sources()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 	Signal_source_info *ss_info = nullptr;
 	while(ss_info = _new_signal_sources.first()) {
 		ck_signal_sources.insert(ss_info);
@@ -107,6 +123,7 @@ void Pd_session::_checkpoint_signal_sources()
 
 void Pd_session::_checkpoint_native_capabilities()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 	Native_capability_info *nc_info = nullptr;
 	while(nc_info = _new_native_caps.first()) {
 		ck_native_caps.insert(nc_info);
@@ -129,6 +146,7 @@ void Pd_session::_checkpoint_native_capabilities()
 
 void Pd_session::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
 //  ck_upgrade_args = _upgrade_args.string();

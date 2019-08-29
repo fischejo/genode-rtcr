@@ -101,12 +101,29 @@ protected:
 	 */
 	Genode::Pd_connection  _parent_pd;
 
+	/**
+	 * Custom address space for monitoring the attachments of the Region map
+	 */
+	Region_map   _address_space;
+	/**
+	 * Custom stack area for monitoring the attachments of the Region map
+	 */
+	Region_map   _stack_area;
+	/**
+	 * Custom linker area for monitoring the attachments of the Region map
+	 */
+	Region_map   _linker_area;
+
+	
 	void _checkpoint_signal_sources();
 	void _checkpoint_signal_contexts();  	
 	void _checkpoint_native_capabilities();  
 
-public:
+private:	
 	using Genode::Rpc_object<Genode::Pd_session>::cap;
+	
+public:
+
 	
 	Pd_session(Genode::Env &env,
 			   Genode::Allocator &md_alloc,
@@ -122,18 +139,6 @@ public:
 	void print(Genode::Output &output) const;
 	void checkpoint() override;
 
-	/**
-	 * Custom address space for monitoring the attachments of the Region map
-	 */
-	Region_map   _address_space;
-	/**
-	 * Custom stack area for monitoring the attachments of the Region map
-	 */
-	Region_map   _stack_area;
-	/**
-	 * Custom linker area for monitoring the attachments of the Region map
-	 */
-	Region_map   _linker_area;
 
 
 	

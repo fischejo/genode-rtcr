@@ -3,8 +3,20 @@
  * \author Johannes Fischer
  * \date   2019-08-29
  */
-
 #include <rtcr/base_module.h>
+
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("violet");
+#else
+#define PROFILE_THIS_CALL
+#endif
+
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;207m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
 
 using namespace Rtcr;
 
@@ -24,17 +36,17 @@ Base_module::Base_module(Genode::Env &env,
 	_alloc(alloc),
 	_ep(ep),
 	_config(config),
-	_parallel(_read_parallel()),
+	_parallel(false),
 	_bootstrap(bootstrap),
-	_pd_root(pd_root()),
-	_pd_service("PD", &_pd_root),
-	_pd_session(_find_pd_session(label, _pd_root)),
-	_cpu_root(cpu_root()),
-	_cpu_service("CPU", &_cpu_root),
-	_cpu_session(_find_cpu_session(label, _cpu_root)),
 	_ram_root(ram_root()),
 	_ram_service("RAM", &_ram_root),
 	_ram_session(_find_ram_session(label, _ram_root)),
+	_pd_root(pd_root()),	
+	_pd_service("PD", &_pd_root),
+	_pd_session(_find_pd_session(label, _pd_root)),
+	_cpu_root(cpu_root()),	
+	_cpu_service("CPU", &_cpu_root),
+	_cpu_session(_find_cpu_session(label, _cpu_root)),
 	_rm_root(rm_root()),
 	_rm_service("RM", &_rm_root),
 	_rom_root(rom_root()),
@@ -46,7 +58,7 @@ Base_module::Base_module(Genode::Env &env,
 	_timer_service("Timer", &_timer_root),
 	_capability_mapping(capability_mapping())
 {
-
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	/* Donate ram quota to child */
 	_ram_session.ref_account(_env.ram_session_cap());
 	// Note: transfer goes directly to parent's ram session
@@ -56,6 +68,7 @@ Base_module::Base_module(Genode::Env &env,
 
 bool Base_module::_read_parallel()
 {
+	DEBUG_THIS_CALL
 	try {
 		Genode::Xml_node child_node = _config->sub_node("module");
 		bool const parallel = child_node.attribute_value<bool>("parallel", false);
@@ -84,48 +97,58 @@ Genode::size_t Base_module::_read_quota()
 
 Cpu_root &Base_module::cpu_root()
 {
+	DEBUG_THIS_CALL	
 	return *new (_alloc) Cpu_root(_env, _alloc, _ep, _pd_root, _bootstrap, _config);
 }
 
 
 Pd_root &Base_module::pd_root()
 {
+	DEBUG_THIS_CALL
 	return *new (_alloc) Pd_root(_env, _alloc, _ep, _ram_session, _bootstrap, _config);
 }
 
 
 Ram_root &Base_module::ram_root()
 {
+	DEBUG_THIS_CALL
+	DEBUG_THIS_CALL
+	  
 	return *new (_alloc) Ram_root(_env, _alloc, _ep, _bootstrap, _config);
 }
 
 
 Rm_root &Base_module::rm_root()
 {
+	DEBUG_THIS_CALL	
 	return *new (_alloc) Rm_root(_env, _alloc, _ep, _ram_session,_bootstrap, _config);
 }
 
 
 Rom_root &Base_module::rom_root()
 {
+	DEBUG_THIS_CALL	
 	return *new (_alloc) Rom_root(_env, _alloc, _ep, _bootstrap, _config);
 }
 
 
 Log_root &Base_module::log_root()
 {
+	DEBUG_THIS_CALL	
 	return *new (_alloc) Log_root(_env, _alloc, _ep, _bootstrap, _config);
 }
 
 
 Timer_root &Base_module::timer_root()
 {
+	DEBUG_THIS_CALL	
 	return *new (_alloc) Timer_root(_env, _alloc, _ep,_bootstrap, _config);
 }
 
 
 Capability_mapping &Base_module::capability_mapping()
 {
+	DEBUG_THIS_CALL	
 	return *new (_alloc) Capability_mapping(_env, _alloc, _pd_session, _config);
 }
 
@@ -211,16 +234,19 @@ Base_module::~Base_module()
 
 void Base_module::checkpoint(bool resume)
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 	/* pause all threads */
 	_cpu_session.pause();
 
 	/* checkpoint  */
 	if(_parallel) {
+		/* start all checkpointing threads */
 		_capability_mapping.start_checkpoint();
 		_pd_session.start_checkpoint();
 		_cpu_session.start_checkpoint();
 		_ram_session.start_checkpoint();
 
+		/* wait until all threads finished */
 		_pd_session.join_checkpoint();
 		_cpu_session.join_checkpoint();
 		_ram_session.join_checkpoint();
@@ -241,16 +267,16 @@ void Base_module::checkpoint(bool resume)
 	}
 
 	/* resume all threads */
-	if(!resume) _cpu_session.resume();
+	if(resume) _cpu_session.resume();
 }
 
 
 Genode::Service *Base_module::resolve_session_request(const char *service_name,
 													  const char *args)
 {
-
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-  
+	DEBUG_THIS_CALL
+		Genode::log("\033[36m Service Request: ", service_name, "\033[0m");
+	
 	if(!Genode::strcmp(service_name, "PD")) {
 		return &_pd_service;
 	} else if(!Genode::strcmp(service_name, "CPU")) {
@@ -258,7 +284,7 @@ Genode::Service *Base_module::resolve_session_request(const char *service_name,
 	} else if(!Genode::strcmp(service_name, "RAM")) {
 		return &_ram_service;
 	} else if(!Genode::strcmp(service_name, "RM")) {
-		return &_rm_service;	
+		return &_rm_service;
 	} else if(!Genode::strcmp(service_name, "ROM")) {
 		return &_rom_service;
 	} else if(!Genode::strcmp(service_name, "LOG")) {

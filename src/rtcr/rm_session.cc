@@ -7,8 +7,20 @@
 
 #include <rtcr/rm/rm_session.h>
 
-using namespace Rtcr;
+#ifdef PROFILE
+#include <util/profiler.h>
+#define PROFILE_THIS_CALL PROFILE_FUNCTION("magenta");
+#else
+#define PROFILE_THIS_CALL
+#endif
 
+#if DEBUG 
+#define DEBUG_THIS_CALL Genode::log("\e[38;5;207m", __PRETTY_FUNCTION__, "\033[0m");
+#else
+#define DEBUG_THIS_CALL
+#endif
+
+using namespace Rtcr;
 
 Region_map &Rm_session::_create(Genode::size_t size)
 {
@@ -63,6 +75,7 @@ Rm_session::Rm_session(Genode::Env &env,
 	_ram_session (ram_session),
 	ck_creation_args (creation_args)
 {
+	DEBUG_THIS_CALL
 }
 
 
@@ -79,6 +92,7 @@ Rm_session::~Rm_session()
 
 void Rm_session::checkpoint()
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();
