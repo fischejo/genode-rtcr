@@ -95,7 +95,7 @@ public:
 	 *
 	 * If no job is in progress, this method will directly return.
 	 */
-	virtual void wait_until_finished();
+	virtual void join_checkpoint();
 
 	/**
 	 * Abstract method which is called for a checkpoint by the thread. This

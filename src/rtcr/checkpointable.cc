@@ -87,7 +87,7 @@ void Checkpointable::start_checkpoint()
 }
 
 
-void Checkpointable::wait_until_finished()
+void Checkpointable::join_checkpoint()
 {
 	_job_finished.wait();
 }

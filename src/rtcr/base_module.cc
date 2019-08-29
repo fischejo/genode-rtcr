@@ -221,23 +221,23 @@ void Base_module::checkpoint(bool resume)
 		_cpu_session.start_checkpoint();
 		_ram_session.start_checkpoint();
 
-		_pd_session.wait_until_finished();
-		_cpu_session.wait_until_finished();
-		_ram_session.wait_until_finished();
-		_capability_mapping.wait_until_finished();
+		_pd_session.join_checkpoint();
+		_cpu_session.join_checkpoint();
+		_ram_session.join_checkpoint();
+		_capability_mapping.join_checkpoint();
     
 	} else {
 		_pd_session.start_checkpoint();
-		_pd_session.wait_until_finished();
+		_pd_session.join_checkpoint();
     
 		_cpu_session.start_checkpoint();
-		_cpu_session.wait_until_finished();    
+		_cpu_session.join_checkpoint();    
 
 		_ram_session.start_checkpoint();
-		_ram_session.wait_until_finished();
+		_ram_session.join_checkpoint();
 
 		_capability_mapping.start_checkpoint();
-		_capability_mapping.wait_until_finished();    
+		_capability_mapping.join_checkpoint();    
 	}
 
 	/* resume all threads */
