@@ -24,53 +24,54 @@ namespace Rtcr {
  * a Cpu_thread_capability
  */
 struct Rtcr::Native_capability_info : private Simple_counter<Native_capability_info>,
-	    Genode::List<Native_capability_info>::Element
+			Genode::List<Native_capability_info>::Element
 {
-        bool ck_bootstrapped;
-        Genode::addr_t ck_kcap;
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
+	
+	bool ck_bootstrapped;
+	Genode::addr_t ck_kcap;
 	Genode::uint16_t ck_badge;
 	Genode::uint16_t ck_ep_badge;
-  
+
+	
 	// Creation arguments and result
 	Genode::Native_capability const cap;
 	Genode::Native_capability const ep_cap;
-        bool bootstrapped;
+	bool bootstrapped;
   
 	Native_capability_info(Genode::Native_capability native_cap,
-			       Genode::Native_capability ep_cap,
-			       bool bootstrapped)
+						   Genode::Native_capability ep_cap,
+						   bool bootstrapped)
 		:
 		bootstrapped (bootstrapped),
 		cap    (native_cap),
 		ep_cap (ep_cap)
-	{ }
+		{ }
 
-  void checkpoint()
-  {
-    ck_badge = cap.local_name();
-    ck_bootstrapped = bootstrapped;
-    ck_ep_badge = ep_cap.local_name();
-  }
+	void checkpoint() {
+		ck_badge = cap.local_name();
+		ck_bootstrapped = bootstrapped;
+		ck_ep_badge = ep_cap.local_name();
+	}
   
-	Native_capability_info *find_by_native_badge(Genode::uint16_t badge)
-	{
+	Native_capability_info *find_by_native_badge(Genode::uint16_t badge) {
 		if(badge == cap.local_name())
 			return this;
 		Native_capability_info *info = next();
 		return info ? info->find_by_native_badge(badge) : 0;
 	}
 
-	Genode::size_t timestamp() const
-	{
+	Genode::size_t timestamp() const {
 		return Simple_counter<Native_capability_info>::id();
 	}
 
-	void print(Genode::Output &output) const
-	{
+	void print(Genode::Output &output) const {
 		using Genode::Hex;
 
 		Genode::print(output, "native ", cap, ", ep ", ep_cap, ", timestamp=",
-			      timestamp(), ", ");
+					  timestamp(), ", ");
 	}
 };
 

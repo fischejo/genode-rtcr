@@ -1,7 +1,8 @@
 /*
  * \brief  Intercepting Log session
  * \author Denis Huber
- * \date   2016-10-02
+ * \author Johannes Fischer
+ * \date   2019-08-29
  */
 
 #ifndef _RTCR_LOG_SESSION_H_
@@ -19,73 +20,72 @@
 namespace Rtcr {
 	class Log_session;
 	class Log_root;
-
-	constexpr bool log_verbose_debug = false;
-	constexpr bool log_root_verbose_debug = false;
 }
 
 /**
- * Custom RPC session object to intercept its creation, modification, and destruction through its interface
+ * Custom RPC session object to intercept its creation, modification, and
+ * destruction through its interface
  */
 class Rtcr::Log_session : public Rtcr::Checkpointable,
-				    public Genode::Rpc_object<Genode::Log_session>,
-                                    public Genode::List<Log_session>::Element
+						  public Genode::Rpc_object<Genode::Log_session>,
+						  public Genode::List<Log_session>::Element
 {
 public:
-  Genode::String<160> ck_creation_args;
-  Genode::String<160> ck_upgrade_args;
-  bool ck_bootstrapped;
-  Genode::uint16_t ck_badge;
-  Genode::addr_t ck_kcap;
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
+	
+	Genode::String<160> ck_creation_args;
+	Genode::String<160> ck_upgrade_args;
+	bool ck_bootstrapped;
+	Genode::uint16_t ck_badge;
+	Genode::addr_t ck_kcap;
 
-    using Genode::Rpc_object<Genode::Log_session>::cap;
+
 protected:
 
-  char* _upgrade_args;
-  bool _bootstrapped;
+	char* _upgrade_args;
+	bool _bootstrapped;
 
-  
-private:
 	/**
-	 * Enable log output for debugging
+	 * Allocator for Rpc objects created by this session and also for monitoring
+	 * list elements
 	 */
-	static constexpr bool verbose_debug = log_verbose_debug;
-	/**
-	 * Allocator for Rpc objects created by this session and also for monitoring list elements
-	 */
-	Genode::Allocator             &_md_alloc;
+	Genode::Allocator &_md_alloc;
+
 	/**
 	 * Entrypoint for managing created Rpc objects
 	 */
-	Genode::Entrypoint            &_ep;
+	Genode::Entrypoint &_ep;
+
 	/**
 	 * Parent's session connection which is used by the intercepted methods
 	 */
-	Genode::Log_connection         _parent_log;
+	Genode::Log_connection _parent_log;
 
 
 public:
+    using Genode::Rpc_object<Genode::Log_session>::cap;
+	
 	Log_session(Genode::Env &env,
-			      Genode::Allocator &md_alloc,
-			      Genode::Entrypoint &ep,
-			      const char *label,
-			      const char *creation_args,
-			      bool bootstrapped,
-			      Genode::Xml_node *config);
+				Genode::Allocator &md_alloc,
+				Genode::Entrypoint &ep,
+				const char *label,
+				const char *creation_args,
+				bool bootstrapped,
+				Genode::Xml_node *config);
 
-  ~Log_session();
+	~Log_session();
 
 	Genode::Log_session_capability parent_cap() { return _parent_log.cap(); }
 
-  void print(Genode::Output &output) const
-  {
-    Genode::print(output,
-		  ", ck_cargs='", ck_creation_args, "'",
-		  ", ck_uargs='", ck_upgrade_args, "'");
-  }
+	void print(Genode::Output &output) const {
+		Genode::print(output,
+					  ", ck_cargs='", ck_creation_args, "'",
+					  ", ck_uargs='", ck_upgrade_args, "'");
+	}
 
-
-  void checkpoint() override;
+	void checkpoint() override;
 
 
 	/*******************************
@@ -95,17 +95,14 @@ public:
 	Genode::size_t write(String const &string) override;
 };
 
+
 /**
- * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
+ * Custom root RPC object to intercept session RPC object creation,
+ * modification, and destruction through the root interface
  */
 class Rtcr::Log_root : public Genode::Root_component<Log_session>
 {
 private:
-	/**
-	 * Enable log output for debugging
-	 */
-	static constexpr bool verbose_debug = log_root_verbose_debug;
-
 	/**
 	 * Environment of Rtcr; is forwarded to a created session object
 	 */
@@ -131,7 +128,8 @@ private:
 	 */
 	Genode::List<Log_session> _session_rpc_objs;
 
-  Genode::Xml_node *_config;
+	Genode::Xml_node *_config;
+
 protected:
 	Log_session *_create_session(const char *args);
 	void _upgrade_session(Log_session *session, const char *upgrade_args);
@@ -139,10 +137,10 @@ protected:
 
 public:
 	Log_root(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
-		 Genode::Entrypoint &session_ep,
-		 bool &bootstrap_phase,
-		 Genode::Xml_node *config);
+			 Genode::Allocator &md_alloc,
+			 Genode::Entrypoint &session_ep,
+			 bool &bootstrap_phase,
+			 Genode::Xml_node *config);
 	~Log_root();
 
 	Log_session *find_by_badge(Genode::uint16_t badge);

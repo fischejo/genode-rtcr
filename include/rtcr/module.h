@@ -1,8 +1,8 @@
 /*
- * \brief  Session Handler
- * \author Denis Huber
+ * \brief Abstract implementation of a Module class. This class provides the
+ * necessary sessions which are required for creating a intercepted child.
  * \author Johannes Fischer
- * \date   2019-03-21
+ * \date   2019-08-29
  */
 
 #ifndef _RTCR_MODULE_SET_H_
@@ -53,14 +53,12 @@ public:
 	 * \return Instance of a Service object.
 	 */
 	virtual Genode::Service *resolve_session_request(const char *service_name,
-							 const char *args) = 0;
+													 const char *args) = 0;
 
 	/**
 	 * Methods required by Target_child for creating a Genode::Child
 	 *
-	 * These methods are implemented in derived classes. If a derived class
-	 * calls one of these methods, but does not implement it on its one, the
-	 * call is delegated to a sister class
+	 * These methods are implemented in derived classes. 
 	 */
 	virtual Genode::Local_service &pd_service() = 0;
 	virtual Genode::Local_service &rm_service() = 0;

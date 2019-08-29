@@ -1,7 +1,8 @@
 /*
- * \brief  Intercepting timer session
+ * \brief  Checkpointing capabilities
  * \author Denis Huber
- * \date   2016-10-05
+ * \author Johannes Fischer
+ * \date   2019-08-29
  */
 
 
@@ -14,21 +15,20 @@ using namespace Rtcr;
 
 
 Capability_mapping::Capability_mapping(Genode::Env &env,
-				       Genode::Allocator &alloc,
-				       Pd_session &pd_session,			   				     Genode::Xml_node *config)
-  :
-  Checkpointable(env, config, "capability_mapping"),
-  _env(env),
-  _alloc (alloc),
-  _pd_session(pd_session)
-{
-}
+									   Genode::Allocator &alloc,
+									   Pd_session &pd_session,			   				     Genode::Xml_node *config)
+	:
+	Checkpointable(env, config, "capability_mapping"),
+	_env(env),
+	_alloc (alloc),
+	_pd_session(pd_session)
+{}
 
 Capability_mapping::~Capability_mapping()
 {
-  while(Kcap_badge_info *kcap = _kcap_mapping.first()) {
-    Genode::destroy(_alloc, kcap);
-  }
+	while(Kcap_badge_info *kcap = _kcap_mapping.first()) {
+		Genode::destroy(_alloc, kcap);
+	}
 }
 
 
@@ -61,18 +61,18 @@ void Capability_mapping::checkpoint()
 	   new_attached_regions to ck_attached_regions during checkpointing */
 	Attached_region_info *ar_info = nullptr;
 	{
-	  Genode::Lock::Guard lock(addr_space._new_attached_regions_lock);
-	  ar_info = addr_space._new_attached_regions.first();
-	  if(ar_info) ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
-	  if(!ar_info) {
-	    ar_info = addr_space.ck_attached_regions.first();
-	    ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
-	  }
+		Genode::Lock::Guard lock(addr_space._new_attached_regions_lock);
+		ar_info = addr_space._new_attached_regions.first();
+		if(ar_info) ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
+		if(!ar_info) {
+			ar_info = addr_space.ck_attached_regions.first();
+			ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
+		}
 	}
 
 	if(!ar_info) {
 		Genode::error("No dataspace found for cap_idx_alloc's datastructure at ",
-			      Hex(cap_idx_alloc_addr));
+					  Hex(cap_idx_alloc_addr));
 		throw Genode::Exception();
 	}
 

@@ -9,24 +9,24 @@
 using namespace Rtcr;
 
 Checkpointable::Checkpointable(Genode::Env &env,
-			       Genode::Xml_node *config,
-			       const char* name)
-  :
-  Thread(env,
-	 name,
-	 64*1024,
-	 _read_affinity(config, name),
-	 Genode::Thread::Weight(),
-	 env.cpu()),
-  _running(true),
-  _next_job(NONE)
+							   Genode::Xml_node *config,
+							   const char* name)
+	:
+	Thread(env,
+		   name,
+		   64*1024,
+		   _read_affinity(config, name),
+		   Genode::Thread::Weight(),
+		   env.cpu()),
+	_running(true),
+	_next_job(NONE)
 {
 	Thread::start();
 }
 
 
 Genode::Affinity::Location Checkpointable::_read_affinity(Genode::Xml_node *config,
-							  const char* node_name)
+														  const char* node_name)
 {
 	try {	
 		Genode::Xml_node affinity_node = config->sub_node(node_name);
@@ -70,7 +70,7 @@ void Checkpointable::entry()
 		case CHECKPOINT:
 			checkpoint();
 			break;
-		  break;
+			break;
 		case NONE:
 			break;
 		}

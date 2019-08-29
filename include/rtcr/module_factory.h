@@ -65,11 +65,11 @@ public:
 	 * \return A instance of a Module class
 	 */
 	virtual Module* create(Genode::Env &env,
-				   Genode::Allocator &alloc,
-				   Genode::Entrypoint &ep,
-				   const char* label,
-				   bool &bootstrap,
-				   Genode::Xml_node *config) = 0;
+						   Genode::Allocator &alloc,
+						   Genode::Entrypoint &ep,
+						   const char* label,
+						   bool &bootstrap,
+						   Genode::Xml_node *config) = 0;
     
 	/**
 	 * Name of your module which you want to register.

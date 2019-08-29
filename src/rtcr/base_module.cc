@@ -1,17 +1,17 @@
 /*
- * \brief  Log module
- * \description This module provides a log session
+ * \brief Base module
  * \author Johannes Fischer
- * \date   2019-04-19
+ * \date   2019-08-29
  */
 
 #include <rtcr/base_module.h>
 
 using namespace Rtcr;
 
-/* Create a static instance of the Log_module_factory. This registers the module */
-
+/* Create a static instance of the Base_module_factory. This registers the
+ * module */
 Rtcr::Base_module_factory _base_module_factory_instance;
+
 
 Base_module::Base_module(Genode::Env &env,
 						 Genode::Allocator &alloc,
@@ -66,7 +66,8 @@ bool Base_module::_read_parallel()
 	}
 	return false;
 }
- 						
+
+
 Genode::size_t Base_module::_read_quota()
 {
 	Genode::size_t quota = 512*1024; // 512 kB
@@ -79,95 +80,57 @@ Genode::size_t Base_module::_read_quota()
 	}
 	return quota;
 }
- 						
-
-
 
 
 Cpu_root &Base_module::cpu_root()
 {
-	return *new (_alloc) Cpu_root(_env,
-								  _alloc,
-								  _ep,
-								  _pd_root,
-								  _bootstrap,
-								  _config);
-
+	return *new (_alloc) Cpu_root(_env, _alloc, _ep, _pd_root, _bootstrap, _config);
 }
+
 
 Pd_root &Base_module::pd_root()
 {
-	return *new (_alloc) Pd_root(_env,
-								 _alloc,
-								 _ep,
-								 _ram_session,			       
-								 _bootstrap,
-								 _config);
+	return *new (_alloc) Pd_root(_env, _alloc, _ep, _ram_session, _bootstrap, _config);
 }
+
 
 Ram_root &Base_module::ram_root()
 {
-	return *new (_alloc) Ram_root(_env,
-								  _alloc,
-								  _ep,
-								  _bootstrap,
-								  _config);
+	return *new (_alloc) Ram_root(_env, _alloc, _ep, _bootstrap, _config);
 }
 
 
 Rm_root &Base_module::rm_root()
 {
-	return *new (_alloc) Rm_root(_env,
-								 _alloc,
-								 _ep,
-								 _ram_session,
-								 _bootstrap,			       
-								 _config);
-
+	return *new (_alloc) Rm_root(_env, _alloc, _ep, _ram_session,_bootstrap, _config);
 }
 
 
 Rom_root &Base_module::rom_root()
 {
-	return *new (_alloc) Rom_root(_env,
-								  _alloc,
-								  _ep,
-								  _bootstrap,
-								  _config);
+	return *new (_alloc) Rom_root(_env, _alloc, _ep, _bootstrap, _config);
 }
 
 
 Log_root &Base_module::log_root()
 {
-	return *new (_alloc) Log_root(_env,
-								  _alloc,
-								  _ep,
-								  _bootstrap,
-								  _config);
+	return *new (_alloc) Log_root(_env, _alloc, _ep, _bootstrap, _config);
 }
 
 
 Timer_root &Base_module::timer_root()
 {
-	return *new (_alloc) Timer_root(_env,
-									_alloc,
-									_ep,
-									_bootstrap,
-									_config);
+	return *new (_alloc) Timer_root(_env, _alloc, _ep,_bootstrap, _config);
 }
 
 
 Capability_mapping &Base_module::capability_mapping()
 {
-	return *new (_alloc) Capability_mapping(_env,
-											_alloc,
-											_pd_session,
-											_config);
+	return *new (_alloc) Capability_mapping(_env, _alloc, _pd_session, _config);
 }
 
 
-Cpu_session &Base_module::_find_cpu_session(const char *label,
-													  Cpu_root &cpu_root)
+Cpu_session &Base_module::_find_cpu_session(const char *label,Cpu_root &cpu_root)
 {
 	/* Preparing argument string */
 	char args_buf[160];

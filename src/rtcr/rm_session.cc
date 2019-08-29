@@ -1,7 +1,8 @@
 /*
  * \brief  Intercepting Rm session
  * \author Denis Huber
- * \date   2016-10-02
+ * \author Johannes Fischer
+ * \date   2019-08-29
  */
 
 #include <rtcr/rm/rm_session.h>
@@ -16,7 +17,7 @@ Region_map &Rm_session::_create(Genode::size_t size)
 
 	/* Create custom Region map */
 	Region_map *new_region_map = new (_md_alloc) Region_map(
-		   _md_alloc, parent_cap, size, "custom", _bootstrap_phase);
+		_md_alloc, parent_cap, size, "custom", _bootstrap_phase);
 
 	/* Manage custom Region map */
 	_ep.manage(*new_region_map);
@@ -54,15 +55,14 @@ Rm_session::Rm_session(Genode::Env &env,
 					   bool &bootstrap_phase,
 					   Genode::Xml_node *config)
 	:
-  Checkpointable(env, config, "rm_session"),
+	Checkpointable(env, config, "rm_session"),
 	_md_alloc         (md_alloc),
 	_ep               (ep),
 	_bootstrap_phase  (bootstrap_phase),
 	_parent_rm        (env),
 	_ram_session (ram_session),
-  ck_creation_args (creation_args)
+	ck_creation_args (creation_args)
 {
-	if(verbose_debug) Genode::log("\033[33m", "Rm", "\033[0m(parent ", _parent_rm, ")");
 }
 
 
@@ -71,9 +71,7 @@ Rm_session::~Rm_session()
 	while(Region_map *obj = _new_region_maps.first()) {
 		_destroy(*obj);
 	}
-
 	// TODO FJO: free destroyed and new objects
-	if(verbose_debug) Genode::log("\033[33m", "~Rm", "\033[0m ", _parent_rm);
 }
 
 
@@ -81,30 +79,30 @@ Rm_session::~Rm_session()
 
 void Rm_session::checkpoint()
 {
-  ck_badge = cap().local_name();
-  ck_bootstrapped = _bootstrap_phase;
+	ck_badge = cap().local_name();
+	ck_bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();
 
-  // TODO
-  //  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
+	// TODO
+	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 
-  Region_map *region_map = nullptr;
-  while(region_map = _new_region_maps.first()) {
-    ck_region_maps.insert(region_map);
-    _new_region_maps.remove(region_map);
-  }
+	Region_map *region_map = nullptr;
+	while(region_map = _new_region_maps.first()) {
+		ck_region_maps.insert(region_map);
+		_new_region_maps.remove(region_map);
+	}
 
-  while(region_map = _destroyed_region_maps.first()) {
-    ck_region_maps.remove(region_map);
-    _destroyed_region_maps.remove(region_map);
-    Genode::destroy(_md_alloc, &region_map);
-  }
+	while(region_map = _destroyed_region_maps.first()) {
+		ck_region_maps.remove(region_map);
+		_destroyed_region_maps.remove(region_map);
+		Genode::destroy(_md_alloc, &region_map);
+	}
 
-  region_map = ck_region_maps.first();
-  while(region_map) {
-    region_map->checkpoint();
-    region_map = region_map->next();
-  }  
+	region_map = ck_region_maps.first();
+	while(region_map) {
+		region_map->checkpoint();
+		region_map = region_map->next();
+	}  
 }
 
 
@@ -112,20 +110,14 @@ void Rm_session::checkpoint()
 
 Genode::Capability<Genode::Region_map> Rm_session::create(Genode::size_t size)
 {
-	if(verbose_debug) Genode::log("Rm::\033[33m", __func__, "\033[0m(size=", size, ")");
-
 	/* Create custom Region map */
 	Region_map &new_region_map = _create(size);
-
-	if(verbose_debug) Genode::log("  result: ", new_region_map.cap());
 	return new_region_map.cap();
 }
 
 
 void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 {
-	if(verbose_debug) Genode::log("Rm::\033[33m", __func__, "\033[0m(", region_map_cap, ")");
-
 	/* Find RPC object for the given Capability */
 	Genode::Lock::Guard lock (_destroyed_region_maps_lock);
 	Region_map *region_map = _new_region_maps.first();
@@ -138,10 +130,7 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 	
 	/* If found, delete everything concerning this RPC object */
 	if(region_map) {
-		if(verbose_debug) Genode::log("  deleting ", region_map->cap());
-
 		Genode::error("Issuing Rm_session::destroy, which is bugged and hangs up.");
-
 		_destroy(*region_map);
 	} else {
 		Genode::error("No Region map with ", region_map_cap, " found!");
@@ -154,8 +143,6 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 
 Rm_session *Rm_root::_create_session(const char *args)
 {
-	if(verbose_debug) Genode::log("Rm_root::\033[33m", __func__, "\033[0m(", args,")");
-
 	/* Revert ram_quota calculation, because the monitor needs the original
 	 * session creation argument */
 	char ram_quota_buf[32];
@@ -170,13 +157,13 @@ Rm_session *Rm_root::_create_session(const char *args)
 
 	/* Create custom Rm_session */
 	Rm_session *new_session =
-	  new (md_alloc()) Rm_session(_env,
-						_md_alloc,
-						_ep,
-						readjusted_args,
-						_ram_session,
-						_bootstrap_phase,
-						_config);
+		new (md_alloc()) Rm_session(_env,
+									_md_alloc,
+									_ep,
+									readjusted_args,
+									_ram_session,
+									_bootstrap_phase,
+									_config);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -187,8 +174,6 @@ Rm_session *Rm_root::_create_session(const char *args)
 
 void Rm_root::_upgrade_session(Rm_session *session, const char *upgrade_args)
 {
-	if(verbose_debug) Genode::log("Rm_root::\033[33m", __func__, "\033[0m(session ", session->cap(),", args=", upgrade_args,")");
-
 	char ram_quota_buf[32];
 	char new_upgrade_args[160];
 
@@ -211,19 +196,17 @@ void Rm_root::_upgrade_session(Rm_session *session, const char *upgrade_args)
 
 void Rm_root::_destroy_session(Rm_session *session)
 {
-	if(verbose_debug) Genode::log("Ram_root::\033[33m", __func__, "\033[0m(session ", session->cap(),")");
-
 	_session_rpc_objs.remove(session);
 	Genode::destroy(_md_alloc, session);
 }
 
 
 Rm_root::Rm_root(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
-		 Genode::Entrypoint &session_ep,
-		 Ram_session &ram_session,		 
-		 bool &bootstrap_phase,
-		 Genode::Xml_node *config)
+				 Genode::Allocator &md_alloc,
+				 Genode::Entrypoint &session_ep,
+				 Ram_session &ram_session,		 
+				 bool &bootstrap_phase,
+				 Genode::Xml_node *config)
 	:
 	Root_component<Rm_session>(session_ep, md_alloc),
 	_env              (env),
@@ -235,7 +218,6 @@ Rm_root::Rm_root(Genode::Env &env,
 	_session_rpc_objs (),
 	_config (config)
 {
-	if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
 }
 
 Rm_root::~Rm_root()
@@ -244,18 +226,16 @@ Rm_root::~Rm_root()
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}
-
-	if(verbose_debug) Genode::log("\033[33m", __func__, "\033[0m");
 }
 
 
 Rm_session *Rm_root::find_by_badge(Genode::uint16_t badge)
 {
-  Rm_session *obj = _session_rpc_objs.first();
-  while(obj) { 
-    if(badge == obj->cap().local_name())
-      return obj;
-    obj = obj->next();
-  }
-  return 0;
+	Rm_session *obj = _session_rpc_objs.first();
+	while(obj) { 
+		if(badge == obj->cap().local_name())
+			return obj;
+		obj = obj->next();
+	}
+	return 0;
 }

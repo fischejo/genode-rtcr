@@ -26,10 +26,10 @@ class Rtcr::Simple_counter
 private:
 	Genode::size_t const current_id;
 	static Genode::size_t get_id()
-	{
-		static Genode::size_t count = 0;
-		return count++;
-	}
+		{
+			static Genode::size_t count = 0;
+			return count++;
+		}
 
 public:
 	Simple_counter() : current_id(get_id()) { }
@@ -47,15 +47,15 @@ struct Rtcr::General_info
 	bool const bootstrapped;
 
 	General_info() : bootstrapped(false)
-	{ }
+		{ }
 
 	General_info(bool bootstrapped) : bootstrapped(bootstrapped)
-	{ }
+		{ }
 
 	void print(Genode::Output &output) const
-	{
-		Genode::print(output, "bootstrapped=", bootstrapped);
-	}
+		{
+			Genode::print(output, "bootstrapped=", bootstrapped);
+		}
 };
 
 
@@ -68,20 +68,20 @@ struct Rtcr::Session_rpc_info : General_info
 	Genode::String<160> upgrade_args;
 
 	Session_rpc_info() : General_info(), creation_args(""), upgrade_args("")
-	{ }
+		{ }
 
 	Session_rpc_info(const char* creation_args, const char* upgrade_args, bool bootstrapped)
-	:
+		:
 		General_info  (bootstrapped),
 		creation_args (creation_args),
 		upgrade_args  (upgrade_args)
-	{ }
+		{ }
 
 	void print(Genode::Output &output) const
-	{
-		Genode::print(output, "cargs='", creation_args, "', uargs='", upgrade_args, "', ");
-		General_info::print(output);
-	}
+		{
+			Genode::print(output, "cargs='", creation_args, "', uargs='", upgrade_args, "', ");
+			General_info::print(output);
+		}
 };
 
 
@@ -93,12 +93,12 @@ struct Rtcr::Normal_rpc_info : General_info
 	// Insert common members
 
 	Normal_rpc_info() : General_info()
-	{ }
+		{ }
 
 	Normal_rpc_info(bool bootstrapped)
-	:
+		:
 		General_info(bootstrapped)
-	{ }
+		{ }
 
 };
 
@@ -111,12 +111,12 @@ struct Rtcr::Normal_obj_info : General_info
 	// Insert common members
 
 	Normal_obj_info() : General_info()
-	{ }
+		{ }
 
 	Normal_obj_info(bool bootstrapped)
-	:
+		:
 		General_info(bootstrapped)
-	{ }
+		{ }
 
 };
 

@@ -1,7 +1,7 @@
 /*
- * \brief  Dataspace Handler
+ * \brief  Thead for checkpointing all capabilities
  * \author Johannes Fischer
- * \date   2019-08-27
+ * \date   2019-08-29
  */
 
 #ifndef _RTCR_CAPABILITY_MAPPING_H_
@@ -30,22 +30,30 @@ protected:
 	Genode::Env        &_env;
 	Genode::Allocator  &_alloc;
 
-  Genode::List<Kcap_badge_info> _kcap_mapping;
-  Genode::addr_t _cap_idx_alloc_addr;
-  Pd_session &_pd_session;
+	/* list of checkpointed capabilities */
+	Genode::List<Kcap_badge_info> _kcap_mapping;
+
+	Genode::addr_t _cap_idx_alloc_addr;
+
+	/* PD session from which the capabilties are extracted */
+	Pd_session &_pd_session;
   
-  void checkpoint() override;
+	void checkpoint() override;
   
 public:
-        Capability_mapping(Genode::Env &env,
-			   Genode::Allocator &alloc,
-			   Pd_session &pd_session,
-			   Genode::Xml_node *config);
+	Capability_mapping(Genode::Env &env,
+					   Genode::Allocator &alloc,
+					   Pd_session &pd_session,
+					   Genode::Xml_node *config);
 
+	~Capability_mapping();
 
-  ~Capability_mapping();
-
-  Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge);
+	/**
+	 * Method for finiding a capabilitiy based on its badge 
+	 *
+	 * \param badge
+	 */
+	Genode::addr_t find_kcap_by_badge(Genode::uint16_t badge);
 };
 
 

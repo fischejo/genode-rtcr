@@ -28,27 +28,27 @@ struct Rtcr::Kcap_badge_info : Genode::List<Kcap_badge_info>::Element
 		: kcap(kcap), badge(badge) { }
 
 	Kcap_badge_info *find_by_kcap(Genode::addr_t kcap)
-	{
-		if(kcap == this->kcap)
-			return this;
-		Kcap_badge_info *info = next();
-		return info ? info->find_by_kcap(kcap) : 0;
-	}
+		{
+			if(kcap == this->kcap)
+				return this;
+			Kcap_badge_info *info = next();
+			return info ? info->find_by_kcap(kcap) : 0;
+		}
 
 	Kcap_badge_info *find_by_badge(Genode::uint16_t badge)
-	{
-		if(badge == this->badge)
-			return this;
-		Kcap_badge_info *info = next();
-		return info ? info->find_by_badge(badge) : 0;
-	}
+		{
+			if(badge == this->badge)
+				return this;
+			Kcap_badge_info *info = next();
+			return info ? info->find_by_badge(badge) : 0;
+		}
 
 	void print(Genode::Output &output) const
-	{
-		using Genode::Hex;
+		{
+			using Genode::Hex;
 
-		Genode::print(output, "kcap=", Hex(kcap), ", badge=", badge);
-	}
+			Genode::print(output, "kcap=", Hex(kcap), ", badge=", badge);
+		}
 };
 
 #endif /* _RTCR_KCAP_BADGE_INFO_H_ */

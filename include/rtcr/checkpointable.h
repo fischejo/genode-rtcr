@@ -19,15 +19,14 @@
 #include <util/event.h>
 
 namespace Rtcr {
-  class Checkpointable;
+	class Checkpointable;
 }
 
 using namespace Rtcr;
 
 
 /**
- * This class is a container around the module and executes `initialize()`,
- * `checkpoint()` and `restore()` in a seperate thread.
+ * This class provides an interface for checkpointing in a seperate thread.
  */
 class Rtcr::Checkpointable : private Genode::Thread
 {
@@ -61,25 +60,34 @@ private:
 	 * `entry()` method will be left. The thread stops.
 	 */
 	bool _running;
-        /**
+	/**
 	 * Entrypoint of the started thread.
 	 */
 	void entry();
 
+	/**
+	 * Reads the affinity of the thread from the XML config
+	 *
+	 * Example configuration:
+	 *
+	 * ```XML
+	 * <checkpointable name="cpu_session" xpos="1" ypos="0" />
+	 * ```
+	 */
 	inline Genode::Affinity::Location _read_affinity(Genode::Xml_node *config,
-						   const char* node_name);
+													 const char* node_name);
 
   
 public:
 	/**
-	 * \param env reference to a Genode environment 
-	 * \param module which should be wrapped and executed in a separate thread
-	 * \param optional XML config of module (necessary to parse affinity of thread)
-	 * \param cpu of the thread
+	 * \param env reference to a Genode environment
+	 * \param config optinonal XML config for the checkpointable module
+	 * \param name which represents the * thread name and the name attribute in
+	 * the XML configuration.
 	 */
-        Checkpointable(Genode::Env &env,
-			 Genode::Xml_node *config,
-			 const char* name);
+	Checkpointable(Genode::Env &env,
+				   Genode::Xml_node *config,
+				   const char* name);
 
 
 	/**
@@ -90,18 +98,16 @@ public:
 	virtual void wait_until_finished();
 
 	/**
-	 * Called when this module should run a checkpoint
+	 * Abstract method which is called for a checkpoint by the thread. This
+	 * method must be implemented by the inheriting class.
 	 */
 	virtual void checkpoint() = 0;
 
   
 	/**
-	 * Called when this module should run a checkpoint
-	 *
-	 * \return Checkpointable_state which stores the checkpointed data.
+	 * Starts a checkpoint
 	 */
 	void start_checkpoint();
-
 
 	/**
 	 * stop this thread

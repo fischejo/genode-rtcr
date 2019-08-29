@@ -1,7 +1,8 @@
 /*
  * \brief  Intercepting Cpu session
  * \author Denis Huber
- * \date   2016-08-10
+ * \author Johannes Fischer
+ * \date   2019-08-29
  */
 
 #ifndef _RTCR_CPU_SESSION_H_
@@ -22,9 +23,6 @@
 namespace Rtcr {
 	class Cpu_session;
 	class Cpu_root;
-
-	constexpr bool cpu_verbose_debug = true;
-	constexpr bool cpu_root_verbose_debug = false;
 }
 
 
@@ -34,49 +32,36 @@ namespace Rtcr {
  * the client
  */
 class Rtcr::Cpu_session : public virtual Rtcr::Checkpointable,
-				    public Genode::Rpc_object<Genode::Cpu_session>,
-                                    public Genode::List<Cpu_session>::Element
+						  public Genode::Rpc_object<Genode::Cpu_session>,
+						  public Genode::List<Cpu_session>::Element
 {
-public:
-  
-  Genode::String<160> ck_creation_args;
-  Genode::String<160> ck_upgrade_args;
-  bool ck_bootstrapped;
-  Genode::uint16_t ck_badge;
-  Genode::addr_t ck_kcap;
-  Genode::List<Cpu_thread> ck_cpu_threads;
-  Genode::uint16_t ck_sigh_badge;
-
-  using Genode::Rpc_object<Genode::Cpu_session>::cap;
-  
-  void print(Genode::Output &output) const
-  {
-    Genode::print(output,
-		  ", ck_creation_args='", ck_creation_args, "'",
-		  ", ck_update_args='", ck_upgrade_args, "'");
-  }
-
-  void checkpoint() override;
+public:	
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
+	
+	Genode::String<160> ck_creation_args;
+	Genode::String<160> ck_upgrade_args;
+	bool ck_bootstrapped;
+	Genode::uint16_t ck_badge;
+	Genode::addr_t ck_kcap;
+	Genode::List<Cpu_thread> ck_cpu_threads;
+	Genode::uint16_t ck_sigh_badge;
   
 protected:
-  const char* _upgrade_args;
-  bool _bootstrapped;
 
-  Genode::Signal_context_capability _sigh;
-  /**
-   * List of client's thread capabilities
-   */
-  Genode::Lock _new_cpu_threads_lock;
-  Genode::Lock _destroyed_cpu_threads_lock;  
-  Genode::List<Cpu_thread> _new_cpu_threads;
-  Genode::List<Cpu_thread> _destroyed_cpu_threads;  
-
-
-private:
+	const char* _upgrade_args;
+	bool _bootstrapped;
+	bool &_bootstrap_phase;
+	
+	Genode::Signal_context_capability _sigh;
 	/**
-	 * Enable log output for debugging
+	 * List of client's thread capabilities
 	 */
-	static constexpr bool verbose_debug = cpu_verbose_debug;
+	Genode::Lock _new_cpu_threads_lock;
+	Genode::Lock _destroyed_cpu_threads_lock;  
+	Genode::List<Cpu_thread> _new_cpu_threads;
+	Genode::List<Cpu_thread> _destroyed_cpu_threads;
 
 	/**
 	 * Environment of creator component (usually rtcr)
@@ -90,10 +75,7 @@ private:
 	 * Entrypoint
 	 */
 	Genode::Entrypoint &_ep;
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool               &_bootstrap_phase;
+
 	/**
 	 * PD root for the list of all PD sessions known to child
 	 *
@@ -106,50 +88,75 @@ private:
 	Genode::Cpu_connection _parent_cpu;
 
 	Cpu_thread &_create_thread(Genode::Pd_session_capability child_pd_cap,
-					     Genode::Pd_session_capability parent_pd_cap,
-					     Genode::Cpu_session::Name const &name,
-					     Genode::Affinity::Location affinity,
-					     Genode::Cpu_session::Weight weight,
-					     Genode::addr_t utcb);
+							   Genode::Pd_session_capability parent_pd_cap,
+							   Genode::Cpu_session::Name const &name,
+							   Genode::Affinity::Location affinity,
+							   Genode::Cpu_session::Weight weight,
+							   Genode::addr_t utcb);
 	
 	void _kill_thread(Cpu_thread &cpu_thread);
-
 
 	/**
 	 * Each child thread is directly assigned to a core. This affinity
 	 * defines the core.
 	 */
 	Genode::Affinity::Location _child_affinity;
+
+	/** 
+	 * Read the child affinity from the XML config
+	 *
+	 * Example Configuration
+	 * ```XML
+	 * <child name="sheep_counter" xpos="1" ypos="0" />
+	 * ```
+	 */
 	Genode::Affinity::Location _read_child_affinity(Genode::Xml_node *config,
-							const char* child_name);
+													const char* child_name);
 
 	/*
 	 * KIA4SM method
 	 */
 	Cpu_thread &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap,
-						    Genode::Pd_session_capability parent_pd_cap,
-						    Genode::Cpu_session::Name const &name,
-						    Genode::Affinity::Location affinity,
-						    Genode::Cpu_session::Weight weight,
-						    Genode::addr_t utcb,
-						    unsigned priority,
-						    unsigned deadline);
+									  Genode::Pd_session_capability parent_pd_cap,
+									  Genode::Cpu_session::Name const &name,
+									  Genode::Affinity::Location affinity,
+									  Genode::Cpu_session::Weight weight,
+									  Genode::addr_t utcb,
+									  unsigned priority,
+									  unsigned deadline);
 
 public:
+	using Genode::Rpc_object<Genode::Cpu_session>::cap;
+	
 	Cpu_session(Genode::Env &env,
-			      Genode::Allocator &md_alloc,
-			      Genode::Entrypoint &ep,
-			      Pd_root &pd_root,
-			      const char *label,
-			      const char *creation_args,
-			      bool &bootstrap_phase,
-			      Genode::Xml_node *config);
+				Genode::Allocator &md_alloc,
+				Genode::Entrypoint &ep,
+				Pd_root &pd_root,
+				const char *label,
+				const char *creation_args,
+				bool &bootstrap_phase,
+				Genode::Xml_node *config);
 	
 	~Cpu_session();
 
+	/**
+	 * Pause all child threads of this session 
+	 */
 	void pause();
+
+	/**
+	 * Resume all child threads of this session 
+	 */	
 	void resume();
 
+  
+	void print(Genode::Output &output) const {
+		Genode::print(output,
+					  ", ck_creation_args='", ck_creation_args, "'",
+					  ", ck_update_args='", ck_upgrade_args, "'");
+	}
+
+	void checkpoint() override;
 	
 	Genode::Cpu_session_capability parent_cap() { return _parent_cpu.cap(); }
 
@@ -160,15 +167,13 @@ public:
 	 ***************************/
 
 	Genode::Thread_capability create_thread(Genode::Pd_session_capability pd_cap,
-						Genode::Cpu_session::Name const &name,
-						Genode::Affinity::Location affinity,
-						Genode::Cpu_session::Weight weight,
-						Genode::addr_t utcb) override;
+											Genode::Cpu_session::Name const &name,
+											Genode::Affinity::Location affinity,
+											Genode::Cpu_session::Weight weight,
+											Genode::addr_t utcb) override;
 
 	void kill_thread(Genode::Thread_capability thread_cap) override;
-
 	void exception_sigh(Genode::Signal_context_capability handler) override;
-
 	Genode::Affinity::Space affinity_space() const override;
 	Genode::Dataspace_capability trace_control() override;
 	Quota quota() override;
@@ -188,12 +193,6 @@ public:
 	void dead(Genode::Dataspace_capability ds) override;
 
 	void killed() override;
-
-
-		
-	
-	static Cpu_session* current_session;
-
 };
 
 
@@ -203,11 +202,6 @@ public:
 class Rtcr::Cpu_root : public Genode::Root_component<Cpu_session>
 {
 private:
-	/**
-	 * Enable log output for debugging
-	 */
-	static constexpr bool verbose_debug = cpu_root_verbose_debug;
-
 	/**
 	 * Environment of Rtcr; is forwarded to a created session object
 	 */
@@ -242,23 +236,23 @@ private:
 	 */
 	Genode::List<Cpu_session> _session_rpc_objs;
 
-        Genode::Xml_node *_config;
+	Genode::Xml_node *_config;
   
 protected:
 	Cpu_session *_create_session(const char *args);
 	void _upgrade_session(Cpu_session *session, const char *upgrade_args);
 	void _destroy_session(Cpu_session *session);
 
-  inline Genode::Affinity::Location _read_child_affinity(Genode::Xml_node *config,
-							 const char* child_name);
+	inline Genode::Affinity::Location _read_child_affinity(Genode::Xml_node *config,
+														   const char* child_name);
   
 public:
 	Cpu_root(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
-		 Genode::Entrypoint &session_ep,
-		 Pd_root &pd_root,
-		 bool &bootstrap_phase,
-		 Genode::Xml_node *config);
+			 Genode::Allocator &md_alloc,
+			 Genode::Entrypoint &session_ep,
+			 Pd_root &pd_root,
+			 bool &bootstrap_phase,
+			 Genode::Xml_node *config);
 
 	
 	~Cpu_root();

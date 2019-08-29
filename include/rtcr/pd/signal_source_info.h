@@ -23,9 +23,12 @@ namespace Rtcr {
  */
 struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element
 {
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
 
-        bool ck_bootstrapped;
-        Genode::addr_t ck_kcap;
+	bool ck_bootstrapped;
+	Genode::addr_t ck_kcap;
 	Genode::uint16_t ck_badge;
 
 
@@ -37,27 +40,24 @@ struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element
 		:
 		bootstrapped(bootstrapped),
 		cap(cap)
-	{ }
+		{ }
 
   
-  void checkpoint()
-  {
-    ck_badge = cap.local_name();
-    ck_bootstrapped = bootstrapped;
-  }
+	void checkpoint() {
+		ck_badge = cap.local_name();
+		ck_bootstrapped = bootstrapped;
+	}
 
 
   
-	Signal_source_info *find_by_badge(Genode::uint16_t badge)
-	{
+	Signal_source_info *find_by_badge(Genode::uint16_t badge) {
 		if(badge == cap.local_name())
 			return this;
 		Signal_source_info *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
 
-	void print(Genode::Output &output) const
-	{
+	void print(Genode::Output &output) const {
 		using Genode::Hex;
 
 		Genode::print(output, cap, ", ");

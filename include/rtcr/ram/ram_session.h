@@ -33,95 +33,103 @@ namespace Rtcr {
 }
 
 /**
- * Custom RAM session to monitor the allocation, freeing, and ram quota transfers
+ * Custom RAM session to monitor the allocation, freeing, and ram quota
+ * transfers
  *
- * Instead of providing ordinary RAM dataspaces, it can provide managed dataspaces,
- * which are used to monitor the access to the provided RAM dataspaces
+ * Instead of providing ordinary RAM dataspaces, it can provide managed
+ * dataspaces, which are used to monitor the access to the provided RAM
+ * dataspaces
  */
 class Rtcr::Ram_session : public Rtcr::Checkpointable,
-				    public Genode::Rpc_object<Genode::Ram_session>,
-                                    public Genode::List<Ram_session>::Element
+						  public Genode::Rpc_object<Genode::Ram_session>,
+						  public Genode::List<Ram_session>::Element
 {
 public:
-  using Genode::Rpc_object<Genode::Ram_session>::cap;
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
   
-  Genode::String<160> ck_creation_args;
-  Genode::String<160> ck_upgrade_args;
-  bool ck_bootstrapped;
-  Genode::uint16_t ck_badge;
-  Genode::addr_t ck_kcap;
-  Genode::List<Ram_dataspace_info> ck_ram_dataspaces;
-  Genode::Ram_session_capability   ck_ref_account_cap;
-  
-  void print(Genode::Output &output) const
-  {
-    Genode::print(output,
-		  ", ck_cargs='", ck_creation_args, "'",
-		  ", ck_uargs='", ck_upgrade_args, "'");
-  }
-
-
-  void checkpoint() override;
-
-  void mark_region_map_dataspace(Genode::Dataspace_capability ds_cap);
+	Genode::String<160> ck_creation_args;
+	Genode::String<160> ck_upgrade_args;
+	bool ck_bootstrapped;
+	Genode::uint16_t ck_badge;
+	Genode::addr_t ck_kcap;
+	Genode::List<Ram_dataspace_info> ck_ram_dataspaces;
+	Genode::Ram_session_capability   ck_ref_account_cap;
   
 protected:
-
-  char* _upgrade_args;
-  Genode::Ram_session_capability   _ref_account_cap;
-  /**
-   * List of allocated ram dataspaces
-   */
-  Genode::Lock                     _new_ram_dataspaces_lock;
-  Genode::List<Ram_dataspace_info> _new_ram_dataspaces;
-
-  Genode::Lock                     _destroyed_ram_dataspaces_lock;  
-  Genode::List<Ram_dataspace_info> _destroyed_ram_dataspaces; 
-
-  
+	/*****************
+	 ** HOT STORAGE **
+	 *****************/
+	
+	char* _upgrade_args;
+	Genode::Ram_session_capability _ref_account_cap;
 	/**
-	 * Enable log output for debugging
+	 * List of allocated ram dataspaces
 	 */
-	static constexpr bool verbose_debug = ram_verbose_debug;
+	Genode::Lock _new_ram_dataspaces_lock;
+	Genode::List<Ram_dataspace_info> _new_ram_dataspaces;
+
+	Genode::Lock _destroyed_ram_dataspaces_lock;  
+	Genode::List<Ram_dataspace_info> _destroyed_ram_dataspaces; 
 
 	/**
 	 * Environment of Rtcr; needed to upgrade RAM quota of the RM session
 	 */
-	Genode::Env             &_env;
+	Genode::Env &_env;
+
 	/**
 	 * Allocator for structures monitoring the allocated Ram dataspaces
 	 */
-	Genode::Allocator       &_md_alloc;
+	Genode::Allocator &_md_alloc;
+
 	/**
 	 * Reference to Target_child's bootstrap phase
 	 */
-	bool                    &_bootstrap_phase;
+	bool &_bootstrap_phase;
+
 	/**
 	 * Connection to the parent Ram session (usually core's Ram session)
 	 */
-	Genode::Ram_connection   _parent_ram;
+	Genode::Ram_connection _parent_ram;
+
 	/**
-	 * Connection to the parent Rm session for creating new Region_maps (usually core's Rm session)
+	 * Connection to the parent Rm session for creating new Region_maps (usually
+	 * core's Rm session)
 	 */
-	Genode::Rm_connection    _parent_rm;
+	Genode::Rm_connection _parent_rm;
+
 	/**
 	 * Destroy rds_info and all its sub infos)
 	 */
 	void _destroy_ramds_info(Ram_dataspace_info &rds_info);
 
-  void copy_dataspace(Ram_dataspace_info &info);
-  Genode::Xml_node *_config;
+	void copy_dataspace(Ram_dataspace_info &info);
+
+	Genode::Xml_node *_config;
 
 public:
+	using Genode::Rpc_object<Genode::Ram_session>::cap;
+	
 	Ram_session(Genode::Env &env,
-			      Genode::Allocator &md_alloc,
-			      const char *label,
-			      const char *creation_args,
-			      bool &bootstrap_phase,
-			      Genode::Xml_node *config);
+				Genode::Allocator &md_alloc,
+				const char *label,
+				const char *creation_args,
+				bool &bootstrap_phase,
+				Genode::Xml_node *config);
   
 	~Ram_session();
+  
+	void print(Genode::Output &output) const {
+		Genode::print(output,
+					  ", ck_cargs='", ck_creation_args, "'",
+					  ", ck_uargs='", ck_upgrade_args, "'");
+	}
 
+	void checkpoint() override;
+
+	void mark_region_map_dataspace(Genode::Dataspace_capability ds_cap);
+	
 	Genode::Ram_session_capability parent_cap() { return _parent_ram.cap(); }
 
 	Ram_session *find_by_badge(Genode::uint16_t badge);
@@ -133,13 +141,15 @@ public:
 	/**
 	 * Allocate a Ram_dataspace
 	 */
-	Genode::Ram_dataspace_capability alloc(Genode::size_t size, Genode::Cache_attribute cached) override;
+	Genode::Ram_dataspace_capability alloc(Genode::size_t size,
+										   Genode::Cache_attribute cached) override;
 	/**
 	 * Frees the Ram_dataspace and destroys all monitoring structures
 	 */
 	void free(Genode::Ram_dataspace_capability ds_cap) override;
 	int ref_account(Genode::Ram_session_capability ram_session) override;
-	int transfer_quota(Genode::Ram_session_capability ram_session, Genode::size_t amount) override;
+	int transfer_quota(Genode::Ram_session_capability ram_session,
+					   Genode::size_t amount) override;
 	Genode::size_t quota() override;
 	Genode::size_t used() override;
 
@@ -193,12 +203,14 @@ protected:
 	void _destroy_session(Ram_session *session);
 
 	Genode::Xml_node *_config;
+
 public:
+
 	Ram_root(Genode::Env &env,
-		 Genode::Allocator &md_alloc,
-		 Genode::Entrypoint &session_ep,
-		 bool &bootstrap_phase,
-		 Genode::Xml_node *config);
+			 Genode::Allocator &md_alloc,
+			 Genode::Entrypoint &session_ep,
+			 bool &bootstrap_phase,
+			 Genode::Xml_node *config);
 	~Ram_root();
 
 	Genode::List<Ram_session> &session_infos() { return _session_rpc_objs; }

@@ -1,7 +1,8 @@
 /*
  * \brief  Monitoring RM::attach and RM::detach
  * \author Denis Huber
- * \date   2016-10-06
+ * \author Johannes Fischer
+ * \date   2019-08-29
  */
 
 #ifndef _RTCR_ATTACHED_REGION_INFO_H_
@@ -10,8 +11,6 @@
 /* Genode includes */
 #include <util/list.h>
 #include <dataspace/capability.h>
-
-/* Rtcr includes */
 
 namespace Rtcr {
 	struct Attached_region_info;
@@ -22,11 +21,18 @@ namespace Rtcr {
  */
 struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element
 {
-
-  Genode::Ram_dataspace_capability memory_content;
-
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
+	Genode::Ram_dataspace_capability memory_content;
     Genode::uint16_t ck_attached_ds_badge;
-  /**
+	bool ck_bootstrapped;
+	
+	/*****************
+	 ** HOT STORAGE **
+	 *****************/
+
+	/**
 	 * Dataspace capability which is attached
 	 */
 	const Genode::Dataspace_capability attached_ds_cap;
@@ -47,49 +53,45 @@ struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element
 	 */
 	const bool executable;
 
-	bool ck_bootstrapped;
-  bool bootstrapped;
 
-  void checkpoint()
-  {
-    ck_bootstrapped = bootstrapped;
-    ck_attached_ds_badge = attached_ds_cap.local_name();
-  }
+	bool bootstrapped;
+
+	void checkpoint() {
+		ck_bootstrapped = bootstrapped;
+		ck_attached_ds_badge = attached_ds_cap.local_name();
+	}
   
   
 	Attached_region_info(Genode::Dataspace_capability attached_ds_cap,
-			     Genode::size_t size,
-			     Genode::off_t offset,
-			     Genode::addr_t local_addr,
-			     bool executable,
-			     bool bootstrapped)
+						 Genode::size_t size,
+						 Genode::off_t offset,
+						 Genode::addr_t local_addr,
+						 bool executable,
+						 bool bootstrapped)
 		:
-                bootstrapped (bootstrapped),
+		bootstrapped (bootstrapped),
 		attached_ds_cap (attached_ds_cap),
 		size       (size),
 		offset     (offset),
 		rel_addr   (local_addr),
 		executable (executable)
-	{ }
+		{ }
 
-	Attached_region_info *find_by_addr(Genode::addr_t addr)
-	{
+	Attached_region_info *find_by_addr(Genode::addr_t addr) {
 		if((addr >= rel_addr) && (addr <= rel_addr + size))
 			return this;
 		Attached_region_info *info = next();
 		return info ? info->find_by_addr(addr) : 0;
 	}
   
-	Attached_region_info *find_by_badge(Genode::uint16_t badge)
-	{
+	Attached_region_info *find_by_badge(Genode::uint16_t badge) {
 		if(badge == attached_ds_cap.local_name())
 			return this;
 		Attached_region_info *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
 
-	void print(Genode::Output &output) const
-	{
+	void print(Genode::Output &output) const {
 		using Genode::Hex;
 		using Genode::print;
 

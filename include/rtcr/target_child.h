@@ -2,7 +2,7 @@
  * \brief  Child creation
  * \author Denis Huber
  * \author Johannes Fischer
- * \date   2019-03-23
+ * \date   2019-08-29
  */
 
 #ifndef _RTCR_TARGET_CHILD_H_
@@ -46,12 +46,12 @@ private:
 	/**
 	 * Local allocator
 	 */
-	Genode::Allocator  &_alloc;
+	Genode::Allocator &_alloc;
 
 	/**
 	 * Entrypoint for managing child's resource-sessions (PD, CPU, RAM)
 	 */
-	Genode::Entrypoint  _resources_ep;
+	Genode::Entrypoint _resources_ep;
 
 	/**
 	 * Entrypoint for child's creation
@@ -68,7 +68,7 @@ private:
 	/**
 	 * Indicator whether child was bootstraped or not
 	 */
-	bool                _in_bootstrap;
+	bool _in_bootstrap;
 
 	/**
 	 * Needed for child's creation
@@ -77,21 +77,21 @@ private:
 	/**
 	 * Needed for child's creation
 	 */
-	Genode::Region_map_client      *_address_space;
+	Genode::Region_map_client *_address_space;
 	/**
 	 * Registry for parent's services (parent of RTCR component). It is shared between all children.
 	 */
-	Genode::Service_registry      &_parent_services;
+	Genode::Service_registry &_parent_services;
 	/**
 	 * Child object
 	 */
-	Genode::Child                 *_child;
+	Genode::Child *_child;
 
 	/**
 	 * In order to create a child process, a few sessions are necessary. These
 	 * are provided by a module implementation.
 	 */
-         Module &_module;
+	Module &_module;
 	
 	/**
 	 * Parse name of child component from XML configuration. 
@@ -112,11 +112,10 @@ private:
 	 *   <module name="inc" />
 	 * </config>
 	 */
-         inline Module_name _read_module_name();
-  
-	inline Genode::Affinity::Location _read_affinity_location();
+	inline Module_name _read_module_name();
 
-         Module &_load_module(Module_name name);
+	Module &_load_module(Module_name name);
+	
 public:
 
 	/**
@@ -128,9 +127,9 @@ public:
 	 * \param name              Name of child component
 	 */
 	Target_child(Genode::Env &env,
-		     Genode::Allocator &alloc,
-		     Genode::Service_registry &parent_services,
-		     Child_name name);
+				 Genode::Allocator &alloc,
+				 Genode::Service_registry &parent_services,
+				 Child_name name);
 
 	/**
 	 * Create a child process
@@ -142,8 +141,8 @@ public:
 	 * \param parent_services   Services which are already provided by the parents
 	 */
 	Target_child(Genode::Env &env,
-		     Genode::Allocator &alloc,
-		     Genode::Service_registry &parent_services);
+				 Genode::Allocator &alloc,
+				 Genode::Service_registry &parent_services);
 
   
 	~Target_child();
@@ -156,7 +155,6 @@ public:
 	/**
 	 * Checkpoint the child
 	 *
-	 * \param state which stores the current state of the child
 	 * \param resume child after checkpointing (default: true)
 	 */
 	void checkpoint(bool resume = true);

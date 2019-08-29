@@ -1,7 +1,8 @@
 /*
  * \brief  Intercepting Pd session
  * \author Denis Huber
- * \date   2016-08-03
+ * \author Johannes Fischer
+ * \date   2019-08-29
  */
 
 #ifndef _RTCR_PD_SESSION_H_
@@ -24,127 +25,122 @@
 namespace Rtcr {
 	class Pd_session;
 	class Pd_root;
-
-	constexpr bool pd_verbose_debug = true;
-	constexpr bool pd_root_verbose_debug = false;
 }
 
 /**
- * Custom RPC session object to intercept its creation, modification, and destruction through its interface
+ * Custom RPC session object to intercept its creation, modification, and
+ * destruction through its interface
  */
 class Rtcr::Pd_session : public Rtcr::Checkpointable,
-				   public Genode::Rpc_object<Genode::Pd_session>,
-                                   public Genode::List<Pd_session>::Element
+						 public Genode::Rpc_object<Genode::Pd_session>,
+						 public Genode::List<Pd_session>::Element
 {
 public:
-  using Genode::Rpc_object<Genode::Pd_session>::cap;
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
   
-  Genode::String<160> ck_creation_args;
-  Genode::String<160> ck_update_args;
-  bool ck_bootstrapped;
-  Genode::uint16_t ck_badge;
-  Genode::addr_t ck_kcap;
+	Genode::String<160> ck_creation_args;
+	Genode::String<160> ck_update_args;
+	bool ck_bootstrapped;
+	Genode::uint16_t ck_badge;
+	Genode::addr_t ck_kcap;
 
-  void print(Genode::Output &output) const;
-  void checkpoint() override;
+	Genode::List<Signal_source_info>     ck_signal_sources;
+	Genode::List<Signal_context_info>    ck_signal_contexts;
+	Genode::List<Native_capability_info> ck_native_caps;
 
-  Genode::List<Signal_source_info>     ck_signal_sources;
-  Genode::List<Signal_context_info>    ck_signal_contexts;
-  Genode::List<Native_capability_info> ck_native_caps;
-
-  /**
-   * Custom address space for monitoring the attachments of the Region map
-   */
-  Region_map   _address_space;
-  /**
-   * Custom stack area for monitoring the attachments of the Region map
-   */
-  Region_map   _stack_area;
-  /**
-   * Custom linker area for monitoring the attachments of the Region map
-   */
-  Region_map   _linker_area;
-
-
-
-  
 protected:
   
-  char* _upgrade_args;
-  bool _bootstrapped;
-
-  /**
-   * List for monitoring the creation and destruction of Signal_source_capabilities
-   */  
-  Genode::Lock                         _new_signal_sources_lock;
-  Genode::List<Signal_source_info>     _new_signal_sources;
-  Genode::Lock                         _destroyed_signal_sources_lock;
-  Genode::List<Signal_source_info>     _destroyed_signal_sources;  
-  void _checkpoint_signal_sources();
-    
-  /**
-   * List for monitoring the creation and destruction of Signal_context_capabilities
-   */  
-  Genode::Lock                         _new_signal_contexts_lock;
-  Genode::List<Signal_context_info>    _new_signal_contexts;
-  Genode::Lock                         _destroyed_signal_contexts_lock;
-  Genode::List<Signal_context_info>    _destroyed_signal_contexts;  
-  void _checkpoint_signal_contexts();  
-
-  /**
-   * List for monitoring the creation and destruction of Native_capabilities
-   */  
-  Genode::Lock                         _new_native_caps_lock;
-  Genode::List<Native_capability_info> _new_native_caps;
-  Genode::Lock                         _destroyed_native_caps_lock;
-  Genode::List<Native_capability_info> _destroyed_native_caps;
-  
-  void _checkpoint_native_capabilities();  
-
-private:
-	/**
-	 * Enable log output for debugging
-	 */
-	static constexpr bool verbose_debug = pd_verbose_debug;
+	char* _upgrade_args;
+	bool _bootstrapped;
 
 	/**
-	 * TODO Needed?
-	 */
-	Genode::Env           &_env;
+	 * List for monitoring the creation and destruction of
+	 * Signal_source_capabilities
+	 */  
+	Genode::Lock _new_signal_sources_lock;
+	Genode::List<Signal_source_info> _new_signal_sources;
+	Genode::Lock _destroyed_signal_sources_lock;
+	Genode::List<Signal_source_info> _destroyed_signal_sources;  
+
+	/**
+	 * List for monitoring the creation and destruction of
+	 * Signal_context_capabilities
+	 */  
+	Genode::Lock _new_signal_contexts_lock;
+	Genode::List<Signal_context_info> _new_signal_contexts;
+	Genode::Lock _destroyed_signal_contexts_lock;
+	Genode::List<Signal_context_info> _destroyed_signal_contexts;  
+
+	/**
+	 * List for monitoring the creation and destruction of Native_capabilities
+	 */  
+	Genode::Lock _new_native_caps_lock;
+	Genode::List<Native_capability_info> _new_native_caps;
+	Genode::Lock _destroyed_native_caps_lock;
+	Genode::List<Native_capability_info> _destroyed_native_caps;  
+
+
+	Genode::Env &_env;
 	/**
 	 * Allocator for list elements which monitor the Signal_source,
 	 * Signal_context and Native_capability creation and destruction
 	 */
-	Genode::Allocator     &_md_alloc;
+	Genode::Allocator &_md_alloc;
 	/**
 	 * Entrypoint to manage itself
 	 */
-	Genode::Entrypoint    &_ep;
+	Genode::Entrypoint &_ep;
 	/**
 	 * Reference to Target_child's bootstrap phase
 	 */
-	bool                  &_bootstrap_phase;
+	bool &_bootstrap_phase;
 	/**
 	 * Connection to parent's pd session, usually from core
 	 */
 	Genode::Pd_connection  _parent_pd;
 
+	void _checkpoint_signal_sources();
+	void _checkpoint_signal_contexts();  	
+	void _checkpoint_native_capabilities();  
 
 public:
+	using Genode::Rpc_object<Genode::Pd_session>::cap;
+	
 	Pd_session(Genode::Env &env,
-			     Genode::Allocator &md_alloc,
-			     Genode::Entrypoint &ep,
-			     const char *label,
-			     const char *creation_args,
-			     Ram_session &ram_session,
-			     bool &bootstrap_phase,
-			     Genode::Xml_node *config);
+			   Genode::Allocator &md_alloc,
+			   Genode::Entrypoint &ep,
+			   const char *label,
+			   const char *creation_args,
+			   Ram_session &ram_session,
+			   bool &bootstrap_phase,
+			   Genode::Xml_node *config);
   
 	~Pd_session();
 
+	void print(Genode::Output &output) const;
+	void checkpoint() override;
+
+	/**
+	 * Custom address space for monitoring the attachments of the Region map
+	 */
+	Region_map   _address_space;
+	/**
+	 * Custom stack area for monitoring the attachments of the Region map
+	 */
+	Region_map   _stack_area;
+	/**
+	 * Custom linker area for monitoring the attachments of the Region map
+	 */
+	Region_map   _linker_area;
+
+
+	
 	Genode::Pd_session_capability parent_cap() { return _parent_pd.cap(); }
 
-  Region_map &address_space_component() { return _address_space; }
+	Region_map &address_space_component() { return _address_space; }
+
 	// Region_map const &address_space_component() const { return _address_space; }
 
 	// Region_map &stack_area_component() { return _stack_area; }
@@ -168,7 +164,7 @@ public:
 	void free_signal_source(Signal_source_capability cap) override;
 
 	Genode::Signal_context_capability alloc_context(Signal_source_capability source,
-							unsigned long imprint) override;
+													unsigned long imprint) override;
 	void free_context(Genode::Signal_context_capability cap) override;
 
 	void submit(Genode::Signal_context_capability context, unsigned cnt) override;
@@ -176,7 +172,7 @@ public:
 	Genode::Native_capability alloc_rpc_cap(Genode::Native_capability ep) override;
 	void free_rpc_cap(Genode::Native_capability cap) override;
 
-  /**
+	/**
 	 * Return custom address space
 	 */
 	Genode::Capability<Genode::Region_map> address_space() override;
@@ -194,24 +190,20 @@ public:
 
 
 /**
- * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
+ * Custom root RPC object to intercept session RPC object creation,
+ * modification, and destruction through the root interface
  */
 class Rtcr::Pd_root : public Genode::Root_component<Pd_session>
 {
 private:
 	/**
-	 * Enable log output for debugging
-	 */
-	static constexpr bool verbose_debug = pd_root_verbose_debug;
-
-	/**
 	 * Environment of Rtcr; is forwarded to a created session object
 	 */
-	Genode::Env        &_env;
+	Genode::Env &_env;
 	/**
 	 * Allocator for session objects and monitoring list elements
 	 */
-	Genode::Allocator  &_md_alloc;
+	Genode::Allocator &_md_alloc;
 	/**
 	 * Entrypoint for managing session objects
 	 */
@@ -219,33 +211,31 @@ private:
 	/**
 	 * Reference to Target_child's bootstrap phase
 	 */
-	bool               &_bootstrap_phase;
+	bool &_bootstrap_phase;
 	/**
 	 * Lock for infos list
 	 */
-	Genode::Lock        _objs_lock;
+	Genode::Lock _objs_lock;
 	/**
 	 * List for monitoring session objects
 	 */
 	Genode::List<Pd_session> _session_rpc_objs;
 
-        Ram_session &_ram_session;  
-        Genode::Xml_node *_config;
+	Ram_session &_ram_session;  
+	Genode::Xml_node *_config;
   
 protected:
 	Pd_session *_create_session(const char *args);
 	void _upgrade_session(Pd_session *session, const char *upgrade_args);
 	void _destroy_session(Pd_session *session);
-
-
   
 public:
 	Pd_root(Genode::Env &env,
-		Genode::Allocator &md_alloc,
-		Genode::Entrypoint &session_ep,
-		Ram_session &ram_session,
-		bool &bootstrap_phase,
-		Genode::Xml_node *config);
+			Genode::Allocator &md_alloc,
+			Genode::Entrypoint &session_ep,
+			Ram_session &ram_session,
+			bool &bootstrap_phase,
+			Genode::Xml_node *config);
 	~Pd_root();
 
 	Genode::List<Pd_session> &session_infos() { return _session_rpc_objs; }
