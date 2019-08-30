@@ -10,6 +10,7 @@
 /* Genode includes */
 #include <foc_native_pd/client.h>
 
+
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
 #include <rtcr/cap/kcap_badge.h>
@@ -43,8 +44,7 @@ protected:
 public:
 	Capability_mapping(Genode::Env &env,
 					   Genode::Allocator &alloc,
-					   Pd_session &pd_session,
-					   Genode::Xml_node *config);
+					   Pd_session &pd_session);
 
 	~Capability_mapping();
 

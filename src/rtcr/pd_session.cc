@@ -28,11 +28,10 @@ Pd_session::Pd_session(Genode::Env &env,
 					   Genode::Entrypoint &ep,
 					   const char *label,
 					   const char *creation_args,
-					   Ram_session &ram_session,
-					   bool &bootstrap_phase,
-					   Genode::Xml_node *config)
+					   Ram_root &ram_root,
+					   bool &bootstrap_phase)
 	:
-	Checkpointable(env, config, "pd_session"),
+	Checkpointable(env, "pd_session"),
 	_env (env),
 	_md_alloc (md_alloc),
 	_ep (ep),
@@ -60,9 +59,9 @@ Pd_session::Pd_session(Genode::Env &env,
 	_ep.manage(_stack_area);
 	_ep.manage(_linker_area);
 
-	ram_session.mark_region_map_dataspace(_address_space.dataspace());
-	ram_session.mark_region_map_dataspace(_stack_area.dataspace());
-	ram_session.mark_region_map_dataspace(_linker_area.dataspace());	
+//	ram_session.mark_region_map_dataspace(_address_space.dataspace());
+//	ram_session.mark_region_map_dataspace(_stack_area.dataspace());
+//	ram_session.mark_region_map_dataspace(_linker_area.dataspace());	
 }
 
 
@@ -339,9 +338,8 @@ Pd_session *Pd_root::_create_session(const char *args)
 									_ep,
 									label_buf,
 									readjusted_args,
-									_ram_session,
-									_bootstrap_phase,
-									_config);
+									_ram_root,
+									_bootstrap_phase);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -379,9 +377,8 @@ void Pd_root::_destroy_session(Pd_session *session)
 Pd_root::Pd_root(Genode::Env &env,
 				 Genode::Allocator &md_alloc,
 				 Genode::Entrypoint &session_ep,
-				 Ram_session &ram_session,		 
-				 bool &bootstrap_phase,
-				 Genode::Xml_node *config)
+				 Ram_root &ram_root,		 
+				 bool &bootstrap_phase)
 	:
 	Root_component<Pd_session>(session_ep, md_alloc),
 	_env              (env),
@@ -390,8 +387,7 @@ Pd_root::Pd_root(Genode::Env &env,
 	_bootstrap_phase  (bootstrap_phase),
 	_objs_lock        (),
 	_session_rpc_objs (),
-	_config (config),
-	_ram_session(ram_session)
+	_ram_root(ram_root)
 {
 }
 

@@ -78,8 +78,7 @@ public:
 				  Genode::Allocator &md_alloc,
 				  Genode::Entrypoint &ep,
 				  const char *creation_args,
-				  bool bootstrapped,
-				  Genode::Xml_node *config);
+				  bool bootstrapped);
 
 	~Timer_session() {};
 
@@ -104,6 +103,8 @@ public:
 	}
 	
 	const char* upgrade_args() { return _upgrade_args; }
+
+	Timer_session *find_by_badge(Genode::uint16_t badge);	
 
 	/************************************
 	 ** Timer session Rpc interface **
@@ -166,14 +167,13 @@ protected:
 	void _upgrade_session(Timer_session *session, const char *upgrade_args);
 
 	void _destroy_session(Timer_session *session);
-	Genode::Xml_node *_config;
+
 public:
   
 	Timer_root(Genode::Env &env,
 			   Genode::Allocator &md_alloc,
 			   Genode::Entrypoint &session_ep,
-			   bool &bootstrap_phase,
-			   Genode::Xml_node *config);
+			   bool &bootstrap_phase);
 
 	~Timer_root();
 

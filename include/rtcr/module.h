@@ -10,9 +10,15 @@
 
 /* Genode includes */
 #include <util/list.h>
-#include <base/heap.h>
-#include <util/list.h>
-#include <base/service.h>
+
+/* Rtcr includes */
+#include <rtcr/cpu/cpu_session.h>
+#include <rtcr/pd/pd_session.h>
+#include <rtcr/ram/ram_session.h>
+#include <rtcr/rm/rm_session.h>
+#include <rtcr/rom/rom_session.h>
+#include <rtcr/timer/timer_session.h>
+#include <rtcr/log/log_session.h>
 
 namespace Rtcr {
 	class Module;
@@ -40,36 +46,14 @@ public:
 	 */
 	virtual Module_name name() = 0;
 
-	/**
-	 * Called when this module should run a checkpoint
-	 */
-	virtual void checkpoint(bool resume) = 0;
+	virtual Pd_root &pd_root() = 0;
+	virtual Cpu_root &cpu_root() = 0;
+	virtual Ram_root &ram_root() = 0;
+	virtual Rm_root &rm_root() = 0;
+	virtual Rom_root &rom_root() = 0;
+	virtual Timer_root &timer_root() = 0;
+	virtual Log_root &log_root() = 0;	
 
-	/**
-	 * Resolves session requests for sessions which are provided by this module.
-	 *
-	 * \param service_name Name of the service which is looked up
-	 * \param args
-	 * \return Instance of a Service object.
-	 */
-	virtual Genode::Service *resolve_session_request(const char *service_name,
-													 const char *args) = 0;
-
-	/**
-	 * Methods required by Target_child for creating a Genode::Child
-	 *
-	 * These methods are implemented in derived classes. 
-	 */
-	virtual Genode::Local_service &pd_service() = 0;
-	virtual Genode::Local_service &rm_service() = 0;
-	virtual Genode::Local_service &cpu_service() = 0;
-	virtual Genode::Local_service &ram_service() = 0;
-
-	virtual Genode::Rpc_object<Genode::Cpu_session> &cpu_session() = 0;
-	virtual Genode::Rpc_object<Genode::Ram_session> &ram_session() = 0;
-	virtual Genode::Rpc_object<Genode::Pd_session> &pd_session() = 0;
-
-	virtual Genode::Rom_connection &rom_connection() = 0;	
 };
 
 

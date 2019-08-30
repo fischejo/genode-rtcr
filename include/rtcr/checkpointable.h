@@ -14,6 +14,7 @@
 #include <cpu_session/connection.h>
 #include <cpu_thread/client.h>
 #include <util/xml_node.h>
+#include <os/config.h>
 
 /* Rtcr includes */
 #include <util/event.h>
@@ -76,20 +77,16 @@ private:
 	 * <checkpointable name="cpu_session" xpos="1" ypos="0" />
 	 * ```
 	 */
-	inline Genode::Affinity::Location _read_affinity(Genode::Xml_node *config,
-													 const char* node_name);
+	inline Genode::Affinity::Location _read_affinity(const char* node_name);
 
   
 public:
 	/**
 	 * \param env reference to a Genode environment
-	 * \param config optinonal XML config for the checkpointable module
 	 * \param name which represents the * thread name and the name attribute in
 	 * the XML configuration.
 	 */
-	Checkpointable(Genode::Env &env,
-				   Genode::Xml_node *config,
-				   const char* name);
+	Checkpointable(Genode::Env &env, const char* name);
 
 
 	/**

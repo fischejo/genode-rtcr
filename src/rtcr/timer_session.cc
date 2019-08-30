@@ -27,10 +27,9 @@ Timer_session::Timer_session(Genode::Env &env,
 							 Genode::Allocator &md_alloc,
 							 Genode::Entrypoint &ep,
 							 const char *creation_args,
-							 bool bootstrapped,
-							 Genode::Xml_node *config)
+							 bool bootstrapped)
 	:
-	Checkpointable(env, config, "timer_session"),
+	Checkpointable(env, "timer_session"),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
 	_parent_timer (env),
@@ -53,6 +52,16 @@ void Timer_session::checkpoint()
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
+}
+
+
+Timer_session *Timer_session::find_by_badge(Genode::uint16_t badge)
+{
+	if(badge == cap().local_name())
+		return this;
+	
+	Timer_session *obj = next();
+	return obj ? obj->find_by_badge(badge) : 0;
 }
 
 
@@ -137,8 +146,7 @@ Timer_session *Timer_root::_create_session(const char *args)
 									   _md_alloc,
 									   _ep,
 									   readjusted_args,
-									   _bootstrap_phase,
-									   _config);
+									   _bootstrap_phase);
 
 	Genode::Lock::Guard guard(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -182,8 +190,7 @@ void Timer_root::_destroy_session(Timer_session *session)
 Timer_root::Timer_root(Genode::Env &env,
 					   Genode::Allocator &md_alloc,
 					   Genode::Entrypoint &session_ep,
-					   bool &bootstrap_phase,
-					   Genode::Xml_node *config)
+					   bool &bootstrap_phase)
 	:
 	Root_component<Timer_session>(session_ep, md_alloc),
 	_env              (env),
@@ -191,10 +198,8 @@ Timer_root::Timer_root(Genode::Env &env,
 	_ep               (session_ep),
 	_bootstrap_phase  (bootstrap_phase),
 	_objs_lock        (),
-	_session_rpc_objs (),
-	_config (config)
-{
-}
+	_session_rpc_objs ()
+{}
 
 
 Timer_root::~Timer_root()
@@ -204,16 +209,3 @@ Timer_root::~Timer_root()
 		Genode::destroy(_md_alloc, obj);
 	}
 }
-
-
-Timer_session *Timer_root::find_by_badge(Genode::uint16_t badge)
-{
-	Timer_session *obj = _session_rpc_objs.first();
-	while(obj) { 
-		if(badge == obj->cap().local_name())
-			return obj;
-		obj = obj->next();
-	}
-	return 0;
-}
-

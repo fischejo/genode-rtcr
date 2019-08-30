@@ -8,16 +8,12 @@
 #define _RTCR_BASE_MODULE_H_
 
 /* Genode includes */
-#include <util/list.h>
 #include <base/heap.h>
-#include <util/list.h>
-#include <os/config.h>
-#include <base/service.h>
-#include <rom_session/connection.h>
 
 /* Local includes */
 #include <rtcr/module.h>
 #include <rtcr/module_factory.h>
+
 #include <rtcr/cpu/cpu_session.h>
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/ram/ram_session.h>
@@ -41,112 +37,53 @@ using namespace Rtcr;
 class Rtcr::Base_module : public virtual Module
 {
 protected:
-	Genode::Env        &_env;
-	Genode::Allocator  &_alloc;
-	Genode::Entrypoint &_ep;
+	/**
+	 * Entrypoint for managing child's resource-sessions (PD, CPU, RAM)
+	 */
+	Genode::Entrypoint _ep;
 
-	/* pointer to the current XML configuration of this module */
-	Genode::Xml_node _config;
-
-	bool &_bootstrap;
-
-	/* If enabled, all threads are executed in parallel during checkpoint */
-	bool _parallel;	
-
+	
 	/* intercepting RAM session. The order of following declarations defines the
 	 * order of initialization. _pd_root depends on _ram_session! */
-	Ram_root &_ram_root;
-	Genode::Local_service _ram_service;
-	Ram_session &_ram_session;
+	Ram_root _ram_root;
 	
 	/* intercepting PD session */
-	Pd_root &_pd_root;
-	Genode::Local_service _pd_service;
-	Pd_session &_pd_session;
+	Pd_root _pd_root;
 
 	/* intercepting CPU session. _cpu_root depends on _pd_root.*/
-	Cpu_root &_cpu_root;
-	Genode::Local_service _cpu_service;
-	Cpu_session &_cpu_session;
+	Cpu_root _cpu_root;
 
 	/* intercepting RM session. _rm_root depends on _ram_session.*/
-	Rm_root &_rm_root;
-	Genode::Local_service _rm_service;
+	Rm_root _rm_root;
 
 	/* intercepting ROM session */
-	Rom_root &_rom_root;
-	Genode::Local_service _rom_service;
-	Genode::Rom_connection _rom_connection;
+	Rom_root _rom_root;
 
 	/* intercepting Log session */
-	Log_root &_log_root;
-	Genode::Local_service _log_service;
+	Log_root _log_root;
 
 	/* intercepting Timer session */
-	Timer_root &_timer_root;
-	Genode::Local_service _timer_service;
+	Timer_root _timer_root;
+   
+	bool _bootstrap;
 
-	/* Thread for creating the capability mapping. _capability_mapping depens on
-	 * _pd_session. */
-	Capability_mapping &_capability_mapping;
-	
-	/* Methods for initializing the intercepting session. In order to provide
-	 * another custom session, inherit from Rtcr::Base_module and override these
-	 * methods */
-	virtual Pd_root &pd_root();
-	virtual Cpu_root &cpu_root();  
-	virtual Ram_root &ram_root();
-	virtual Rm_root &rm_root();
-	virtual Rom_root &rom_root();
-	virtual Log_root &log_root();
-	virtual Timer_root &timer_root();
-	virtual Capability_mapping &capability_mapping();
-  
-	Cpu_session &_find_cpu_session(const char *label, Cpu_root &cpu_root);
-	Pd_session &_find_pd_session(const char *label, Pd_root &pd_root);
-	Ram_session &_find_ram_session(const char *label, Ram_root &ram_root);  
-
-	/* methods for parsing the XML configuration */
-	inline Genode::size_t _read_quota();
-	inline bool _read_parallel();  
-	inline Genode::Xml_node _read_config();
 	
 public:  
 
-	Base_module(Genode::Env &env,
-				Genode::Allocator &alloc,
-				Genode::Entrypoint &ep,
-				const char* label,
-				bool &bootstrap);
+	Base_module(Genode::Env &env, Genode::Allocator &alloc);
 
-	~Base_module();
+	~Base_module() {};
 
-	/**
-	 * Checkpoint PD,RAM,ROM,RM,CPU sessions
-	 *
-	 * \param resume the child threads after checkpoint
-	 */
-	void checkpoint(bool resume) override;
-
-	/**
-	 * If the child requests a service of PD,RM,RAM,ROM or CPU, this module
-	 * provides it.
-	 */    
-	Genode::Service *resolve_session_request(const char *service_name,
-											 const char *args) override;
-
+	 Pd_root &pd_root() override { return _pd_root; }
+	 Cpu_root &cpu_root() override { return _cpu_root;}
+	 Ram_root &ram_root() override {return _ram_root;}
+	 Rm_root &rm_root() override {return _rm_root;}
+	 Rom_root &rom_root() override {return _rom_root;}
+	 Log_root &log_root() override {return _log_root;}
+	 Timer_root &timer_root() override {return _timer_root;}
+	
 	Module_name name() override { return "base"; }
 
-	/* following methods provide the necessary services and sessions which are
-	 * required for creating a child */
-	Genode::Local_service &pd_service() override { return _pd_service; }
-	Genode::Local_service &rm_service() override  { return _rm_service; }
-	Genode::Local_service &cpu_service() override  { return _cpu_service; }
-	Genode::Local_service &ram_service() override  { return _ram_service; }
-	Genode::Rpc_object<Genode::Cpu_session> &cpu_session() override { return _cpu_session; }
-	Genode::Rpc_object<Genode::Ram_session> &ram_session() override { return _ram_session; }
-	Genode::Rpc_object<Genode::Pd_session> &pd_session() override { return _pd_session; }
-	Genode::Rom_connection &rom_connection() override  { return _rom_connection; }
 };
 
 
@@ -158,11 +95,9 @@ class Rtcr::Base_module_factory : public Module_factory
 public:
 	Module* create(Genode::Env &env,
 				   Genode::Allocator &alloc,
-				   Genode::Entrypoint &ep,
-				   const char* label,
-				   bool &bootstrap) override
+				   Genode::Entrypoint &ep) override
 		{
-			return new (alloc) Base_module(env, alloc, ep, label, bootstrap);
+			return new (alloc) Base_module(env, alloc);
 		}
     
 	Module_name name() override { return "base"; }

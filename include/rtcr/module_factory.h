@@ -59,15 +59,11 @@ public:
 	 * \param env        Environment
 	 * \param alloc      Heap Allocator
 	 * \param ep         Entrypoint
-	 * \param label      Label of ?
-	 * \param bootstrap  Bootstrap indicator
 	 * \return A instance of a Module class
 	 */
 	virtual Module* create(Genode::Env &env,
 						   Genode::Allocator &alloc,
-						   Genode::Entrypoint &ep,
-						   const char* label,
-						   bool &bootstrap) = 0;
+						   Genode::Entrypoint &ep) = 0;
     
 	/**
 	 * Name of your module which you want to register.
@@ -85,7 +81,10 @@ public:
     
 	/* \brief Methods which implement the list operations */
 	static void print();
-	static Module_factory* get(const Module_name name);  
+	static Module_factory* get(const Module_name name);
+
+	static Module_factory* get();
+	
 	static Module_factory* first();
 	Module_factory* next();
 };

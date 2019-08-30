@@ -121,20 +121,19 @@ protected:
 	void _checkpoint_signal_contexts();  	
 	void _checkpoint_native_capabilities();  
 
-private:	
-	using Genode::Rpc_object<Genode::Pd_session>::cap;
+
+
 	
 public:
-
+	using Genode::Rpc_object<Genode::Pd_session>::cap;
 	
 	Pd_session(Genode::Env &env,
 			   Genode::Allocator &md_alloc,
 			   Genode::Entrypoint &ep,
 			   const char *label,
 			   const char *creation_args,
-			   Ram_session &ram_session,
-			   bool &bootstrap_phase,
-			   Genode::Xml_node *config);
+			   Ram_root &ram_root,
+			   bool &bootstrap_phase);
   
 	~Pd_session();
 
@@ -231,8 +230,8 @@ private:
 	 */
 	Genode::List<Pd_session> _session_rpc_objs;
 
-	Ram_session &_ram_session;  
-	Genode::Xml_node *_config;
+	Ram_root &_ram_root;  
+
   
 protected:
 	Pd_session *_create_session(const char *args);
@@ -243,9 +242,8 @@ public:
 	Pd_root(Genode::Env &env,
 			Genode::Allocator &md_alloc,
 			Genode::Entrypoint &session_ep,
-			Ram_session &ram_session,
-			bool &bootstrap_phase,
-			Genode::Xml_node *config);
+			Ram_root &ram_root,
+			bool &bootstrap_phase);
 	~Pd_root();
 
 	Genode::List<Pd_session> &sessions() { return _session_rpc_objs; }

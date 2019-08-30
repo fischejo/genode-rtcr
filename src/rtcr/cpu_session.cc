@@ -80,18 +80,17 @@ Cpu_session::Cpu_session(Genode::Env &env,
 					     Pd_root &pd_root,
 					     const char *label,
 					     const char *creation_args,
-					     bool &bootstrap_phase,
-					     Genode::Xml_node *config)
+					     bool &bootstrap_phase)
 
 	:
-	Checkpointable(env, config, "cpu_session"),
+	Checkpointable(env, "cpu_session"),
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
 	_bootstrap_phase (bootstrap_phase),
 	_pd_root         (pd_root),
 	_parent_cpu      (env, label),
-	_child_affinity (_read_child_affinity(config, label))
+	_child_affinity (_read_child_affinity(label))
 {
 	DEBUG_THIS_CALL
 		}
@@ -107,16 +106,20 @@ Cpu_session::~Cpu_session()
 }
 
 
-Genode::Affinity::Location Cpu_session::_read_child_affinity(Genode::Xml_node *config, const char* child_name)
+Genode::Affinity::Location Cpu_session::_read_child_affinity(const char* child_name)
 {
-	try {	
-		Genode::Xml_node affinity_node = config->sub_node("child");
-		// TODO FJO: iterate through all child nodes and find node with name="child_name"
-		long const xpos = affinity_node.attribute_value<long>("xpos", 0);
-		long const ypos = affinity_node.attribute_value<long>("ypos", 0);
+	try {
+		Genode::Xml_node config_node = Genode::config()->xml_node();
+		Genode::Xml_node ck_node = config_node.sub_node("child");
+		Genode::String<30> node_name;
+		while(Genode::strcmp(child_name, ck_node.attribute_value("name", node_name).string()))
+			ck_node = ck_node.next("child");
+
+		long const xpos = ck_node.attribute_value<long>("xpos", 0);
+		long const ypos = ck_node.attribute_value<long>("ypos", 0);
 		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
 	}
-	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
+	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}	
 }
 
 
@@ -346,8 +349,7 @@ Cpu_session *Cpu_root::_create_session(const char *args)
 									 _pd_root,
 									 label_buf,
 									 readjusted_args,
-									 _bootstrap_phase,
-									 _config);
+									 _bootstrap_phase);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -385,8 +387,7 @@ Cpu_root::Cpu_root(Genode::Env &env,
 				   Genode::Allocator &md_alloc,
 				   Genode::Entrypoint &session_ep,
 				   Pd_root &pd_root,
-				   bool &bootstrap_phase,
-				   Genode::Xml_node *config)
+				   bool &bootstrap_phase)
 	:
 	Root_component<Cpu_session>(session_ep, md_alloc),
 	_env              (env),
@@ -395,8 +396,7 @@ Cpu_root::Cpu_root(Genode::Env &env,
 	_bootstrap_phase  (bootstrap_phase),
 	_pd_root          (pd_root),
 	_objs_lock        (),
-	_session_rpc_objs (),
-	_config(config)
+	_session_rpc_objs ()
 {
 }
 

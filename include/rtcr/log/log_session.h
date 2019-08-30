@@ -77,8 +77,7 @@ public:
 				Genode::Entrypoint &ep,
 				const char *label,
 				const char *creation_args,
-				bool bootstrapped,
-				Genode::Xml_node *config);
+				bool bootstrapped);
 
 	~Log_session();
 
@@ -97,7 +96,8 @@ public:
 	}
 	
 	const char* upgrade_args() { return _upgrade_args; }
-	
+
+	Log_session *find_by_badge(Genode::uint16_t badge);		
 
 	/*******************************
 	 ** Log session Rpc interface **
@@ -139,8 +139,6 @@ private:
 	 */
 	Genode::List<Log_session> _session_rpc_objs;
 
-	Genode::Xml_node *_config;
-
 protected:
 	Log_session *_create_session(const char *args);
 	void _upgrade_session(Log_session *session, const char *upgrade_args);
@@ -150,11 +148,10 @@ public:
 	Log_root(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
-			 bool &bootstrap_phase,
-			 Genode::Xml_node *config);
+			 bool &bootstrap_phase);
 	~Log_root();
 
-	Log_session *find_by_badge(Genode::uint16_t badge);
+
   
 	Genode::List<Log_session> &sessions() { return _session_rpc_objs; }
 };

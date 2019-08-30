@@ -30,9 +30,9 @@ using namespace Rtcr;
 
 Capability_mapping::Capability_mapping(Genode::Env &env,
 									   Genode::Allocator &alloc,
-									   Pd_session &pd_session,			   				     Genode::Xml_node *config)
+									   Pd_session &pd_session)
 	:
-	Checkpointable(env, config, "capability_mapping"),
+	Checkpointable(env, "capability_mapping"),
 	_env(env),
 	_alloc (alloc),
 	_pd_session(pd_session)

@@ -28,10 +28,9 @@ Log_session::Log_session(Genode::Env &env,
 					     Genode::Entrypoint &ep,
 					     const char *label,
 					     const char *creation_args,
-					     bool bootstrapped,
-					     Genode::Xml_node *config)
+					     bool bootstrapped)
 	:
-	Checkpointable(env, config, "log_session"),
+	Checkpointable(env, "log_session"),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
 	_parent_log   (env, label),
@@ -66,15 +65,13 @@ void Log_session::checkpoint()
 
 
 
-Log_session *Log_root::find_by_badge(Genode::uint16_t badge)
+Log_session *Log_session::find_by_badge(Genode::uint16_t badge)
 {
-	Log_session *obj = _session_rpc_objs.first();
-	while(obj) { 
-		if(badge == obj->cap().local_name())
-			return obj;
-		obj = obj->next();
-	}
-	return 0;
+	if(badge == cap().local_name())
+		return this;
+	
+	Log_session *obj = next();
+	return obj ? obj->find_by_badge(badge) : 0;	
 }
 
 
@@ -105,8 +102,7 @@ Log_session *Log_root::_create_session(const char *args)
 									 _ep,
 									 label_buf,
 									 readjusted_args,
-									 _bootstrap_phase,
-									 _config);
+									 _bootstrap_phase);
 
 	Genode::Lock::Guard guard(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -145,8 +141,7 @@ void Log_root::_destroy_session(Log_session *session)
 Log_root::Log_root(Genode::Env &env,
 				   Genode::Allocator &md_alloc,
 				   Genode::Entrypoint &session_ep,
-				   bool &bootstrap_phase,
-				   Genode::Xml_node *config)
+				   bool &bootstrap_phase)
 	:
 	Root_component<Log_session>(session_ep, md_alloc),
 	_env              (env),
@@ -154,8 +149,7 @@ Log_root::Log_root(Genode::Env &env,
 	_ep               (session_ep),
 	_bootstrap_phase  (bootstrap_phase),
 	_objs_lock        (),
-	_session_rpc_objs (),
-	_config (config)
+	_session_rpc_objs ()
 {
 
 }

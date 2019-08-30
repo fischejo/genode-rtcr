@@ -79,8 +79,7 @@ protected:
 	Region_map &_create(Genode::size_t size);
 	void _destroy(Region_map &region_map);
 
-	Ram_session &_ram_session;	
-
+	Ram_root &_ram_root;
 
 	
 public:
@@ -90,9 +89,8 @@ public:
 		       Genode::Allocator &md_alloc,
 		       Genode::Entrypoint &ep,
 		       const char *creation_args,
-		       Ram_session &ram_session,
-		       bool &bootstrap_phase,
-		       Genode::Xml_node *config);
+		       Ram_root &ram_root,
+		       bool &bootstrap_phase);
   
 	~Rm_session();
 
@@ -112,6 +110,8 @@ public:
 					  ", ck_uargs='", ck_upgrade_args, "'");    
 	}
 
+	Rm_session *find_by_badge(Genode::uint16_t badge);
+	
 	/******************************
 	 ** Rm session Rpc interface **
 	 ******************************/
@@ -173,20 +173,17 @@ protected:
 	void _upgrade_session(Rm_session *session, const char *upgrade_args);
 	void _destroy_session(Rm_session *session);
 
-	Ram_session &_ram_session;
-
-	Genode::Xml_node *_config;
+	Ram_root &_ram_root;
   
 public:
 	Rm_root(Genode::Env &env,
 			Genode::Allocator &md_alloc,
 			Genode::Entrypoint &session_ep,
-			Ram_session &ram_session,		
-			bool &bootstrap_phase,
-			Genode::Xml_node *config);
+			Ram_root &ram_root,		
+			bool &bootstrap_phase);
   
 	~Rm_root();
-	Rm_session *find_by_badge(Genode::uint16_t badge);
+
 	Genode::List<Rm_session> &sessions() { return _session_rpc_objs; }
 };
 

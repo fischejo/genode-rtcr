@@ -18,9 +18,17 @@
 #include <cap_session/connection.h>
 #include <util/list.h>
 
-/* Local includes */
+/* Rtcr includes */
 #include <rtcr/module.h>
-#include <rtcr/module_factory.h>
+#include <rtcr/cpu/cpu_session.h>
+#include <rtcr/pd/pd_session.h>
+#include <rtcr/ram/ram_session.h>
+#include <rtcr/rm/rm_session.h>
+#include <rtcr/log/log_session.h>
+#include <rtcr/timer/timer_session.h>
+#include <rtcr/rom/rom_session.h>
+#include <rtcr/cap/capability_mapping.h>
+#include <rtcr/session_service.h>
 
 namespace Rtcr {
 	class Target_child;
@@ -30,7 +38,8 @@ namespace Rtcr {
 /**
  * Encapsulates the policy and creation of the child
  */
-class Rtcr::Target_child : public Genode::Child_policy
+class Rtcr::Target_child : public Genode::Child_policy,
+						   public Genode::List<Rtcr::Target_child>
 {
 private:
 	/**
@@ -48,11 +57,8 @@ private:
 	 */
 	Genode::Allocator &_alloc;
 
-	/**
-	 * Entrypoint for managing child's resource-sessions (PD, CPU, RAM)
-	 */
-	Genode::Entrypoint _resources_ep;
-
+	Module &_module;
+	
 	/**
 	 * Entrypoint for child's creation
 	 *
@@ -64,17 +70,29 @@ private:
 	Genode::Cap_connection _cap_session;
 	Genode::Affinity::Location _affinity_location;
 	Genode::Rpc_entrypoint _entrypoint;
+	
+	Genode::Local_service _ram_service;
+	Ram_session &_ram_session;
 
+	Genode::Local_service _pd_service;
+	Pd_session &_pd_session;
+	
+	Genode::Local_service _cpu_service;
+	Cpu_session &_cpu_session;
+
+	Genode::Rom_connection _rom_connection;
+
+	Session_service<Rm_session,Rm_root> _rm_service;
+	Session_service<Log_session,Log_root> _log_service;
+	Session_service<Rom_session,Rom_root> _rom_service;
+	Session_service<Timer_session,Timer_root> _timer_service;
+
+	Capability_mapping _capability_mapping;
+	
 	/**
 	 * Indicator whether child was bootstraped or not
 	 */
 	bool _in_bootstrap;
-
-	/**
-	 * In order to create a child process, a few sessions are necessary. These
-	 * are provided by a module implementation.
-	 */
-	Module &_module;
 
 	/**
 	 * Needed for child's creation
@@ -93,29 +111,12 @@ private:
 	 */
 	Genode::Child _child;
 
-	
-	/**
-	 * Parse name of child component from XML configuration. 
-	 *
-	 * The name can be defined as following:
-	 * ```XML
-	 * <config>
-	 *   <child name="sheep_counter" />
-	 * </config>
-	 */
-	inline Child_name _read_name();
-	/**
-	 * Parse name of child component from XML configuration. 
-	 *
-	 * The name can be defined as following:
-	 * ```XML
-	 * <config>
-	 *   <module name="inc" />
-	 * </config>
-	 */
-	inline Module_name _read_module_name();
 
-	Module &_load_module(Module_name name);
+	Cpu_session &_find_cpu_session(const char *label, Cpu_root &cpu_root);
+	Pd_session &_find_pd_session(const char *label, Pd_root &pd_root);
+	Ram_session &_find_ram_session(const char *label, Ram_root &ram_root);  
+
+	bool _parallel;
 	
 public:
 
@@ -129,37 +130,26 @@ public:
 	 */
 	Target_child(Genode::Env &env,
 				 Genode::Allocator &alloc,
-				 Genode::Service_registry &parent_services,
-				 Child_name name);
-
-	/**
-	 * Create a child process
-	 *
-	 * The name of the child component is parsed from the XML Configuration.
-	 *
-	 * \param env               Environment
-	 * \param alloc             Heap Allocator
-	 * \param parent_services   Services which are already provided by the parents
-	 */
-	Target_child(Genode::Env &env,
-				 Genode::Allocator &alloc,
-				 Genode::Service_registry &parent_services);
+				 Genode::Service_registry &parent_services,				 
+				 const char *label,
+				 Module &module);
 
   
-	~Target_child();
+	~Target_child() {};
   
 	/**
 	 * Start child from scratch
 	 */
 	void start();
 
-	/**
-	 * Checkpoint the child
-	 *
-	 * \param resume child after checkpointing (default: true)
-	 */
-	void checkpoint(bool resume = true);
-	
+	void pause();
+
+	void resume();
+
+	void checkpoint();
+
+	void print(Genode::Output &output) const;
+
 	/****************************
 	 ** Child-policy interface **
 	 ****************************/
@@ -167,7 +157,8 @@ public:
 	const char *name() const { return _name.string(); }
 	Genode::Service *resolve_session_request(const char *service_name, const char *args);
 	void filter_session_args(const char *service, char *args, Genode::size_t args_len);
-  
+
+	
 };
 
 #endif /* _RTCR_TARGET_CHILD_H_ */

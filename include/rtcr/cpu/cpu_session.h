@@ -112,8 +112,7 @@ protected:
 	 * <child name="sheep_counter" xpos="1" ypos="0" />
 	 * ```
 	 */
-	Genode::Affinity::Location _read_child_affinity(Genode::Xml_node *config,
-													const char* child_name);
+	Genode::Affinity::Location _read_child_affinity(const char* child_name);
 
 	/*
 	 * KIA4SM method
@@ -127,11 +126,9 @@ protected:
 									  unsigned priority,
 									  unsigned deadline);
 
-private	:
-	using Genode::Rpc_object<Genode::Cpu_session>::cap;
 	
 public:
-
+	using Genode::Rpc_object<Genode::Cpu_session>::cap;
 	
 	Cpu_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,
@@ -139,8 +136,7 @@ public:
 				Pd_root &pd_root,
 				const char *label,
 				const char *creation_args,
-				bool &bootstrap_phase,
-				Genode::Xml_node *config);
+				bool &bootstrap_phase);
 	
 	~Cpu_session();
 
@@ -226,10 +222,7 @@ private:
 	 * Entrypoint for managing session objects
 	 */
 	Genode::Entrypoint &_ep;
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool               &_bootstrap_phase;
+
 	/**
 	 * Monitor's PD root for the list of all PD sessions known to the child
 	 *
@@ -248,8 +241,8 @@ private:
 	 */
 	Genode::List<Cpu_session> _session_rpc_objs;
 
-	Genode::Xml_node *_config;
-  
+	bool &_bootstrap_phase;
+	
 protected:
 	Cpu_session *_create_session(const char *args);
 	void _upgrade_session(Cpu_session *session, const char *upgrade_args);
@@ -263,12 +256,9 @@ public:
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
 			 Pd_root &pd_root,
-			 bool &bootstrap_phase,
-			 Genode::Xml_node *config);
+			 bool &bootstrapped);
 
-	
 	~Cpu_root();
-
 
 	Genode::List<Cpu_session> &sessions() { return _session_rpc_objs; }
 };

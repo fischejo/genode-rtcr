@@ -8,11 +8,9 @@
 
 using namespace Rtcr;
 
-Checkpointable::Checkpointable(Genode::Env &env,
-							   Genode::Xml_node *config,
-							   const char* name)
+Checkpointable::Checkpointable(Genode::Env &env, const char* name)
 	:
-	_affinity(_read_affinity(config, name)),
+	_affinity(_read_affinity(name)),
 	Thread(env,
 		   name,
 		   64*1024,
@@ -31,11 +29,11 @@ Checkpointable::Checkpointable(Genode::Env &env,
 }
 
 
-Genode::Affinity::Location Checkpointable::_read_affinity(Genode::Xml_node *config,
-														  const char* name)
+Genode::Affinity::Location Checkpointable::_read_affinity(const char* name)
 {
 	try {
-		Genode::Xml_node ck_node = config->sub_node("checkpointable");
+		Genode::Xml_node config_node = Genode::config()->xml_node();
+		Genode::Xml_node ck_node = config_node.sub_node("checkpointable");
 		Genode::String<30> node_name;
 		while(Genode::strcmp(name, ck_node.attribute_value("name", node_name).string()))
 			ck_node = ck_node.next("checkpointable");

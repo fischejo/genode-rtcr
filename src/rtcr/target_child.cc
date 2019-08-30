@@ -26,70 +26,32 @@
 #define DEBUG_THIS_CALL
 #endif
 
-
 using namespace Rtcr;
 
 
 Target_child::Target_child(Genode::Env &env,
 						   Genode::Allocator &alloc,
-						   Genode::Service_registry &parent_services)
-	: Target_child(env,
-				   alloc,
-				   parent_services,
-				   _read_name())
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-}
-
-
-Child_name Target_child::_read_name()
-{
-	DEBUG_THIS_CALL	
-
-		return Child_name("sheep_counter");
-}
-
-
-Module_name Target_child::_read_module_name()
-{
-	DEBUG_THIS_CALL
-	return Module_name("base");
-}
-
-
-Module &Target_child::_load_module(Module_name name)
-{
-	DEBUG_THIS_CALL
-
-	/* find factory for module */
-	Module_factory *factory = Module_factory::get(name);
-
-	if(!factory) {
-		Genode::error("Module '", name, "' is not linked!");
-	} else {
-		/* create module */
-		Module *module = factory->create(_env,
-										 _alloc,
-										 _resources_ep,
-										 _name.string(),
-										 _in_bootstrap);
-
-		Genode::log("\e[38;5;214m", "Module loaded: \e[1m", name, "\033[0m");    
-		return *module;
-	}
-}
-
-
-
-Target_child::Target_child(Genode::Env &env,
-						   Genode::Allocator &alloc,
 						   Genode::Service_registry &parent_services,
-						   Child_name name)
+						   const char* label,
+						   Module &module)
 	:
-	_name (name),
+	_name (label),
 	_env (env),
+	_parallel(false),
 	_alloc (alloc),
-	_resources_ep (_env, 16*1024, "resources ep"),
+	_module(module),
+	_ram_service("RAM", &module.ram_root()),
+	_ram_session(_find_ram_session(label, module.ram_root())),
+	_pd_service("PD", &module.pd_root()),
+	_pd_session(_find_pd_session(label, module.pd_root())),
+	_cpu_service("CPU", &module.cpu_root()),
+	_cpu_session(_find_cpu_session(label, module.cpu_root())),
+	_rm_service("RM", &module.rm_root()),
+	_rom_service("ROM", &module.rom_root()),
+	_rom_connection(env, label),
+	_log_service("LOG", &module.log_root()),
+	_timer_service("Timer", &module.timer_root()),
+	_capability_mapping(env, alloc, _pd_session),
 	_entrypoint(&_cap_session,
 				ENTRYPOINT_STACK_SIZE,
 				"entrypoint",
@@ -97,52 +59,118 @@ Target_child::Target_child(Genode::Env &env,
 				_affinity_location), /* TODO: FJO still necessary? */
 	_in_bootstrap    (true),
 	_parent_services (parent_services),
-	_module(_load_module(_read_module_name())),
-	_address_space(_module.pd_session().address_space()),
-	_initial_thread(_module.cpu_session(),
-					_module.pd_session().cap(),
+	_address_space(_pd_session.address_space()),
+	_initial_thread(_cpu_session,
+					_pd_session.cap(),
 					_name.string()),
-	_child(_module.rom_connection().dataspace(),
+	_child(_rom_connection.dataspace(),
 		   Genode::Dataspace_capability(),
-		   _module.pd_session().cap(),
-		   _module.pd_session(),
-		   _module.ram_session().cap(),
-		   _module.ram_session(),
-		   _module.cpu_session().cap(),
+		   _pd_session.cap(),
+		   _pd_session,
+		   _ram_session.cap(),
+		   _ram_session,
+		   _cpu_session.cap(),
 		   _initial_thread,
 		   _env.rm(),
 		   _address_space,
 		   _entrypoint,
 		   *this,
-		   _module.pd_service(),
-		   _module.ram_service(),
-		   _module.cpu_service())
-
+		   _pd_service,
+		   _ram_service,
+		   _cpu_service)
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL	
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
-}
-
-
-Target_child::~Target_child()
-{
-//	if(_child) Genode::destroy(_alloc, _child);
-//	Genode::destroy(_alloc, _address_space);
-//	Genode::destroy(_alloc, _initial_thread);
+#ifdef VERBOSE		
+		Genode::log("Execute checkpointable ",_parallel ? "parallel" : "sequential");
+#endif
 }
 
 
 void Target_child::start()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL		
-
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	_entrypoint.activate();
 }
 
-
-void Target_child::checkpoint(bool resume)
+void Target_child::pause()
 {
-	_module.checkpoint(resume);
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+	_cpu_session.pause();
+}
+
+void Target_child::resume()
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+	_cpu_session.resume();	
+}
+
+
+void Target_child::checkpoint()
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+	if(_parallel) {
+		/* start all checkpointing threads */
+		_capability_mapping.start_checkpoint();
+		_pd_session.start_checkpoint();
+		_cpu_session.start_checkpoint();
+		_ram_session.start_checkpoint();
+		if(_rm_service.session()) _rm_service.session()->start_checkpoint();
+		if(_rom_service.session()) _rom_service.session()->start_checkpoint();
+		if(_log_service.session()) _log_service.session()->start_checkpoint();
+		if(_timer_service.session()) _timer_service.session()->start_checkpoint();
+		
+		/* wait until all threads finished */
+		_pd_session.join_checkpoint();
+		_cpu_session.join_checkpoint();
+		_ram_session.join_checkpoint();
+		if(_rm_service.session()) _rm_service.session()->join_checkpoint();
+		if(_rom_service.session()) _rom_service.session()->join_checkpoint();
+		if(_log_service.session()) _log_service.session()->join_checkpoint();
+		if(_timer_service.session()) _timer_service.session()->join_checkpoint();
+		
+		_capability_mapping.join_checkpoint();
+	} else {
+		_pd_session.start_checkpoint();
+		_pd_session.join_checkpoint();
+    
+		_cpu_session.start_checkpoint();
+		_cpu_session.join_checkpoint();    
+
+		_ram_session.start_checkpoint();
+		_ram_session.join_checkpoint();
+
+		if(_rm_service.session()) {
+			_rm_service.session()->start_checkpoint();
+			_rm_service.session()->join_checkpoint();
+		}
+		if(_rom_service.session()) {
+			_rom_service.session()->start_checkpoint();
+			_rom_service.session()->join_checkpoint();				
+		}
+		if(_log_service.session()) {
+			_log_service.session()->start_checkpoint();
+			_log_service.session()->join_checkpoint();			
+		}
+		if(_timer_service.session()) {
+			_timer_service.session()->start_checkpoint();
+			_timer_service.session()->join_checkpoint();			
+		}
+		
+		_capability_mapping.start_checkpoint();
+		_capability_mapping.join_checkpoint();    
+	}
+}
+
+
+void Target_child::print(Genode::Output &output) const {
+	_pd_session.print(output);
+	_cpu_session.print(output);
+	_ram_session.print(output);
+	// if(_rm_service.session()) _rm_service.session()->print(output);
+	// if(_rom_service.session()) _rom_service.session()->print(output);
+	// if(_log_service.session()) _log_service.session()->print(output);
+	// if(_timer_service.session()) _timer_service.session()->print(output);		
 }
 
 
@@ -166,9 +194,20 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 		return service;
 	}
 
-	service = _module.resolve_session_request(service_name, args);
-	if(service) {
-		return service;	    
+	if(!Genode::strcmp(service_name, "PD")) {
+		return &_pd_service;
+	} else if(!Genode::strcmp(service_name, "CPU")) {
+		return &_cpu_service;
+	} else if(!Genode::strcmp(service_name, "RAM")) {
+		return &_ram_service;
+	} else if(!Genode::strcmp(service_name, "RM")) {
+		return &_rm_service;	
+	} else if(!Genode::strcmp(service_name, "ROM")) {
+		return &_rom_service;
+	} else if(!Genode::strcmp(service_name, "LOG")) {
+		return &_log_service;
+	} else if(!Genode::strcmp(service_name, "Timer")) {
+		return &_timer_service;			
 	}
 
 	/* Service not known, cannot intercept it */
@@ -197,4 +236,70 @@ void Target_child::filter_session_args(const char *service,
 		Genode::Session_label const new_label = prefixed_label(name, old_label);
 		Genode::Arg_string::set_arg_string(args, args_len, "label", new_label.string());
 	}
+}
+
+Cpu_session &Target_child::_find_cpu_session(const char *label,Cpu_root &cpu_root)
+{
+	/* Preparing argument string */
+	char args_buf[160];
+	Genode::snprintf(args_buf, sizeof(args_buf),
+					 "priority=0x%x, ram_quota=%u, label=\"%s\"",
+					 Genode::Cpu_session::DEFAULT_PRIORITY, 128*1024, label);
+	
+	/* Issuing session method of Cpu_root */
+	Genode::Session_capability cpu_cap = cpu_root.session(args_buf, Genode::Affinity());
+
+	/* Find created RPC object in Cpu_root's list */
+	Cpu_session *cpu_session = cpu_root.sessions().first();
+	if(cpu_session) cpu_session = cpu_session->find_by_badge(cpu_cap.local_name());
+	if(!cpu_session) {
+		Genode::error("Creating custom CPU session failed: "
+					  "Could not find PD session in PD root");
+		throw Genode::Exception();
+	}
+
+	return *cpu_session;
+}
+
+
+Pd_session &Target_child::_find_pd_session(const char *label, Pd_root &pd_root)
+{
+	/* Preparing argument string */
+	char args_buf[160];
+	Genode::snprintf(args_buf, sizeof(args_buf), "ram_quota=%u, label=\"%s\"", 20*1024*sizeof(long), label);
+	/* Issuing session method of pd_root */
+	Genode::Session_capability pd_cap = pd_root.session(args_buf, Genode::Affinity());
+
+	/* Find created RPC object in pd_root's list */
+	Pd_session *pd_session = pd_root.sessions().first();
+	if(pd_session) pd_session = pd_session->find_by_badge(pd_cap.local_name());
+	if(!pd_session) {
+		Genode::error("Creating custom PD session failed: Could not find PD session in PD root");
+		throw Genode::Exception();
+	}
+
+	return *pd_session;
+}
+
+
+Ram_session &Target_child::_find_ram_session(const char *label, Ram_root &ram_root)
+{ 
+	/* Preparing argument string */
+	char args_buf[160];
+	Genode::snprintf(args_buf, sizeof(args_buf),
+					 "ram_quota=%u, phys_start=0x%lx, phys_size=0x%lx, label=\"%s\"",
+					 4*1024*sizeof(long), 0UL, 0UL, label);
+
+	/* Issuing session method of Ram_root */
+	Genode::Session_capability ram_cap = ram_root.session(args_buf, Genode::Affinity());
+
+	/* Find created RPC object in Ram_root's list */
+	Ram_session *ram_session = ram_root.sessions().first();
+	if(ram_session) ram_session = ram_session->find_by_badge(ram_cap.local_name());
+	if(!ram_session) {
+		Genode::error("Creating custom RAM session failed: Could not find RAM session in RAM root");
+		throw Genode::Exception();
+	}
+
+	return *ram_session;
 }

@@ -29,10 +29,9 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 							   Genode::Entrypoint& ep,
 							   const char *label,
 							   const char *creation_args,
-							   bool &bootstrapped,
-							   Genode::Xml_node *config)
+							   bool &bootstrapped)
 	:
-	Checkpointable(env, config, "rom_session"),
+	Checkpointable(env, "rom_session"),
 	_env          (env),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
@@ -58,6 +57,15 @@ void Rom_session::checkpoint()
 	ck_sigh_badge = _sigh.local_name();
 }
 
+
+Rom_session *Rom_session::find_by_badge(Genode::uint16_t badge)
+{
+	if(badge == cap().local_name())
+		return this;
+	
+	Rom_session *obj = next();
+	return obj ? obj->find_by_badge(badge) : 0;	
+}
 
 
 Genode::Rom_dataspace_capability Rtcr::Rom_session::dataspace()
@@ -108,8 +116,7 @@ Rom_session *Rom_root::_create_session(const char *args)
 									 _ep,
 									 label_buf,
 									 readjusted_args,
-									 _bootstrap_phase,
-									 _config);
+									 _bootstrap_phase);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -149,8 +156,7 @@ void Rom_root::_destroy_session(Rom_session *session)
 Rom_root::Rom_root(Genode::Env &env,
 				   Genode::Allocator &md_alloc,
 				   Genode::Entrypoint &session_ep,
-				   bool &bootstrap_phase,
-				   Genode::Xml_node *config)
+				   bool &bootstrap_phase)
 	:
 	Root_component<Rom_session>(session_ep, md_alloc),
 	_env              (env),
@@ -158,8 +164,8 @@ Rom_root::Rom_root(Genode::Env &env,
 	_ep               (session_ep),
 	_bootstrap_phase  (bootstrap_phase),
 	_objs_lock        (),
-	_session_rpc_objs (),
-	_config(config)
+	_session_rpc_objs ()
+
 {
 }
 
@@ -171,16 +177,4 @@ Rom_root::~Rom_root()
 		_session_rpc_objs.remove(obj);
 		Genode::destroy(_md_alloc, obj);
 	}
-}
-
-
-Rom_session *Rom_root::find_by_badge(Genode::uint16_t badge)
-{
-	Rom_session *obj = _session_rpc_objs.first();
-	while(obj) { 
-		if(badge == obj->cap().local_name())
-			return obj;
-		obj = obj->next();
-	}
-	return 0;  
 }

@@ -73,8 +73,6 @@ protected:
 	 */
 	Genode::Rom_connection _parent_rom;
 
-
-
 	
 public:
 	using Genode::Rpc_object<Genode::Rom_session>::cap;
@@ -84,8 +82,7 @@ public:
 				Genode::Entrypoint &ep,
 				const char *label,
 				const char *creation_args,
-				bool &bootstrap_phase,
-				Genode::Xml_node *config);
+				bool &bootstrap_phase);
 
 	~Rom_session() {};
   
@@ -103,10 +100,9 @@ public:
 	
 	const char* upgrade_args() { return _upgrade_args; }
 
+	Rom_session *find_by_badge(Genode::uint16_t badge);		
 	
 	Genode::Rom_session_capability parent_cap() { return _parent_rom.cap(); }
-
-	Rom_session *find_by_badge(Genode::uint16_t badge);
 
 	/*******************************
 	 ** Rom session Rpc interface **
@@ -161,18 +157,15 @@ protected:
 
 	void _destroy_session(Rom_session *session);
 
-	Genode::Xml_node *_config;
 public:
   
 	Rom_root(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
-			 bool &bootstrap_phase,
-			 Genode::Xml_node *config);
+			 bool &bootstrap_phase);
 
 	~Rom_root();
   
-	Rom_session *find_by_badge(Genode::uint16_t badge);
 	Genode::List<Rom_session> &sessions() { return _session_rpc_objs; }
 };
 

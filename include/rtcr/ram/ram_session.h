@@ -110,18 +110,16 @@ protected:
 
 	Genode::Xml_node *_config;
 
-private:	
-	using Genode::Rpc_object<Genode::Ram_session>::cap;
+	Genode::size_t _read_child_quota(const char* child_name);
 	
 public:
-
+	using Genode::Rpc_object<Genode::Ram_session>::cap;
 	
 	Ram_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,
 				const char *label,
 				const char *creation_args,
-				bool &bootstrap_phase,
-				Genode::Xml_node *config);
+				bool &bootstrap_phase);
   
 	~Ram_session();
   
@@ -213,15 +211,12 @@ protected:
 	void _upgrade_session(Ram_session *session, const char *upgrade_args);
 	void _destroy_session(Ram_session *session);
 
-	Genode::Xml_node *_config;
-
 public:
 
 	Ram_root(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
-			 bool &bootstrap_phase,
-			 Genode::Xml_node *config);
+			 bool &bootstrap_phase);
 	~Ram_root();
 
 	Genode::List<Ram_session> &sessions() { return _session_rpc_objs; }

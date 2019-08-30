@@ -37,7 +37,7 @@ Region_map &Rm_session::_create(Genode::size_t size)
 	/* Insert custom Region map into list */
 	Genode::Lock::Guard lock(_region_maps_lock);
 	_region_maps.insert(new_region_map);
-	_ram_session.mark_region_map_dataspace(new_region_map->dataspace());
+//	_ram_session.mark_region_map_dataspace(new_region_map->dataspace()); TODO FJO
 	return *new_region_map;
 }
 
@@ -59,16 +59,15 @@ Rm_session::Rm_session(Genode::Env &env,
 					   Genode::Allocator &md_alloc,
 					   Genode::Entrypoint &ep,
 					   const char *creation_args,
-					   Ram_session &ram_session,
-					   bool &bootstrap_phase,
-					   Genode::Xml_node *config)
+					   Ram_root &ram_root,
+					   bool &bootstrap_phase)
 	:
-	Checkpointable(env, config, "rm_session"),
+	Checkpointable(env, "rm_session"),
 	_md_alloc         (md_alloc),
 	_ep               (ep),
 	_bootstrap_phase  (bootstrap_phase),
 	_parent_rm        (env),
-	_ram_session (ram_session),
+	_ram_root (ram_root),
 	ck_creation_args (creation_args)
 {
 	DEBUG_THIS_CALL
@@ -107,6 +106,15 @@ void Rm_session::checkpoint()
 	}
 
 	ck_region_maps = _region_maps.first();
+}
+
+Rm_session *Rm_session::find_by_badge(Genode::uint16_t badge)
+{
+	if(badge == cap().local_name())
+		return this;
+	
+	Rm_session *obj = next();
+	return obj ? obj->find_by_badge(badge) : 0;	
 }
 
 
@@ -156,9 +164,8 @@ Rm_session *Rm_root::_create_session(const char *args)
 									_md_alloc,
 									_ep,
 									readjusted_args,
-									_ram_session,
-									_bootstrap_phase,
-									_config);
+									_ram_root,
+									_bootstrap_phase);
 
 	Genode::Lock::Guard lock(_objs_lock);
 	_session_rpc_objs.insert(new_session);
@@ -195,19 +202,17 @@ void Rm_root::_destroy_session(Rm_session *session)
 Rm_root::Rm_root(Genode::Env &env,
 				 Genode::Allocator &md_alloc,
 				 Genode::Entrypoint &session_ep,
-				 Ram_session &ram_session,		 
-				 bool &bootstrap_phase,
-				 Genode::Xml_node *config)
+				 Ram_root &ram_root,		 
+				 bool &bootstrap_phase)
 	:
 	Root_component<Rm_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
 	_bootstrap_phase  (bootstrap_phase),
-	_ram_session (ram_session),
+	_ram_root (ram_root),
 	_objs_lock        (),
-	_session_rpc_objs (),
-	_config (config)
+	_session_rpc_objs ()
 {
 }
 
@@ -220,13 +225,3 @@ Rm_root::~Rm_root()
 }
 
 
-Rm_session *Rm_root::find_by_badge(Genode::uint16_t badge)
-{
-	Rm_session *obj = _session_rpc_objs.first();
-	while(obj) { 
-		if(badge == obj->cap().local_name())
-			return obj;
-		obj = obj->next();
-	}
-	return 0;
-}
