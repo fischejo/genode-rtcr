@@ -44,17 +44,12 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 }
 
 
-Rtcr::Rom_session::~Rom_session()
-{
-}
-
-
 void Rom_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
-//  ck_upgrade_args = _upgrade_args.string();
+	ck_upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);

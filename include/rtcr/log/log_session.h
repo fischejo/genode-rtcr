@@ -47,7 +47,7 @@ protected:
 	 ** HOT STORAGE **
 	 *****************/
 
-	char* _upgrade_args;
+	const char* _upgrade_args;
 	bool _bootstrapped;
 
 	/**
@@ -92,6 +92,12 @@ public:
 
 	void checkpoint() override;
 
+	void upgrade(const char *upgrade_args) {
+		_upgrade_args = upgrade_args;		
+	}
+	
+	const char* upgrade_args() { return _upgrade_args; }
+	
 
 	/*******************************
 	 ** Log session Rpc interface **

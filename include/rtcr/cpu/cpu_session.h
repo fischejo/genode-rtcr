@@ -162,6 +162,13 @@ public:
 	}
 
 	void checkpoint() override;
+
+
+	void upgrade(const char *upgrade_args) {
+		_upgrade_args = upgrade_args;		
+	}
+
+	const char* upgrade_args() { return _upgrade_args; }
 	
 	Genode::Cpu_session_capability parent_cap() { return _parent_cpu.cap(); }
 

@@ -49,7 +49,7 @@ protected:
 	 ** HOT STORAGE **
 	 *****************/
 
-	char* _upgrade_args;
+	const char* _upgrade_args;
 	bool _bootstrapped;
 	Genode::Signal_context_capability _sigh;
 	unsigned _timeout;
@@ -81,7 +81,7 @@ public:
 				  bool bootstrapped,
 				  Genode::Xml_node *config);
 
-	~Timer_session();
+	~Timer_session() {};
 
 
 	void print(Genode::Output &output) const {
@@ -98,6 +98,12 @@ public:
 	Timer::Session_capability parent_cap() { return _parent_timer.cap(); }
 
 	void checkpoint() override;
+
+	void upgrade(const char *upgrade_args) {
+		_upgrade_args = upgrade_args;		
+	}
+	
+	const char* upgrade_args() { return _upgrade_args; }
 
 	/************************************
 	 ** Timer session Rpc interface **

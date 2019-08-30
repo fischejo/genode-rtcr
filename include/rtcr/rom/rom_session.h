@@ -47,7 +47,7 @@ protected:
 	 ** HOT STORAGE **
 	 *****************/
 	
-	char* _upgrade_args;
+	const char* _upgrade_args;
 	bool _bootstrapped;
 	Genode::Rom_dataspace_capability  _dataspace;
 	Genode::size_t                    _size;
@@ -87,7 +87,7 @@ public:
 				bool &bootstrap_phase,
 				Genode::Xml_node *config);
 
-	~Rom_session();
+	~Rom_session() {};
   
 	void print(Genode::Output &output) const {
 		using Genode::Hex;
@@ -96,6 +96,13 @@ public:
 	}
 
 	void checkpoint() override;
+
+	void upgrade(const char *upgrade_args) {
+		_upgrade_args = upgrade_args;		
+	}
+	
+	const char* upgrade_args() { return _upgrade_args; }
+
 	
 	Genode::Rom_session_capability parent_cap() { return _parent_rom.cap(); }
 

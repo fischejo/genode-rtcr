@@ -64,7 +64,7 @@ protected:
 	 ** HOT STORAGE **
 	 *****************/
 	
-	char* _upgrade_args;
+	const char* _upgrade_args;
 	Genode::Ram_session_capability _ref_account_cap;
 	/**
 	 * List of allocated ram dataspaces
@@ -132,6 +132,12 @@ public:
 	}
 
 	void checkpoint() override;
+
+	void upgrade(const char *upgrade_args) {
+		_upgrade_args = upgrade_args;		
+	}
+	
+	const char* upgrade_args() { return _upgrade_args; }
 
 	void mark_region_map_dataspace(Genode::Dataspace_capability ds_cap);
 	

@@ -156,7 +156,7 @@ void Pd_session::checkpoint()
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 		ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
-//  ck_upgrade_args = _upgrade_args.string();
+	ck_upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
@@ -355,7 +355,7 @@ void Pd_root::_upgrade_session(Pd_session *session, const char *upgrade_args)
 	char ram_quota_buf[32];
 	char new_upgrade_args[160];
 
-//	Genode::strncpy(new_upgrade_args, session->parent_state().upgrade_args.string(), sizeof(new_upgrade_args));
+	Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
 
 	Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
 	Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
@@ -364,10 +364,8 @@ void Pd_root::_upgrade_session(Pd_session *session, const char *upgrade_args)
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
 	Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
 
-	// TODO FJO:
-	//	session->parent_state().upgrade_args = new_upgrade_args;
-
 	_env.parent().upgrade(session->parent_cap(), upgrade_args);
+	session->upgrade(upgrade_args);
 }
 
 

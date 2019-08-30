@@ -58,7 +58,7 @@ void Log_session::checkpoint()
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
-//  ck_upgrade_args = _upgrade_args;
+	ck_upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
@@ -97,7 +97,7 @@ Log_session *Log_root::_create_session(const char *args)
 
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
-	Genode::log("here");
+
 	/* Create virtual session object */
 	Log_session *new_session =
 		new (md_alloc()) Log_session(_env,
@@ -107,7 +107,7 @@ Log_session *Log_root::_create_session(const char *args)
 									 readjusted_args,
 									 _bootstrap_phase,
 									 _config);
-	Genode::log("here 2");
+
 	Genode::Lock::Guard guard(_objs_lock);
 	_session_rpc_objs.insert(new_session);
 
@@ -120,8 +120,7 @@ void Log_root::_upgrade_session(Log_session *session, const char *upgrade_args)
 	char ram_quota_buf[32];
 	char new_upgrade_args[160];
 
-//	Genode::strncpy(new_upgrade_args, session->parent_state().upgrade_args.string(), sizeof(new_upgrade_args));
-
+	Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
 	Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
 	Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
 	ram_quota += extra_ram_quota;
@@ -131,9 +130,8 @@ void Log_root::_upgrade_session(Log_session *session, const char *upgrade_args)
 
 
 	// TODO inform session
-	//	session->parent_state().upgrade_args = new_upgrade_args;
-
 	_env.parent().upgrade(session->parent_cap(), upgrade_args);
+	session->upgrade(upgrade_args);
 }
 
 

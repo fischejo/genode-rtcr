@@ -43,7 +43,7 @@ public:
 	 ******************/
   
 	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_update_args;
+	Genode::String<160> ck_upgrade_args;
 	bool ck_bootstrapped;
 	Genode::uint16_t ck_badge;
 	Genode::addr_t ck_kcap;
@@ -54,7 +54,7 @@ public:
 
 protected:
   
-	char* _upgrade_args;
+	const char* _upgrade_args;
 	bool _bootstrapped;
 
 	/**
@@ -141,8 +141,11 @@ public:
 	void print(Genode::Output &output) const;
 	void checkpoint() override;
 
-
-
+	void upgrade(const char *upgrade_args) {
+		_upgrade_args = upgrade_args;		
+	}
+	
+	const char* upgrade_args() { return _upgrade_args; }
 	
 	Genode::Pd_session_capability parent_cap() { return _parent_pd.cap(); }
 

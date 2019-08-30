@@ -50,7 +50,7 @@ protected:
 	 ** HOT STORAGE **
 	 *****************/
 	
-	char* _upgrade_args;
+	const char* _upgrade_args;
 	Genode::Lock _region_maps_lock;
 	Genode::Lock _destroyed_region_maps_lock;  
 	Genode::List<Region_map> _region_maps;
@@ -100,6 +100,12 @@ public:
 
 	void checkpoint() override;
 
+	void upgrade(const char *upgrade_args) {
+		_upgrade_args = upgrade_args;		
+	}
+	
+	const char* upgrade_args() { return _upgrade_args; }
+	
 	void print(Genode::Output &output) const {
 		Genode::print(output,
 					  ", ck_cargs='", ck_creation_args, "'",
