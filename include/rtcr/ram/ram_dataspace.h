@@ -18,15 +18,15 @@
 #include <rtcr/info_structs.h>
 
 namespace Rtcr {
-	struct Ram_dataspace_info;
+	struct Ram_dataspace;
 }
 
 /**
  * Monitors allocated Ram dataspaces
  */
-struct Rtcr::Ram_dataspace_info : private Simple_counter<Ram_dataspace_info>,
-			Genode::List<Ram_dataspace_info>::Element,
-			Genode::Fifo<Ram_dataspace_info>::Element
+struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
+			Genode::List<Ram_dataspace>::Element,
+			Genode::Fifo<Ram_dataspace>::Element
 {
 	/******************
 	 ** COLD STORAGE **
@@ -44,7 +44,7 @@ struct Rtcr::Ram_dataspace_info : private Simple_counter<Ram_dataspace_info>,
 	 * List and Fifo provide a next() method. In general, you want to use the
 	 * list implementation.
 	 */
-	using Genode::List<Ram_dataspace_info>::Element::next;
+	using Genode::List<Ram_dataspace>::Element::next;
 	
 	bool _bootstrapped;
 	bool is_region_map;
@@ -66,7 +66,7 @@ struct Rtcr::Ram_dataspace_info : private Simple_counter<Ram_dataspace_info>,
 	Genode::size_t                   const ck_size;
 	Genode::Cache_attribute          const ck_cached;
 
-	Ram_dataspace_info(Genode::Ram_dataspace_capability ds_cap,
+	Ram_dataspace(Genode::Ram_dataspace_capability ds_cap,
 					   Genode::size_t size,
 					   Genode::Cache_attribute cached,
 					   bool bootstrapped)
@@ -79,7 +79,7 @@ struct Rtcr::Ram_dataspace_info : private Simple_counter<Ram_dataspace_info>,
 		storage (nullptr)
 		{ }
 
-	Ram_dataspace_info(Genode::Ram_dataspace_capability ds_cap,
+	Ram_dataspace(Genode::Ram_dataspace_capability ds_cap,
 					   Genode::size_t size,
 					   Genode::Cache_attribute cached,
 					   bool bootstrapped,
@@ -95,24 +95,24 @@ struct Rtcr::Ram_dataspace_info : private Simple_counter<Ram_dataspace_info>,
 	
 	/* one method should be virtual, otherwise this class is not polymorphic
 	 * and therefore dynamic_cast can't be applied. */
-	virtual ~Ram_dataspace_info() {};
+	virtual ~Ram_dataspace() {};
 		
-	Ram_dataspace_info *find_by_badge(Genode::uint16_t badge) {
+	Ram_dataspace *find_by_badge(Genode::uint16_t badge) {
 		if(badge == ck_cap.local_name())
 			return this;
-		Ram_dataspace_info *info = next();
+		Ram_dataspace *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
 
-	Ram_dataspace_info *find_by_timestamp(Genode::size_t timestamp) {
+	Ram_dataspace *find_by_timestamp(Genode::size_t timestamp) {
 		if(timestamp == this->timestamp())
 			return this;
-		Ram_dataspace_info *info = next();
+		Ram_dataspace *info = next();
 		return info ? info->find_by_timestamp(timestamp) : 0;
 	}
 
 	Genode::size_t timestamp() const {
-		return Simple_counter<Ram_dataspace_info>::id();
+		return Simple_counter<Ram_dataspace>::id();
 	}
 
 	void print(Genode::Output &output) const {

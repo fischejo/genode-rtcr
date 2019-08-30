@@ -16,7 +16,7 @@
 #include <rtcr/info_structs.h>
 
 namespace Rtcr {
-	struct Native_capability_info;
+	struct Native_capability;
 }
 
 /**
@@ -24,9 +24,9 @@ namespace Rtcr {
  * They are usually created by client's entrypoint and therefore require
  * a Cpu_thread_capability
  */
-struct Rtcr::Native_capability_info : private Simple_counter<Native_capability_info>,
-			Genode::List<Native_capability_info>::Element,
-			Genode::Fifo<Native_capability_info>::Element			
+struct Rtcr::Native_capability : private Simple_counter<Native_capability>,
+			Genode::List<Native_capability>::Element,
+			Genode::Fifo<Native_capability>::Element			
 {
 	/******************
 	 ** COLD STORAGE **
@@ -51,10 +51,10 @@ struct Rtcr::Native_capability_info : private Simple_counter<Native_capability_i
 	 * List and Fifo provide a next() method. In general, you want to use the
 	 * list implementation.
 	 */	
-	using Genode::List<Native_capability_info>::Element::next;
+	using Genode::List<Native_capability>::Element::next;
 
 	
-	Native_capability_info(Genode::Native_capability native_cap,
+	Native_capability(Genode::Native_capability native_cap,
 						   Genode::Native_capability ep_cap,
 						   bool bootstrapped)
 		:
@@ -69,15 +69,15 @@ struct Rtcr::Native_capability_info : private Simple_counter<Native_capability_i
 		ck_ep_badge = ep_cap.local_name();
 	}
   
-	Native_capability_info *find_by_native_badge(Genode::uint16_t badge) {
+	Native_capability *find_by_native_badge(Genode::uint16_t badge) {
 		if(badge == cap.local_name())
 			return this;
-		Native_capability_info *info = next();
+		Native_capability *info = next();
 		return info ? info->find_by_native_badge(badge) : 0;
 	}
 
 	Genode::size_t timestamp() const {
-		return Simple_counter<Native_capability_info>::id();
+		return Simple_counter<Native_capability>::id();
 	}
 
 	void print(Genode::Output &output) const {

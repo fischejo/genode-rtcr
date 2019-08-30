@@ -21,7 +21,7 @@
 #include <util/misc_math.h>
 
 /* Rtcr includes */
-#include <rtcr/ram/ram_dataspace_info.h>
+#include <rtcr/ram/ram_dataspace.h>
 #include <rtcr/checkpointable.h>
 
 namespace Rtcr {
@@ -56,7 +56,7 @@ public:
 	bool ck_bootstrapped;
 	Genode::uint16_t ck_badge;
 	Genode::addr_t ck_kcap;
-	Genode::List<Ram_dataspace_info>::Element *ck_ram_dataspaces;
+	Genode::List<Ram_dataspace>::Element *ck_ram_dataspaces;
 	Genode::Ram_session_capability   ck_ref_account_cap;
   
 protected:
@@ -70,10 +70,10 @@ protected:
 	 * List of allocated ram dataspaces
 	 */
 	Genode::Lock _ram_dataspaces_lock;
-	Genode::List<Ram_dataspace_info> _ram_dataspaces;
+	Genode::List<Ram_dataspace> _ram_dataspaces;
 
 	Genode::Lock _destroyed_ram_dataspaces_lock;  
-	Genode::Fifo<Ram_dataspace_info> _destroyed_ram_dataspaces; 
+	Genode::Fifo<Ram_dataspace> _destroyed_ram_dataspaces; 
 
 	/**
 	 * Environment of Rtcr; needed to upgrade RAM quota of the RM session
@@ -102,11 +102,11 @@ protected:
 	Genode::Rm_connection _parent_rm;
 
 	/**
-	 * Destroy rds_info and all its sub infos)
+	 * Destroy rds and all its sub infos)
 	 */
-	void _destroy_ramds_info(Ram_dataspace_info &rds_info);
+	void _destroy_ramds(Ram_dataspace &rds);
 
-	void copy_dataspace(Ram_dataspace_info &info);
+	void copy_dataspace(Ram_dataspace &info);
 
 	Genode::Xml_node *_config;
 
@@ -218,7 +218,7 @@ public:
 			 Genode::Xml_node *config);
 	~Ram_root();
 
-	Genode::List<Ram_session> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Ram_session> &sessions() { return _session_rpc_objs; }
 };
 
 

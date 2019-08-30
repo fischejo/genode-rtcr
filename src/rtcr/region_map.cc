@@ -61,7 +61,7 @@ void Region_map::checkpoint()
 	ck_ds_badge = _ds_cap.local_name();
 	ck_sigh_badge = _sigh.local_name();
 
-	Attached_region_info *region = nullptr;
+	Attached_region *region = nullptr;
 	while(region = _destroyed_attached_regions.dequeue()) {
 		_attached_regions.remove(region);
 		Genode::destroy(_md_alloc, region);
@@ -129,7 +129,7 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 	//Genode::log("  actual_size=", Genode::Hex(actual_size));
 
 	/* Store information about the attachment */
-	Attached_region_info *new_obj = new (_md_alloc) Attached_region_info(ds_cap,
+	Attached_region *new_obj = new (_md_alloc) Attached_region(ds_cap,
 																		 actual_size,
 																		 offset,
 																		 addr,
@@ -145,7 +145,7 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 			    num_pages, num_pages==1?" page":" pages");
 #endif
 
-	/* Store Attached_region_info in a list */
+	/* Store Attached_region in a list */
 	Genode::Lock::Guard lock_guard(_attached_regions_lock);
 	_attached_regions.insert(new_obj);
 
@@ -160,7 +160,7 @@ void Region_map::detach(Region_map::Local_addr local_addr)
 
 	/* Find region */
 
-	Attached_region_info *region = _attached_regions.first();
+	Attached_region *region = _attached_regions.first();
 	if(region) region = region->find_by_addr((Genode::addr_t)local_addr);
 	if(region) {
 		/* Remove and destroy region from list and allocator */

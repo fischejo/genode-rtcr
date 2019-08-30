@@ -193,7 +193,7 @@ Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capabili
 {
 	/* Find corresponding parent PD session cap for the given custom PD session
 	 * cap */
-	Pd_session *pd_session = _pd_root.session_infos().first();
+	Pd_session *pd_session = _pd_root.sessions().first();
 	if(pd_session) pd_session = pd_session->find_by_badge(child_pd_cap.local_name());
 	if(!pd_session) {
 		Genode::error("Thread creation failed: PD session ",

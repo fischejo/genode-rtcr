@@ -17,7 +17,7 @@
 #include <base/rpc_server.h>
 
 /* Rtcr includes */
-#include <rtcr/rm/attached_region_info.h>
+#include <rtcr/rm/attached_region.h>
 
 namespace Rtcr {
 	class Region_map;
@@ -42,7 +42,7 @@ public:
 	Genode::size_t ck_size;
 	Genode::uint16_t ck_ds_badge;
 	Genode::uint16_t ck_sigh_badge;
-	Genode::List<Attached_region_info>::Element *ck_attached_regions;
+	Genode::List<Attached_region>::Element *ck_attached_regions;
   
 protected:
 	/*****************
@@ -76,10 +76,10 @@ protected:
 	 * List of attached regions
 	 */
 	Genode::Lock _destroyed_attached_regions_lock;
-	Genode::Fifo<Attached_region_info> _destroyed_attached_regions;
+	Genode::Fifo<Attached_region> _destroyed_attached_regions;
 
 	Genode::Lock _attached_regions_lock;
-	Genode::List<Attached_region_info> _attached_regions;
+	Genode::List<Attached_region> _attached_regions;
 	
 	/**
 	 * Allocator for Region map's attachments
@@ -116,7 +116,7 @@ public:
 
 
 	/* TODO FJO: this is not thread safe... */
-	Genode::List<Attached_region_info> attached_regions() { return _attached_regions; }
+	Genode::List<Attached_region> attached_regions() { return _attached_regions; }
 
 	void checkpoint();
 

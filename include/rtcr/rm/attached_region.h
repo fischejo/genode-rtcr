@@ -14,14 +14,14 @@
 #include <dataspace/capability.h>
 
 namespace Rtcr {
-	struct Attached_region_info;
+	struct Attached_region;
 }
 
 /**
  * Record of an attached dataspace
  */
-struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element,
-			Genode::Fifo<Attached_region_info>::Element
+struct Rtcr::Attached_region : Genode::List<Attached_region>::Element,
+			Genode::Fifo<Attached_region>::Element
 
 {
 	/******************
@@ -39,7 +39,7 @@ struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element,
 	 * List and Fifo provide a next() method. In general, you want to use the
 	 * list implementation.
 	 */
-	using Genode::List<Attached_region_info>::Element::next;
+	using Genode::List<Attached_region>::Element::next;
 
 	
 	/**
@@ -72,7 +72,7 @@ struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element,
 	}
   
   
-	Attached_region_info(Genode::Dataspace_capability attached_ds_cap,
+	Attached_region(Genode::Dataspace_capability attached_ds_cap,
 						 Genode::size_t size,
 						 Genode::off_t offset,
 						 Genode::addr_t local_addr,
@@ -87,20 +87,20 @@ struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element,
 		executable (executable)
 		{ }
 
-	Attached_region_info *find_by_addr(Genode::addr_t addr) {
+	Attached_region *find_by_addr(Genode::addr_t addr) {
 		Genode::log("find_by_addr attached_ds_cap=", attached_ds_cap,
 					" rel_addr=", rel_addr,
 					" size=", size);
 		if((addr >= rel_addr) && (addr <= rel_addr + size))
 			return this;
-		Attached_region_info *info = next();
+		Attached_region *info = next();
 		return info ? info->find_by_addr(addr) : 0;
 	}
   
-	Attached_region_info *find_by_badge(Genode::uint16_t badge) {
+	Attached_region *find_by_badge(Genode::uint16_t badge) {
 		if(badge == attached_ds_cap.local_name())
 			return this;
-		Attached_region_info *info = next();
+		Attached_region *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
 

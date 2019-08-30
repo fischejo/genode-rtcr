@@ -12,10 +12,10 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
-#include <rtcr/cap/kcap_badge_info.h>
+#include <rtcr/cap/kcap_badge.h>
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/rm/region_map.h>
-#include <rtcr/rm/attached_region_info.h>
+#include <rtcr/rm/attached_region.h>
 
 namespace Rtcr {
 	class Capability_mapping;
@@ -31,7 +31,7 @@ protected:
 	Genode::Allocator  &_alloc;
 
 	/* list of checkpointed capabilities */
-	Genode::List<Kcap_badge_info> _kcap_mapping;
+	Genode::List<Kcap_badge> _kcap_mapping;
 
 	Genode::addr_t _cap_idx_alloc_addr;
 

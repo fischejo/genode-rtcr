@@ -70,7 +70,7 @@ protected:
 	 */
 	Genode::Env        &_env;
 	/**
-	 * Allocator for objects belonging to the monitoring of threads (e.g. Thread_info)
+	 * Allocator for objects belonging to the monitoring of threads (e.g. Thread)
 	 */
 	Genode::Allocator  &_md_alloc;
 	/**
@@ -263,7 +263,7 @@ public:
 	~Cpu_root();
 
 
-	Genode::List<Cpu_session> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Cpu_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_CPU_SESSION_H_ */

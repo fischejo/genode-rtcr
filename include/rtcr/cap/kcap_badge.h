@@ -13,33 +13,33 @@
 /* Rtcr includes */
 
 namespace Rtcr {
-	struct Kcap_badge_info;
+	struct Kcap_badge;
 }
 
 /**
  * List element to store the designated kcap address for a given badge
  */
-struct Rtcr::Kcap_badge_info : Genode::List<Kcap_badge_info>::Element
+struct Rtcr::Kcap_badge : Genode::List<Kcap_badge>::Element
 {
 	Genode::addr_t   kcap;
 	Genode::uint16_t badge;
 
-	Kcap_badge_info(Genode::addr_t kcap, Genode::uint16_t badge)
+	Kcap_badge(Genode::addr_t kcap, Genode::uint16_t badge)
 		: kcap(kcap), badge(badge) { }
 
-	Kcap_badge_info *find_by_kcap(Genode::addr_t kcap)
+	Kcap_badge *find_by_kcap(Genode::addr_t kcap)
 		{
 			if(kcap == this->kcap)
 				return this;
-			Kcap_badge_info *info = next();
+			Kcap_badge *info = next();
 			return info ? info->find_by_kcap(kcap) : 0;
 		}
 
-	Kcap_badge_info *find_by_badge(Genode::uint16_t badge)
+	Kcap_badge *find_by_badge(Genode::uint16_t badge)
 		{
 			if(badge == this->badge)
 				return this;
-			Kcap_badge_info *info = next();
+			Kcap_badge *info = next();
 			return info ? info->find_by_badge(badge) : 0;
 		}
 

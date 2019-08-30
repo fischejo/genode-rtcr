@@ -14,23 +14,23 @@
 
 
 namespace Rtcr {
-	struct Ref_badge_info;
+	struct Ref_badge;
 }
 
 /**
  * List element to store a badge
  */
-struct Rtcr::Ref_badge_info : Genode::List<Ref_badge_info>::Element
+struct Rtcr::Ref_badge : Genode::List<Ref_badge>::Element
 {
 	Genode::uint16_t ref_badge;
 
-	Ref_badge_info() : ref_badge(0) { }
-	Ref_badge_info(Genode::uint16_t badge) : ref_badge(badge) { }
+	Ref_badge() : ref_badge(0) { }
+	Ref_badge(Genode::uint16_t badge) : ref_badge(badge) { }
 
-	Ref_badge_info *find_by_badge(Genode::uint16_t badge) {
+	Ref_badge *find_by_badge(Genode::uint16_t badge) {
 		if(badge == this->ref_badge)
 			return this;
-		Ref_badge_info *info = next();
+		Ref_badge *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
 

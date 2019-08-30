@@ -165,7 +165,7 @@ Cpu_session &Base_module::_find_cpu_session(const char *label,Cpu_root &cpu_root
 	Genode::Session_capability cpu_cap = cpu_root.session(args_buf, Genode::Affinity());
 
 	/* Find created RPC object in Cpu_root's list */
-	Cpu_session *cpu_session = cpu_root.session_infos().first();
+	Cpu_session *cpu_session = cpu_root.sessions().first();
 	if(cpu_session) cpu_session = cpu_session->find_by_badge(cpu_cap.local_name());
 	if(!cpu_session) {
 		Genode::error("Creating custom CPU session failed: "
@@ -186,7 +186,7 @@ Pd_session &Base_module::_find_pd_session(const char *label, Pd_root &pd_root)
 	Genode::Session_capability pd_cap = pd_root.session(args_buf, Genode::Affinity());
 
 	/* Find created RPC object in pd_root's list */
-	Pd_session *pd_session = pd_root.session_infos().first();
+	Pd_session *pd_session = pd_root.sessions().first();
 	if(pd_session) pd_session = pd_session->find_by_badge(pd_cap.local_name());
 	if(!pd_session) {
 		Genode::error("Creating custom PD session failed: Could not find PD session in PD root");
@@ -209,7 +209,7 @@ Ram_session &Base_module::_find_ram_session(const char *label, Ram_root &ram_roo
 	Genode::Session_capability ram_cap = ram_root.session(args_buf, Genode::Affinity());
 
 	/* Find created RPC object in Ram_root's list */
-	Ram_session *ram_session = ram_root.session_infos().first();
+	Ram_session *ram_session = ram_root.sessions().first();
 	if(ram_session) ram_session = ram_session->find_by_badge(ram_cap.local_name());
 	if(!ram_session) {
 		Genode::error("Creating custom RAM session failed: Could not find RAM session in RAM root");

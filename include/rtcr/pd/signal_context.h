@@ -16,14 +16,14 @@
 #include <rtcr/info_structs.h>
 
 namespace Rtcr {
-	struct Signal_context_info;
+	struct Signal_context;
 }
 
 /**
  * List element to store Signal_context_capabilities created by the pd session
  */
-struct Rtcr::Signal_context_info : Genode::List<Signal_context_info>::Element,
-			Genode::Fifo<Signal_context_info>::Element
+struct Rtcr::Signal_context : Genode::List<Signal_context>::Element,
+			Genode::Fifo<Signal_context>::Element
 {
 	/******************
 	 ** COLD STORAGE **
@@ -50,10 +50,10 @@ struct Rtcr::Signal_context_info : Genode::List<Signal_context_info>::Element,
 	 * List and Fifo provide a next() method. In general, you want to use the
 	 * list implementation.
 	 */	
-	using Genode::List<Signal_context_info>::Element::next;
+	using Genode::List<Signal_context>::Element::next;
 
 	
-	Signal_context_info(Genode::Signal_context_capability sc_cap,
+	Signal_context(Genode::Signal_context_capability sc_cap,
 						Genode::Capability<Genode::Signal_source> ss_cap,
 						unsigned long imprint,
 						bool bootstrapped)
@@ -71,10 +71,10 @@ struct Rtcr::Signal_context_info : Genode::List<Signal_context_info>::Element,
 		ck_signal_source_badge = cap.local_name();
 	}
   
-	Signal_context_info *find_by_badge(Genode::uint16_t badge) {
+	Signal_context *find_by_badge(Genode::uint16_t badge) {
 		if(badge == cap.local_name())
 			return this;
-		Signal_context_info *info = next();
+		Signal_context *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
 

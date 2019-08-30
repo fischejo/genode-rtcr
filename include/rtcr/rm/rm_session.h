@@ -181,7 +181,7 @@ public:
   
 	~Rm_root();
 	Rm_session *find_by_badge(Genode::uint16_t badge);
-	Genode::List<Rm_session> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Rm_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_RM_SESSION_H_ */

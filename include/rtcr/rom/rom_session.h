@@ -166,7 +166,7 @@ public:
 	~Rom_root();
   
 	Rom_session *find_by_badge(Genode::uint16_t badge);
-	Genode::List<Rom_session> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Rom_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_ROM_SESSION_COMPONENT_H_ */

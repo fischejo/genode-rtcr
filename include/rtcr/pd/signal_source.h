@@ -15,15 +15,15 @@
 /* Rtcr includes */
 
 namespace Rtcr {
-	struct Signal_source_info;
+	struct Signal_source;
 }
 
 
 /**
  * List element to store Signal_source_capabilities created by the pd session
  */
-struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element,
-			Genode::Fifo<Signal_source_info>::Element
+struct Rtcr::Signal_source : Genode::List<Signal_source>::Element,
+			Genode::Fifo<Signal_source>::Element
 {
 	/******************
 	 ** COLD STORAGE **
@@ -46,10 +46,10 @@ struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element,
 	 * List and Fifo provide a next() method. In general, you want to use the
 	 * list implementation.
 	 */	
-	using Genode::List<Signal_source_info>::Element::next;
+	using Genode::List<Signal_source>::Element::next;
 
 	
-	Signal_source_info(Genode::Capability<Genode::Signal_source> cap, bool bootstrapped)
+	Signal_source(Genode::Capability<Genode::Signal_source> cap, bool bootstrapped)
 		:
 		bootstrapped(bootstrapped),
 		cap(cap)
@@ -63,10 +63,10 @@ struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element,
 
 
   
-	Signal_source_info *find_by_badge(Genode::uint16_t badge) {
+	Signal_source *find_by_badge(Genode::uint16_t badge) {
 		if(badge == cap.local_name())
 			return this;
-		Signal_source_info *info = next();
+		Signal_source *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
 

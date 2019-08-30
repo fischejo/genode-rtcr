@@ -174,7 +174,7 @@ public:
 	Timer_session *find_by_badge(Genode::uint16_t badge);
 
   
-	Genode::List<Timer_session> &session_infos() { return _session_rpc_objs;  }
+	Genode::List<Timer_session> &sessions() { return _session_rpc_objs;  }
 };
 
 

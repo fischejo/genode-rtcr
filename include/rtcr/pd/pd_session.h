@@ -19,9 +19,9 @@
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
 #include <rtcr/rm/region_map.h>
-#include <rtcr/pd/native_capability_info.h>
-#include <rtcr/pd/signal_context_info.h>
-#include <rtcr/pd/signal_source_info.h>
+#include <rtcr/pd/native_capability.h>
+#include <rtcr/pd/signal_context.h>
+#include <rtcr/pd/signal_source.h>
 #include <rtcr/ram/ram_session.h>
 
 namespace Rtcr {
@@ -48,9 +48,9 @@ public:
 	Genode::uint16_t ck_badge;
 	Genode::addr_t ck_kcap;
 
-	Genode::List<Signal_source_info>::Element* ck_signal_sources;
-	Genode::List<Signal_context_info>::Element* ck_signal_contexts;
-	Genode::List<Native_capability_info>::Element* ck_native_caps;
+	Genode::List<Signal_source>::Element* ck_signal_sources;
+	Genode::List<Signal_context>::Element* ck_signal_contexts;
+	Genode::List<Native_capability>::Element* ck_native_caps;
 
 protected:
   
@@ -62,26 +62,26 @@ protected:
 	 * Signal_source_capabilities
 	 */  
 	Genode::Lock _signal_sources_lock;
-	Genode::List<Signal_source_info> _signal_sources;
+	Genode::List<Signal_source> _signal_sources;
 	Genode::Lock _destroyed_signal_sources_lock;
-	Genode::Fifo<Signal_source_info> _destroyed_signal_sources;  
+	Genode::Fifo<Signal_source> _destroyed_signal_sources;  
 
 	/**
 	 * List for monitoring the creation and destruction of
 	 * Signal_context_capabilities
 	 */  
 	Genode::Lock _signal_contexts_lock;
-	Genode::List<Signal_context_info> _signal_contexts;
+	Genode::List<Signal_context> _signal_contexts;
 	Genode::Lock _destroyed_signal_contexts_lock;
-	Genode::Fifo<Signal_context_info> _destroyed_signal_contexts;  
+	Genode::Fifo<Signal_context> _destroyed_signal_contexts;  
 
 	/**
 	 * List for monitoring the creation and destruction of Native_capabilities
 	 */  
 	Genode::Lock _native_caps_lock;
-	Genode::List<Native_capability_info> _native_caps;
+	Genode::List<Native_capability> _native_caps;
 	Genode::Lock _destroyed_native_caps_lock;
-	Genode::Fifo<Native_capability_info> _destroyed_native_caps;
+	Genode::Fifo<Native_capability> _destroyed_native_caps;
 
 
 	Genode::Env &_env;
@@ -245,7 +245,7 @@ public:
 			Genode::Xml_node *config);
 	~Pd_root();
 
-	Genode::List<Pd_session> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Pd_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_PD_SESSION_H_ */

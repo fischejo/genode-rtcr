@@ -42,7 +42,7 @@ Capability_mapping::Capability_mapping(Genode::Env &env,
 
 Capability_mapping::~Capability_mapping()
 {
-	while(Kcap_badge_info *kcap = _kcap_mapping.first()) {
+	while(Kcap_badge *kcap = _kcap_mapping.first()) {
 		Genode::destroy(_alloc, kcap);
 	}
 }
@@ -59,7 +59,7 @@ void Capability_mapping::checkpoint()
 	using Genode::uint16_t;
 
 	/* TODO FJO: the list is just on the stack!!! */
-	Genode::List<Kcap_badge_info> result;
+	Genode::List<Kcap_badge> result;
 
 	/* Retrieve cap_idx_alloc_addr */
 	Genode::Pd_session_client pd_client(_pd_session.parent_cap());
@@ -77,13 +77,13 @@ void Capability_mapping::checkpoint()
 
 	/* This lock is necessary as the rm_session is also moving items from
 	   new_attached_regions to ck_attached_regions during checkpointing */
-	Attached_region_info *ar_info = nullptr;
+	Attached_region *ar = nullptr;
 
 	// TODO FJO: accesing attached_regions is not thread safe
-	ar_info  =addr_space.attached_regions().first();
-	if(ar_info) ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
+	ar  =addr_space.attached_regions().first();
+	if(ar) ar = ar->find_by_addr(cap_idx_alloc_addr);
 
-	if(!ar_info) {
+	if(!ar) {
 		Genode::error("No dataspace found for cap_idx_alloc's datastructure at ",
 					  Hex(cap_idx_alloc_addr));
 		throw Genode::Exception();
@@ -94,15 +94,15 @@ void Capability_mapping::checkpoint()
 	size_t const array_ele_size = sizeof(Genode::Cap_index);
 	size_t const array_size     = array_ele_size*4096;
 
-	addr_t const child_ds_start     = ar_info->rel_addr;
-	addr_t const child_ds_end       = child_ds_start + ar_info->size;
+	addr_t const child_ds_start     = ar->rel_addr;
+	addr_t const child_ds_end       = child_ds_start + ar->size;
 	addr_t const child_struct_start = cap_idx_alloc_addr;
 	addr_t const child_struct_end   = child_struct_start + struct_size;
 	addr_t const child_array_start  = child_struct_start + 8;
 	addr_t const child_array_end    = child_array_start + array_size;
 
-	addr_t const local_ds_start     = _env.rm().attach(ar_info->attached_ds_cap, ar_info->size, ar_info->offset);
-	addr_t const local_ds_end       = local_ds_start + ar_info->size;
+	addr_t const local_ds_start     = _env.rm().attach(ar->attached_ds_cap, ar->size, ar->offset);
+	addr_t const local_ds_end       = local_ds_start + ar->size;
 	addr_t const local_struct_start = local_ds_start + (cap_idx_alloc_addr - child_ds_start);
 	addr_t const local_struct_end   = local_struct_start + struct_size;
 	addr_t const local_array_start  = local_struct_start + 8;
@@ -140,8 +140,8 @@ void Capability_mapping::checkpoint()
 		addr_t const kcap  = ((curr - local_array_start) / array_ele_size) << 12;
 
 		if(badge != UNUSED && badge != INVALID_ID) {
-			Kcap_badge_info *state_info = new (_alloc) Kcap_badge_info(kcap, badge);
-			result.insert(state_info);
+			Kcap_badge *state = new (_alloc) Kcap_badge(kcap, badge);
+			result.insert(state);
 
 #ifdef DEBUG
 			log("+ ", Hex(kcap), ": ", badge, " (", Hex(badge), ")");
@@ -154,7 +154,7 @@ void Capability_mapping::checkpoint()
 
 #ifdef DEBUG
 	Genode::log("Capability map:");
-	Kcap_badge_info const *info = result.first();
+	Kcap_badge const *info = result.first();
 	if(!info) Genode::log(" <empty>\n");
 	while(info)
 	{
@@ -170,7 +170,7 @@ Genode::addr_t Capability_mapping::find_kcap_by_badge(Genode::uint16_t badge)
 {
 	Genode::addr_t kcap = 0;
 
-	Kcap_badge_info *info = _kcap_mapping.first();
+	Kcap_badge *info = _kcap_mapping.first();
 	if(info) info = info->find_by_badge(badge);
 	if(info) kcap = info->kcap;
 	return kcap;

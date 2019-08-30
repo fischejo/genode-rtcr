@@ -13,10 +13,10 @@
 
 namespace Rtcr {
 	template<typename T> class Simple_counter;
-	struct General_info;
-	struct Session_rpc_info;
-	struct Normal_rpc_info;
-	struct Normal_obj_info;
+	struct General;
+	struct Session_rpc;
+	struct Normal_rpc;
+	struct Normal_obj;
 }
 
 
@@ -42,14 +42,14 @@ public:
 };
 
 
-struct Rtcr::General_info
+struct Rtcr::General
 {
 	bool const bootstrapped;
 
-	General_info() : bootstrapped(false)
+	General() : bootstrapped(false)
 		{ }
 
-	General_info(bool bootstrapped) : bootstrapped(bootstrapped)
+	General(bool bootstrapped) : bootstrapped(bootstrapped)
 		{ }
 
 	void print(Genode::Output &output) const
@@ -62,17 +62,17 @@ struct Rtcr::General_info
 /**
  * Struct to monitor session RPC objects
  */
-struct Rtcr::Session_rpc_info : General_info
+struct Rtcr::Session_rpc : General
 {
 	Genode::String<160> creation_args;
 	Genode::String<160> upgrade_args;
 
-	Session_rpc_info() : General_info(), creation_args(""), upgrade_args("")
+	Session_rpc() : General(), creation_args(""), upgrade_args("")
 		{ }
 
-	Session_rpc_info(const char* creation_args, const char* upgrade_args, bool bootstrapped)
+	Session_rpc(const char* creation_args, const char* upgrade_args, bool bootstrapped)
 		:
-		General_info  (bootstrapped),
+		General  (bootstrapped),
 		creation_args (creation_args),
 		upgrade_args  (upgrade_args)
 		{ }
@@ -80,7 +80,7 @@ struct Rtcr::Session_rpc_info : General_info
 	void print(Genode::Output &output) const
 		{
 			Genode::print(output, "cargs='", creation_args, "', uargs='", upgrade_args, "', ");
-			General_info::print(output);
+			General::print(output);
 		}
 };
 
@@ -88,16 +88,16 @@ struct Rtcr::Session_rpc_info : General_info
 /**
  * Struct to monitor normal RPC object (e.g. Region map, CPU thread)
  */
-struct Rtcr::Normal_rpc_info : General_info
+struct Rtcr::Normal_rpc : General
 {
 	// Insert common members
 
-	Normal_rpc_info() : General_info()
+	Normal_rpc() : General()
 		{ }
 
-	Normal_rpc_info(bool bootstrapped)
+	Normal_rpc(bool bootstrapped)
 		:
-		General_info(bootstrapped)
+		General(bootstrapped)
 		{ }
 
 };
@@ -106,16 +106,16 @@ struct Rtcr::Normal_rpc_info : General_info
 /**
  * Struct to store information about RPC function invokation (e.g. parameter, return value)
  */
-struct Rtcr::Normal_obj_info : General_info
+struct Rtcr::Normal_obj : General
 {
 	// Insert common members
 
-	Normal_obj_info() : General_info()
+	Normal_obj() : General()
 		{ }
 
-	Normal_obj_info(bool bootstrapped)
+	Normal_obj(bool bootstrapped)
 		:
-		General_info(bootstrapped)
+		General(bootstrapped)
 		{ }
 
 };

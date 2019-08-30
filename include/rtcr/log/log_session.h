@@ -150,7 +150,7 @@ public:
 
 	Log_session *find_by_badge(Genode::uint16_t badge);
   
-	Genode::List<Log_session> &session_infos() { return _session_rpc_objs; }
+	Genode::List<Log_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_LOG_SESSION_H_ */

@@ -23,14 +23,14 @@ using namespace Rtcr;
 #endif
 
 
-void Ram_session::_destroy_ramds_info(Ram_dataspace_info &ramds_info)
+void Ram_session::_destroy_ramds(Ram_dataspace &ramds)
 {
 
 	Genode::Ram_dataspace_capability ds_cap =
-		Genode::static_cap_cast<Genode::Ram_dataspace>(ramds_info.ck_cap);
+		Genode::static_cap_cast<Genode::Ram_dataspace>(ramds.ck_cap);
 
-	/* Destroy Ram_dataspace_info */
-	Genode::destroy(_md_alloc, &ramds_info);
+	/* Destroy Ram_dataspace */
+	Genode::destroy(_md_alloc, &ramds);
 
 	/* Free from parent */
 	_parent_ram.free(ds_cap);
@@ -64,7 +64,7 @@ Ram_session::~Ram_session()
 
 void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 {
-	Ram_dataspace_info *dataspace = _ram_dataspaces.first();
+	Ram_dataspace *dataspace = _ram_dataspaces.first();
 	/* only iterate through the recently added dataspaces. */
 	while(dataspace && dataspace != ck_ram_dataspaces) {
 		if (dataspace->ck_cap == cap) {
@@ -75,7 +75,7 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 }
 
 
-void Ram_session::copy_dataspace(Ram_dataspace_info &info)
+void Ram_session::copy_dataspace(Ram_dataspace &info)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	char *dst_addr_start = _env.rm().attach(info.ck_dst_cap);
@@ -98,10 +98,10 @@ void Ram_session::checkpoint()
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 
 	/* step 1: remove all destroyed dataspaces */
-	Ram_dataspace_info *dataspace = nullptr;	
+	Ram_dataspace *dataspace = nullptr;	
 	while(dataspace = _destroyed_ram_dataspaces.dequeue()) {
 		_ram_dataspaces.remove(dataspace);
-		_destroy_ramds_info(*dataspace);    
+		_destroy_ramds(*dataspace);    
 	}
 
 	/* step 2: allocate cold dataspace for recently added dataspaces */
@@ -142,10 +142,10 @@ Genode::Ram_dataspace_capability Ram_session::alloc(Genode::size_t size, Genode:
 {
 	auto result_cap = _parent_ram.alloc(size, cached);
 
-	/* Create a Ram_dataspace_info to monitor the newly created Ram_dataspace */
-	Ram_dataspace_info *new_rds_info = new (_md_alloc) Ram_dataspace_info(result_cap, size, cached, _bootstrap_phase);
+	/* Create a Ram_dataspace to monitor the newly created Ram_dataspace */
+	Ram_dataspace *new_rds = new (_md_alloc) Ram_dataspace(result_cap, size, cached, _bootstrap_phase);
 	Genode::Lock::Guard guard(_ram_dataspaces_lock);
-	_ram_dataspaces.insert(new_rds_info);
+	_ram_dataspaces.insert(new_rds);
 	return result_cap;
 
 }
@@ -153,14 +153,14 @@ Genode::Ram_dataspace_capability Ram_session::alloc(Genode::size_t size, Genode:
 
 void Ram_session::free(Genode::Ram_dataspace_capability ds_cap)
 {
-	/* Find the Ram_dataspace_info which monitors the given Ram_dataspace */
-	Ram_dataspace_info *rds_info = _ram_dataspaces.first();
-	if(rds_info) rds_info = rds_info->find_by_badge(ds_cap.local_name());
-	if(rds_info) {
+	/* Find the Ram_dataspace which monitors the given Ram_dataspace */
+	Ram_dataspace *rds = _ram_dataspaces.first();
+	if(rds) rds = rds->find_by_badge(ds_cap.local_name());
+	if(rds) {
 		Genode::Lock::Guard lock_guard(_destroyed_ram_dataspaces_lock);		
-		_destroyed_ram_dataspaces.enqueue(rds_info);
+		_destroyed_ram_dataspaces.enqueue(rds);
 	} else {
-		Genode::warning(__func__, " Ram_dataspace_info not found for ", ds_cap);
+		Genode::warning(__func__, " Ram_dataspace not found for ", ds_cap);
 		return;
 	}
 }

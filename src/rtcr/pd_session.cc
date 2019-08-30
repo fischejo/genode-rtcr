@@ -78,16 +78,16 @@ void Pd_session::_checkpoint_signal_contexts()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 
-		Signal_context_info *sc_info = nullptr;
-	while(sc_info = _destroyed_signal_contexts.dequeue()) {
-		_signal_contexts.remove(sc_info);
-		Genode::destroy(_md_alloc, &sc_info);
+		Signal_context *sc = nullptr;
+	while(sc = _destroyed_signal_contexts.dequeue()) {
+		_signal_contexts.remove(sc);
+		Genode::destroy(_md_alloc, &sc);
 	}
 
-	sc_info = _signal_contexts.first();
-	while(sc_info) {
-		sc_info->checkpoint();
-		sc_info = sc_info->next();
+	sc = _signal_contexts.first();
+	while(sc) {
+		sc->checkpoint();
+		sc = sc->next();
 	}
 
 	ck_signal_contexts = _signal_contexts.first();
@@ -98,16 +98,16 @@ void Pd_session::_checkpoint_signal_sources()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 
-		Signal_source_info *ss_info = nullptr;
-	while(ss_info = _destroyed_signal_sources.dequeue()) {
-		_signal_sources.remove(ss_info);
-		Genode::destroy(_md_alloc, &ss_info);
+		Signal_source *ss = nullptr;
+	while(ss = _destroyed_signal_sources.dequeue()) {
+		_signal_sources.remove(ss);
+		Genode::destroy(_md_alloc, &ss);
 	}
 
-	ss_info = _signal_sources.first();
-	while(ss_info) {
-		ss_info->checkpoint();
-		ss_info = ss_info->next();
+	ss = _signal_sources.first();
+	while(ss) {
+		ss->checkpoint();
+		ss = ss->next();
 	}
 
 	ck_signal_sources = _signal_sources.first();
@@ -118,16 +118,16 @@ void Pd_session::_checkpoint_native_capabilities()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL	
 
-		Native_capability_info *nc_info = nullptr;
-	while(nc_info = _destroyed_native_caps.dequeue()) {
-		_native_caps.remove(nc_info);
-		Genode::destroy(_md_alloc, &nc_info);
+		Native_capability *nc = nullptr;
+	while(nc = _destroyed_native_caps.dequeue()) {
+		_native_caps.remove(nc);
+		Genode::destroy(_md_alloc, &nc);
 	}
 
-	nc_info = _native_caps.first();
-	while(nc_info) {
-		nc_info->checkpoint();
-		nc_info = nc_info->next();
+	nc = _native_caps.first();
+	while(nc) {
+		nc->checkpoint();
+		nc = nc->next();
 	}
 
 	ck_native_caps = _native_caps.first();
@@ -180,9 +180,9 @@ Genode::Capability<Genode::Signal_source> Pd_session::alloc_signal_source()
 	auto result_cap = _parent_pd.alloc_signal_source();
 
 	/* Create and insert list element to monitor this signal source */
-	Signal_source_info *new_ss_info = new (_md_alloc) Signal_source_info(result_cap, _bootstrap_phase);
+	Signal_source *new_ss = new (_md_alloc) Signal_source(result_cap, _bootstrap_phase);
 	Genode::Lock::Guard guard(_signal_sources_lock);
-	_signal_sources.insert(new_ss_info);
+	_signal_sources.insert(new_ss);
 
 	return result_cap;
 }
@@ -192,12 +192,12 @@ void Pd_session::free_signal_source(Genode::Capability<Genode::Signal_source> ca
 {
 	/* Find list element */
 	Genode::Lock::Guard guard(_signal_sources_lock);
-	Signal_source_info *ss_info = _signal_sources.first();
-	if(ss_info) ss_info = ss_info->find_by_badge(cap.local_name());
-	if(ss_info) {		
+	Signal_source *ss = _signal_sources.first();
+	if(ss) ss = ss->find_by_badge(cap.local_name());
+	if(ss) {		
 		/* Free signal source */
 		_parent_pd.free_signal_source(cap);
-		_destroyed_signal_sources.enqueue(ss_info);		
+		_destroyed_signal_sources.enqueue(ss);		
 	} else {
 		Genode::error("No list element found!");
 	}
@@ -210,10 +210,12 @@ Genode::Signal_context_capability Pd_session::alloc_context(
 	auto result_cap = _parent_pd.alloc_context(source, imprint);
 
 	/* Create and insert list element to monitor this signal context */
-	Signal_context_info *new_sc_info = new (_md_alloc)
-		Signal_context_info(result_cap, source, imprint, _bootstrap_phase);
+	Signal_context *new_sc = new (_md_alloc) Signal_context(result_cap,
+															source,
+															imprint,
+															_bootstrap_phase);
 	Genode::Lock::Guard guard(_signal_contexts_lock);
-	_signal_contexts.insert(new_sc_info);
+	_signal_contexts.insert(new_sc);
 	return result_cap;
 }
 
@@ -222,12 +224,12 @@ void Pd_session::free_context(Genode::Signal_context_capability cap)
 {
 	/* Find list element */
 	Genode::Lock::Guard guard(_signal_contexts_lock);
-	Signal_context_info *sc_info = _signal_contexts.first();
-	if(sc_info) sc_info = sc_info->find_by_badge(cap.local_name());
-	if(sc_info) {
+	Signal_context *sc = _signal_contexts.first();
+	if(sc) sc = sc->find_by_badge(cap.local_name());
+	if(sc) {
 		/* Free signal context */
 		_parent_pd.free_context(cap);
-		_destroyed_signal_contexts.enqueue(sc_info);
+		_destroyed_signal_contexts.enqueue(sc);
 	} else {
 		Genode::error("No list element found!");
 	}
@@ -245,9 +247,11 @@ Genode::Native_capability Pd_session::alloc_rpc_cap(Genode::Native_capability ep
 	auto result_cap = _parent_pd.alloc_rpc_cap(ep);
 
 	/* Create and insert list element to monitor this native_capability */
-	Native_capability_info *new_nc_info = new (_md_alloc) Native_capability_info(result_cap, ep, _bootstrap_phase);
+	Native_capability *new_nc = new (_md_alloc) Native_capability(result_cap,
+																  ep,
+																  _bootstrap_phase);
 	Genode::Lock::Guard guard(_native_caps_lock);
-	_native_caps.insert(new_nc_info);
+	_native_caps.insert(new_nc);
 	return result_cap;
 }
 
@@ -256,12 +260,12 @@ void Pd_session::free_rpc_cap(Genode::Native_capability cap)
 {
 	/* Find list element */
 	Genode::Lock::Guard guard(_native_caps_lock);
-	Native_capability_info *nc_info = _native_caps.first();
-	if(nc_info) nc_info = nc_info->find_by_native_badge(cap.local_name());
-	if(nc_info) {
+	Native_capability *nc = _native_caps.first();
+	if(nc) nc = nc->find_by_native_badge(cap.local_name());
+	if(nc) {
 		/* Free native capability */
 		_parent_pd.free_rpc_cap(cap);
-		_destroyed_native_caps.enqueue(nc_info);		
+		_destroyed_native_caps.enqueue(nc);		
 	} else {
 		Genode::error("No list element found!");
 	}
