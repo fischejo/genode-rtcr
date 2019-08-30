@@ -72,12 +72,15 @@ Rm_session::Rm_session(Genode::Env &env,
 	ck_creation_args (creation_args)
 {
 	DEBUG_THIS_CALL
-}
+		}
 
 
 Rm_session::~Rm_session()
 {
-
+	while(Region_map *rm = _region_maps.first()) {
+		_region_maps.remove(rm);
+		Genode::destroy(_md_alloc, rm);
+	}
 }
 
 
@@ -86,7 +89,7 @@ Rm_session::~Rm_session()
 void Rm_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	ck_badge = cap().local_name();
+		ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();
 

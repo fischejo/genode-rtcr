@@ -71,6 +71,23 @@ Pd_session::~Pd_session()
 	_ep.dissolve(_linker_area);
 	_ep.dissolve(_stack_area);
 	_ep.dissolve(_address_space);
+
+	while(Signal_context *sc = _signal_contexts.first()) {
+		_signal_contexts.remove(sc);
+		Genode::destroy(_md_alloc, sc);
+	}
+
+
+	while(Signal_source *ss = _signal_sources.first()) {
+		_signal_sources.remove(ss);
+		Genode::destroy(_md_alloc, ss);
+	}
+
+	
+	while(Native_capability *nc = _native_caps.first()) {
+		_native_caps.remove(nc);
+		Genode::destroy(_md_alloc, nc);
+	} 
 }
 
 

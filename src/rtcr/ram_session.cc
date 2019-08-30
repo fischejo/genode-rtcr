@@ -53,12 +53,15 @@ Ram_session::Ram_session(Genode::Env &env,
 	ck_creation_args (creation_args)
 {
 	DEBUG_THIS_CALL
-}
+		}
 
 
 Ram_session::~Ram_session()
 {
-
+	while(Ram_dataspace *ds = _ram_dataspaces.first()) {
+		_ram_dataspaces.remove(ds);
+		Genode::destroy(_md_alloc, ds);
+	}
 }
 
 
@@ -78,7 +81,7 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 void Ram_session::copy_dataspace(Ram_dataspace &info)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	char *dst_addr_start = _env.rm().attach(info.ck_dst_cap);
+		char *dst_addr_start = _env.rm().attach(info.ck_dst_cap);
 	char *src_addr_start = _env.rm().attach(info.ck_cap);
 
 	Genode::memcpy(dst_addr_start, src_addr_start, info.ck_size);
@@ -90,7 +93,7 @@ void Ram_session::copy_dataspace(Ram_dataspace &info)
 void Ram_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	ck_badge = cap().local_name();
+		ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();
 

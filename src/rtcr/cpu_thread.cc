@@ -45,11 +45,6 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 }
 
 
-Cpu_thread::~Cpu_thread()
-{
-}
-
-
 void Cpu_thread::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL	

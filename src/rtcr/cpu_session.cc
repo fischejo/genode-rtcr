@@ -94,12 +94,16 @@ Cpu_session::Cpu_session(Genode::Env &env,
 	_child_affinity (_read_child_affinity(config, label))
 {
 	DEBUG_THIS_CALL
-}
+		}
 
 
 Cpu_session::~Cpu_session()
 {
 
+	while(Cpu_thread *cpu_thread = _cpu_threads.first()) {
+		_cpu_threads.remove(cpu_thread);
+		Genode::destroy(_md_alloc, cpu_thread);
+	}
 }
 
 
@@ -120,7 +124,7 @@ Genode::Affinity::Location Cpu_session::_read_child_affinity(Genode::Xml_node *c
 void Cpu_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	ck_badge = cap().local_name();
+		ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrapped;
 	ck_upgrade_args = _upgrade_args;
 
@@ -148,7 +152,7 @@ void Cpu_session::checkpoint()
 void Cpu_session::pause()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	Cpu_thread *cpu_thread = _cpu_threads.first();
+		Cpu_thread *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		/* if the object is in the destroyed queue, it means that it is already
 		 * destroyed */
@@ -163,7 +167,7 @@ void Cpu_session::resume()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
-	Cpu_thread *cpu_thread = _cpu_threads.first();
+		Cpu_thread *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		/* if the object is in the destroyed queue, it means that it is already
 		 * destroyed */

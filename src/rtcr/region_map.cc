@@ -41,8 +41,10 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
 
 Region_map::~Region_map()
 {
-
-	// TODO FJO: free new and destroyed region maps
+	while(Attached_region *ar = _attached_regions.first()) {
+		_attached_regions.remove(ar);
+		Genode::destroy(_md_alloc, ar);
+	}
 }
 
 

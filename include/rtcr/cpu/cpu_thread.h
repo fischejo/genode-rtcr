@@ -80,7 +80,7 @@ public:
 			   Genode::Affinity::Location affinity,
 			   bool &bootstrap_phase);
 
-	~Cpu_thread();
+	~Cpu_thread() {}
 
 
 	void print(Genode::Output &output) const;
