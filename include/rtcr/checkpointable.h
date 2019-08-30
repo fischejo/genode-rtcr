@@ -31,6 +31,8 @@ using namespace Rtcr;
 class Rtcr::Checkpointable : private Genode::Thread
 {
 private:
+
+	Genode::Affinity::Location _affinity;	
 	/**
 	 * Indicator which pause this thread until a new job
 	 * (checkpoint,restore) are triggered.

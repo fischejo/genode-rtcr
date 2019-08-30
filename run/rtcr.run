@@ -45,8 +45,9 @@ install_config {
     		<resource name="RAM" quantum="256M"/>
                 <config>
                     <child name="sheep_counter" quota="1048576" xpos="0" />
-                    <module name="base" parallel="false" />
-                    <checkpointable name="cpu_session" xpos="0" />
+                    <module name="base">
+	                 <checkpoint parallel="false"/>
+                    <checkpointable name="cpu_session" xpos="1" />
                     <checkpointable name="pd_session" xpos="0" />    
                     <checkpointable name="ram_session" xpos="0" />    
                      <checkpointable name="rm_session" xpos="0" />    
@@ -54,6 +55,7 @@ install_config {
                         <checkpointable name="log_session" xpos="0" />    
                         <checkpointable name="timer_session" xpos="0" />    
                         <checkpointable name="capability_mapping" xpos="0" />    
+</module>
                 </config>
 	</start>
 </config>}

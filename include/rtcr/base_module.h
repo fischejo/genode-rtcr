@@ -44,13 +44,14 @@ protected:
 	Genode::Env        &_env;
 	Genode::Allocator  &_alloc;
 	Genode::Entrypoint &_ep;
+
+	/* pointer to the current XML configuration of this module */
+	Genode::Xml_node _config;
+
 	bool &_bootstrap;
 
 	/* If enabled, all threads are executed in parallel during checkpoint */
-	bool _parallel;
-	
-	/* pointer to the current XML configuration of this module */
-	Genode::Xml_node *_config;
+	bool _parallel;	
 
 	/* intercepting RAM session. The order of following declarations defines the
 	 * order of initialization. _pd_root depends on _ram_session! */
@@ -108,15 +109,15 @@ protected:
 	/* methods for parsing the XML configuration */
 	inline Genode::size_t _read_quota();
 	inline bool _read_parallel();  
-  
+	inline Genode::Xml_node _read_config();
+	
 public:  
 
 	Base_module(Genode::Env &env,
 				Genode::Allocator &alloc,
 				Genode::Entrypoint &ep,
 				const char* label,
-				bool &bootstrap,
-				Genode::Xml_node *config);
+				bool &bootstrap);
 
 	~Base_module();
 
@@ -159,10 +160,9 @@ public:
 				   Genode::Allocator &alloc,
 				   Genode::Entrypoint &ep,
 				   const char* label,
-				   bool &bootstrap,
-				   Genode::Xml_node *config) override
+				   bool &bootstrap) override
 		{
-			return new (alloc) Base_module(env, alloc, ep, label, bootstrap, config);
+			return new (alloc) Base_module(env, alloc, ep, label, bootstrap);
 		}
     
 	Module_name name() override { return "base"; }

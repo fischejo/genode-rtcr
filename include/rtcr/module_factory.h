@@ -61,15 +61,13 @@ public:
 	 * \param ep         Entrypoint
 	 * \param label      Label of ?
 	 * \param bootstrap  Bootstrap indicator
-	 * \param config     XML configuration of the XML module node.
 	 * \return A instance of a Module class
 	 */
 	virtual Module* create(Genode::Env &env,
 						   Genode::Allocator &alloc,
 						   Genode::Entrypoint &ep,
 						   const char* label,
-						   bool &bootstrap,
-						   Genode::Xml_node *config) = 0;
+						   bool &bootstrap) = 0;
     
 	/**
 	 * Name of your module which you want to register.

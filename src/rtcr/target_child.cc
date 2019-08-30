@@ -44,23 +44,16 @@ Target_child::Target_child(Genode::Env &env,
 
 Child_name Target_child::_read_name()
 {
-	/* parse name of child application from xml config */	
-	const Genode::Xml_node& config_node = Genode::config()->xml_node();
-	Genode::Xml_node child_node = config_node.sub_node("child");
-	Child_name child_name = child_node.attribute_value("name", Child_name());	
-	Genode::log("\e[38;5;214m", "Use XML defined child name: \e[1m", child_name, "\033[0m");
-	return child_name;
+	DEBUG_THIS_CALL	
+
+		return Child_name("sheep_counter");
 }
 
 
 Module_name Target_child::_read_module_name()
 {
 	DEBUG_THIS_CALL
-	/* parse name of child application from xml config */	
-	const Genode::Xml_node& config_node = Genode::config()->xml_node();
-	Genode::Xml_node module_node = config_node.sub_node("module");
-	Module_name module_name = module_node.attribute_value("name", Module_name());
-	return module_name;
+	return Module_name("base");
 }
 
 
@@ -71,7 +64,6 @@ Module &Target_child::_load_module(Module_name name)
 	/* find factory for module */
 	Module_factory *factory = Module_factory::get(name);
 
-	Genode::Xml_node config_node = Genode::config()->xml_node();
 	if(!factory) {
 		Genode::error("Module '", name, "' is not linked!");
 	} else {
@@ -80,8 +72,7 @@ Module &Target_child::_load_module(Module_name name)
 										 _alloc,
 										 _resources_ep,
 										 _name.string(),
-										 _in_bootstrap,
-									     &config_node);
+										 _in_bootstrap);
 
 		Genode::log("\e[38;5;214m", "Module loaded: \e[1m", name, "\033[0m");    
 		return *module;

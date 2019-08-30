@@ -12,34 +12,40 @@ Checkpointable::Checkpointable(Genode::Env &env,
 							   Genode::Xml_node *config,
 							   const char* name)
 	:
+	_affinity(_read_affinity(config, name)),
 	Thread(env,
 		   name,
 		   64*1024,
-		   _read_affinity(config, name),
+		   _affinity,
 		   Genode::Thread::Weight(),
 		   env.cpu()),
 	_running(true),
 	_next_job(NONE)
 {
 	Thread::start();
+
+#ifdef VERBOSE
+	Genode::log("Checkpointable[",name,"] started on CPU ",
+				"xpos=",_affinity.xpos(), " ypos=",_affinity.ypos());
+#endif	
 }
 
 
 Genode::Affinity::Location Checkpointable::_read_affinity(Genode::Xml_node *config,
-														  const char* node_name)
+														  const char* name)
 {
-	// TODO FJO: fix that workaround
-	return Genode::Affinity::Location(0, 0, 1, 1);
-	
-	try {	
-		Genode::Xml_node affinity_node = config->sub_node(node_name);
-		long const xpos = affinity_node.attribute_value<long>("xpos", 0);
-		long const ypos = affinity_node.attribute_value<long>("ypos", 0);
+	try {
+		Genode::Xml_node ck_node = config->sub_node("checkpointable");
+		Genode::String<30> node_name;
+		while(Genode::strcmp(name, ck_node.attribute_value("name", node_name).string()))
+			ck_node = ck_node.next("checkpointable");
+
+		long const xpos = ck_node.attribute_value<long>("xpos", 0);
+		long const ypos = ck_node.attribute_value<long>("ypos", 0);
 		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
 	}
 	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
 }
-
 
 
 void Checkpointable::stop()
@@ -52,11 +58,6 @@ void Checkpointable::stop()
 
 void Checkpointable::entry()
 {
-#ifdef DEBUG
-	Genode::log("\e[1m\e[38;5;199m", "Checkpointable[", name(), "] started", "\033[0m");
-#endif	
-
-	
 	while(_running) {
 		/* wait for the next job */
 		_next_event.wait();

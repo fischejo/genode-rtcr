@@ -29,14 +29,13 @@ Base_module::Base_module(Genode::Env &env,
 						 Genode::Allocator &alloc,
 						 Genode::Entrypoint &ep,
 						 const char* label,
-						 bool &bootstrap,
-						 Genode::Xml_node *config)
+						 bool &bootstrap)
 	:
 	_env(env),
 	_alloc(alloc),
 	_ep(ep),
-	_config(config),
-	_parallel(false),
+	_config(_read_config()),
+	_parallel(_read_parallel()),
 	_bootstrap(bootstrap),
 	_ram_root(ram_root()),
 	_ram_service("RAM", &_ram_root),
@@ -59,6 +58,11 @@ Base_module::Base_module(Genode::Env &env,
 	_capability_mapping(capability_mapping())
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
+
+#ifdef VERBOSE		
+		Genode::log("Execute checkpointable ",_parallel ? "parallel" : "sequential");
+#endif
+	
 	/* Donate ram quota to child */
 	_ram_session.ref_account(_env.ram_session_cap());
 	// Note: transfer goes directly to parent's ram session
@@ -66,17 +70,19 @@ Base_module::Base_module(Genode::Env &env,
 }
 
 
+Genode::Xml_node Base_module::_read_config()
+{
+	return Genode::config()->xml_node().sub_node("module");
+}
+
 bool Base_module::_read_parallel()
 {
 	DEBUG_THIS_CALL
 	try {
-		Genode::Xml_node child_node = _config->sub_node("module");
-		bool const parallel = child_node.attribute_value<bool>("parallel", false);
-		Genode::log("Running Checkpointable in parallel: ", parallel);
+		Genode::Xml_node ck_node = _config.sub_node("checkpoint");
+		bool const parallel = ck_node.attribute_value<bool>("parallel", false);
 		return parallel;
-	} catch(...) {
-		Genode::warning("No parallel configured.");
-	}
+	} catch(...) {}
 	return false;
 }
 
@@ -84,13 +90,14 @@ bool Base_module::_read_parallel()
 Genode::size_t Base_module::_read_quota()
 {
 	Genode::size_t quota = 512*1024; // 512 kB
-	try {
-		Genode::Xml_node child_node = _config->sub_node("child");
-		long const quota = child_node.attribute_value<long>("quota", quota);
-		Genode::log("Child Quota: ", quota);
-	} catch(...) {
-		Genode::warning("No quota configured. Set default value: 512 kB.");
-	}
+	// try {
+	// 	Genode::Xml_node child_node = _config->sub_node("child");
+	// 	long const quota = child_node.attribute_value<long>("quota", quota);
+	// 	Genode::log("Child Quota: ", quota);
+	// } catch(...) {
+	// 	Genode::warning("No quota configured. Set default value: 512 kB.");
+	// }
+	
 	return quota;
 }
 
@@ -98,14 +105,14 @@ Genode::size_t Base_module::_read_quota()
 Cpu_root &Base_module::cpu_root()
 {
 	DEBUG_THIS_CALL	
-	return *new (_alloc) Cpu_root(_env, _alloc, _ep, _pd_root, _bootstrap, _config);
+	return *new (_alloc) Cpu_root(_env, _alloc, _ep, _pd_root, _bootstrap, &_config);
 }
 
 
 Pd_root &Base_module::pd_root()
 {
 	DEBUG_THIS_CALL
-	return *new (_alloc) Pd_root(_env, _alloc, _ep, _ram_session, _bootstrap, _config);
+	return *new (_alloc) Pd_root(_env, _alloc, _ep, _ram_session, _bootstrap, &_config);
 }
 
 
@@ -114,42 +121,42 @@ Ram_root &Base_module::ram_root()
 	DEBUG_THIS_CALL
 	DEBUG_THIS_CALL
 	  
-	return *new (_alloc) Ram_root(_env, _alloc, _ep, _bootstrap, _config);
+	return *new (_alloc) Ram_root(_env, _alloc, _ep, _bootstrap, &_config);
 }
 
 
 Rm_root &Base_module::rm_root()
 {
 	DEBUG_THIS_CALL	
-	return *new (_alloc) Rm_root(_env, _alloc, _ep, _ram_session,_bootstrap, _config);
+	return *new (_alloc) Rm_root(_env, _alloc, _ep, _ram_session,_bootstrap, &_config);
 }
 
 
 Rom_root &Base_module::rom_root()
 {
 	DEBUG_THIS_CALL	
-	return *new (_alloc) Rom_root(_env, _alloc, _ep, _bootstrap, _config);
+	return *new (_alloc) Rom_root(_env, _alloc, _ep, _bootstrap, &_config);
 }
 
 
 Log_root &Base_module::log_root()
 {
 	DEBUG_THIS_CALL	
-	return *new (_alloc) Log_root(_env, _alloc, _ep, _bootstrap, _config);
+	return *new (_alloc) Log_root(_env, _alloc, _ep, _bootstrap, &_config);
 }
 
 
 Timer_root &Base_module::timer_root()
 {
 	DEBUG_THIS_CALL	
-	return *new (_alloc) Timer_root(_env, _alloc, _ep,_bootstrap, _config);
+	return *new (_alloc) Timer_root(_env, _alloc, _ep,_bootstrap, &_config);
 }
 
 
 Capability_mapping &Base_module::capability_mapping()
 {
 	DEBUG_THIS_CALL	
-	return *new (_alloc) Capability_mapping(_env, _alloc, _pd_session, _config);
+	return *new (_alloc) Capability_mapping(_env, _alloc, _pd_session, &_config);
 }
 
 
