@@ -35,8 +35,8 @@ Region_map &Rm_session::_create(Genode::size_t size)
 	_ep.manage(*new_region_map);
 
 	/* Insert custom Region map into list */
-	Genode::Lock::Guard lock(_new_region_maps_lock);
-	_new_region_maps.insert(new_region_map);
+	Genode::Lock::Guard lock(_region_maps_lock);
+	_region_maps.insert(new_region_map);
 	_ram_session.mark_region_map_dataspace(new_region_map->dataspace());
 	return *new_region_map;
 }
@@ -46,10 +46,6 @@ void Rm_session::_destroy(Region_map &region_map)
 {
 	/* Reverse order as in _create */
 	auto parent_cap = region_map.parent_cap();
-
-	/* Remove custom RPC object form list */
-	Genode::Lock::Guard lock(_destroyed_region_maps_lock);
-	_destroyed_region_maps.insert(&region_map);
 
 	/* Dissolve custom RPC object */
 	_ep.dissolve(region_map);
@@ -81,10 +77,7 @@ Rm_session::Rm_session(Genode::Env &env,
 
 Rm_session::~Rm_session()
 {
-	while(Region_map *obj = _new_region_maps.first()) {
-		_destroy(*obj);
-	}
-	// TODO FJO: free destroyed and new objects
+
 }
 
 
@@ -101,25 +94,19 @@ void Rm_session::checkpoint()
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 
 	Region_map *region_map = nullptr;
-	while(region_map = _new_region_maps.first()) {
-		ck_region_maps.insert(region_map);
-		_new_region_maps.remove(region_map);
-	}
-
-	while(region_map = _destroyed_region_maps.first()) {
-		ck_region_maps.remove(region_map);
-		_destroyed_region_maps.remove(region_map);
+	while(region_map = _destroyed_region_maps.dequeue()) {
+		_region_maps.remove(region_map);
 		Genode::destroy(_md_alloc, &region_map);
 	}
 
-	region_map = ck_region_maps.first();
+	region_map = _region_maps.first();
 	while(region_map) {
 		region_map->checkpoint();
 		region_map = region_map->next();
-	}  
+	}
+
+	ck_region_maps = _region_maps.first();
 }
-
-
 
 
 Genode::Capability<Genode::Region_map> Rm_session::create(Genode::size_t size)
@@ -133,26 +120,19 @@ Genode::Capability<Genode::Region_map> Rm_session::create(Genode::size_t size)
 void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 {
 	/* Find RPC object for the given Capability */
-	Genode::Lock::Guard lock (_destroyed_region_maps_lock);
-	Region_map *region_map = _new_region_maps.first();
+	Region_map *region_map = _region_maps.first();
 	if(region_map) region_map = region_map->find_by_badge(region_map_cap.local_name());
-	if(!region_map) {
-		region_map = ck_region_maps.first();
-		if(region_map) region_map = region_map->find_by_badge(
-			region_map_cap.local_name());
-	} 
-	
-	/* If found, delete everything concerning this RPC object */
 	if(region_map) {
 		Genode::error("Issuing Rm_session::destroy, which is bugged and hangs up.");
+
+		Genode::Lock::Guard lock(_destroyed_region_maps_lock);
+		_destroyed_region_maps.enqueue(region_map);
+		
 		_destroy(*region_map);
 	} else {
 		Genode::error("No Region map with ", region_map_cap, " found!");
 	}
 }
-
-
-
 
 
 Rm_session *Rm_root::_create_session(const char *args)

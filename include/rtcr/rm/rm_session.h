@@ -43,8 +43,7 @@ public:
 	bool ck_bootstrapped;
 	Genode::uint16_t ck_badge;
 	Genode::addr_t ck_kcap;
-	Genode::List<Region_map> ck_region_maps;
-  
+	Genode::List<Region_map>::Element *ck_region_maps;
    
 protected:
 	/*****************
@@ -52,10 +51,10 @@ protected:
 	 *****************/
 	
 	char* _upgrade_args;
-	Genode::Lock _new_region_maps_lock;
+	Genode::Lock _region_maps_lock;
 	Genode::Lock _destroyed_region_maps_lock;  
-	Genode::List<Region_map> _new_region_maps;
-	Genode::List<Region_map> _destroyed_region_maps;
+	Genode::List<Region_map> _region_maps;
+	Genode::Fifo<Region_map> _destroyed_region_maps;
 
 	/**
 	 * Allocator for Rpc objects created by this session and also for monitoring structures

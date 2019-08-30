@@ -10,6 +10,7 @@
 
 /* Genode includes */
 #include <util/list.h>
+#include <util/fifo.h>
 #include <dataspace/capability.h>
 
 namespace Rtcr {
@@ -19,7 +20,9 @@ namespace Rtcr {
 /**
  * Record of an attached dataspace
  */
-struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element
+struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element,
+			Genode::Fifo<Attached_region_info>::Element
+
 {
 	/******************
 	 ** COLD STORAGE **
@@ -32,6 +35,13 @@ struct Rtcr::Attached_region_info : Genode::List<Attached_region_info>::Element
 	 ** HOT STORAGE **
 	 *****************/
 
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */
+	using Genode::List<Attached_region_info>::Element::next;
+
+	
 	/**
 	 * Dataspace capability which is attached
 	 */

@@ -9,6 +9,7 @@
 
 /* Genode includes */
 #include <util/list.h>
+#include <util/fifo.h>
 #include <base/signal.h>
 
 /* Rtcr includes */
@@ -21,7 +22,8 @@ namespace Rtcr {
 /**
  * List element to store Signal_context_capabilities created by the pd session
  */
-struct Rtcr::Signal_context_info : Genode::List<Signal_context_info>::Element
+struct Rtcr::Signal_context_info : Genode::List<Signal_context_info>::Element,
+			Genode::Fifo<Signal_context_info>::Element
 {
 	/******************
 	 ** COLD STORAGE **
@@ -33,14 +35,24 @@ struct Rtcr::Signal_context_info : Genode::List<Signal_context_info>::Element
 	bool ck_bootstrapped;
 	Genode::addr_t ck_kcap;
 	Genode::uint16_t ck_badge;
-  
-  
+
+	/*****************
+	 ** HOT STORAGE **
+	 *****************/
+	
 	// Creation arguments and result
 	Genode::Signal_context_capability         const cap;
 	Genode::Capability<Genode::Signal_source> const ss_cap;
 	unsigned long                             const imprint;
 	bool bootstrapped;
-  
+
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */	
+	using Genode::List<Signal_context_info>::Element::next;
+
+	
 	Signal_context_info(Genode::Signal_context_capability sc_cap,
 						Genode::Capability<Genode::Signal_source> ss_cap,
 						unsigned long imprint,

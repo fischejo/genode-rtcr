@@ -41,10 +41,7 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
 
 Region_map::~Region_map()
 {
-	while(Attached_region_info *obj = ck_attached_regions.first()) {
-		ck_attached_regions.remove(obj);
-		Genode::destroy(_md_alloc, obj);
-	}
+
 	// TODO FJO: free new and destroyed region maps
 }
 
@@ -52,6 +49,7 @@ Region_map::~Region_map()
 void Region_map::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
+
 	ck_badge = cap().local_name();
 	ck_bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();
@@ -64,23 +62,18 @@ void Region_map::checkpoint()
 	ck_sigh_badge = _sigh.local_name();
 
 	Attached_region_info *region = nullptr;
-	while(region = _new_attached_regions.first()) {
-		_new_attached_regions.remove(region);
-		ck_attached_regions.insert(region);
-	}
-
-	while(region = _destroyed_attached_regions.first()) {
-		ck_attached_regions.remove(region);
-		_destroyed_attached_regions.remove(region);
+	while(region = _destroyed_attached_regions.dequeue()) {
+		_attached_regions.remove(region);
 		Genode::destroy(_md_alloc, region);
 	}
-  
-	region = ck_attached_regions.first();
+
+	region = _attached_regions.first();
 	while(region) {
 		region->checkpoint();
 		region = region->next();
 	}  
 
+	ck_attached_regions = _attached_regions.first();
 }
 
 
@@ -153,8 +146,8 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 #endif
 
 	/* Store Attached_region_info in a list */
-	Genode::Lock::Guard lock_guard(_new_attached_regions_lock);
-	_new_attached_regions.insert(new_obj);
+	Genode::Lock::Guard lock_guard(_attached_regions_lock);
+	_attached_regions.insert(new_obj);
 
 	return addr;
 }
@@ -166,25 +159,17 @@ void Region_map::detach(Region_map::Local_addr local_addr)
 	_parent_region_map.detach(local_addr);
 
 	/* Find region */
-	Genode::Lock::Guard lock_guard(_new_attached_regions_lock);
-	Attached_region_info *region = _new_attached_regions.first();
+
+	Attached_region_info *region = _attached_regions.first();
 	if(region) region = region->find_by_addr((Genode::addr_t)local_addr);
 	if(region) {
-		_new_attached_regions.remove(region);
+		/* Remove and destroy region from list and allocator */
+		Genode::Lock::Guard lock_guard(_destroyed_attached_regions_lock);
+		_destroyed_attached_regions.enqueue(region);
 	} else {
-		region = ck_attached_regions.first();
-		if(region) region = region->find_by_addr((Genode::addr_t)local_addr);
-		if(region) {
-			ck_attached_regions.remove(region);
-		} else {
 			Genode::warning("Region not found in Rm::detach(). Local address",
-							Genode::Hex(local_addr), " not in regions list.");			
-		}
-	}
-
-	/* Remove and destroy region from list and allocator */
-	Genode::Lock::Guard lock_guard2(_destroyed_attached_regions_lock);
-	_destroyed_attached_regions.insert(region);
+							Genode::Hex(local_addr), " not in regions list.");
+	}			
 }
 
 

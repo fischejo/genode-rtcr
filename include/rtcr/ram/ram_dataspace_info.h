@@ -10,6 +10,7 @@
 
 /* Genode includes */
 #include <util/list.h>
+#include <util/fifo.h>
 #include <ram_session/ram_session.h>
 #include <region_map/client.h>
 
@@ -24,7 +25,8 @@ namespace Rtcr {
  * Monitors allocated Ram dataspaces
  */
 struct Rtcr::Ram_dataspace_info : private Simple_counter<Ram_dataspace_info>,
-			Genode::List<Ram_dataspace_info>::Element
+			Genode::List<Ram_dataspace_info>::Element,
+			Genode::Fifo<Ram_dataspace_info>::Element
 {
 	/******************
 	 ** COLD STORAGE **
@@ -37,6 +39,12 @@ struct Rtcr::Ram_dataspace_info : private Simple_counter<Ram_dataspace_info>,
 	/*****************
 	 ** HOT STORAGE **
 	 *****************/
+
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */
+	using Genode::List<Ram_dataspace_info>::Element::next;
 	
 	bool _bootstrapped;
 	bool is_region_map;

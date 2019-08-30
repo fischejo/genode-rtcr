@@ -9,6 +9,7 @@
 
 /* Genode includes */
 #include <util/list.h>
+#include <util/fifo.h>
 #include <base/capability.h>
 
 /* Rtcr includes */
@@ -21,7 +22,8 @@ namespace Rtcr {
 /**
  * List element to store Signal_source_capabilities created by the pd session
  */
-struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element
+struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element,
+			Genode::Fifo<Signal_source_info>::Element
 {
 	/******************
 	 ** COLD STORAGE **
@@ -31,11 +33,22 @@ struct Rtcr::Signal_source_info : Genode::List<Signal_source_info>::Element
 	Genode::addr_t ck_kcap;
 	Genode::uint16_t ck_badge;
 
+	/*****************
+	 ** HOT STORAGE **
+	 *****************/
+	
 
 	bool bootstrapped;
 	// Creation result
 	Genode::Capability<Genode::Signal_source> const cap;
 
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */	
+	using Genode::List<Signal_source_info>::Element::next;
+
+	
 	Signal_source_info(Genode::Capability<Genode::Signal_source> cap, bool bootstrapped)
 		:
 		bootstrapped(bootstrapped),

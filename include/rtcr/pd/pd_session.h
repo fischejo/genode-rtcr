@@ -13,6 +13,8 @@
 #include <base/allocator.h>
 #include <base/rpc_server.h>
 #include <pd_session/connection.h>
+#include <util/list.h>
+#include <util/fifo.h>
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
@@ -46,9 +48,9 @@ public:
 	Genode::uint16_t ck_badge;
 	Genode::addr_t ck_kcap;
 
-	Genode::List<Signal_source_info>     ck_signal_sources;
-	Genode::List<Signal_context_info>    ck_signal_contexts;
-	Genode::List<Native_capability_info> ck_native_caps;
+	Genode::List<Signal_source_info>::Element* ck_signal_sources;
+	Genode::List<Signal_context_info>::Element* ck_signal_contexts;
+	Genode::List<Native_capability_info>::Element* ck_native_caps;
 
 protected:
   
@@ -59,27 +61,27 @@ protected:
 	 * List for monitoring the creation and destruction of
 	 * Signal_source_capabilities
 	 */  
-	Genode::Lock _new_signal_sources_lock;
-	Genode::List<Signal_source_info> _new_signal_sources;
+	Genode::Lock _signal_sources_lock;
+	Genode::List<Signal_source_info> _signal_sources;
 	Genode::Lock _destroyed_signal_sources_lock;
-	Genode::List<Signal_source_info> _destroyed_signal_sources;  
+	Genode::Fifo<Signal_source_info> _destroyed_signal_sources;  
 
 	/**
 	 * List for monitoring the creation and destruction of
 	 * Signal_context_capabilities
 	 */  
-	Genode::Lock _new_signal_contexts_lock;
-	Genode::List<Signal_context_info> _new_signal_contexts;
+	Genode::Lock _signal_contexts_lock;
+	Genode::List<Signal_context_info> _signal_contexts;
 	Genode::Lock _destroyed_signal_contexts_lock;
-	Genode::List<Signal_context_info> _destroyed_signal_contexts;  
+	Genode::Fifo<Signal_context_info> _destroyed_signal_contexts;  
 
 	/**
 	 * List for monitoring the creation and destruction of Native_capabilities
 	 */  
-	Genode::Lock _new_native_caps_lock;
-	Genode::List<Native_capability_info> _new_native_caps;
+	Genode::Lock _native_caps_lock;
+	Genode::List<Native_capability_info> _native_caps;
 	Genode::Lock _destroyed_native_caps_lock;
-	Genode::List<Native_capability_info> _destroyed_native_caps;  
+	Genode::Fifo<Native_capability_info> _destroyed_native_caps;
 
 
 	Genode::Env &_env;

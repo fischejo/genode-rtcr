@@ -9,6 +9,8 @@
 #define _RTCR_REGION_MAP_COMPONENT_H_
 
 /* Genode includes */
+#include <util/list.h>
+#include <util/fifo.h>
 #include <region_map/client.h>
 #include <dataspace/client.h>
 #include <base/allocator.h>
@@ -25,7 +27,8 @@ namespace Rtcr {
  * Custom Region map intercepting RPC methods
  */
 class Rtcr::Region_map : public Genode::Rpc_object<Genode::Region_map>,
-						 public Genode::List<Region_map>::Element
+						 public Genode::List<Region_map>::Element,
+						 public Genode::Fifo<Region_map>::Element
 {
 public:
 	/******************
@@ -39,7 +42,7 @@ public:
 	Genode::size_t ck_size;
 	Genode::uint16_t ck_ds_badge;
 	Genode::uint16_t ck_sigh_badge;
-	Genode::List<Attached_region_info> ck_attached_regions;
+	Genode::List<Attached_region_info>::Element *ck_attached_regions;
   
 protected:
 	/*****************
@@ -65,6 +68,7 @@ protected:
 
 	/**
 	 * Signal context of the fault handler
+
 	 */
 	Genode::Signal_context_capability _sigh;
 
@@ -72,8 +76,11 @@ protected:
 	 * List of attached regions
 	 */
 	Genode::Lock _destroyed_attached_regions_lock;
-	Genode::List<Attached_region_info> _destroyed_attached_regions;
+	Genode::Fifo<Attached_region_info> _destroyed_attached_regions;
 
+	Genode::Lock _attached_regions_lock;
+	Genode::List<Attached_region_info> _attached_regions;
+	
 	/**
 	 * Allocator for Region map's attachments
 	 */
@@ -90,6 +97,11 @@ protected:
 	const char* _label;
 
 public:
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */
+	using Genode::List<Region_map>::Element::next;
 
 	Region_map(Genode::Allocator &md_alloc,
 		       Genode::Capability<Genode::Region_map>
@@ -102,9 +114,9 @@ public:
 
 	Genode::Capability<Genode::Region_map> parent_cap() { return _parent_region_map; }
 
-	Genode::Lock _new_attached_regions_lock;
-	Genode::List<Attached_region_info> _new_attached_regions;
 
+	/* TODO FJO: this is not thread safe... */
+	Genode::List<Attached_region_info> attached_regions() { return _attached_regions; }
 
 	void checkpoint();
 

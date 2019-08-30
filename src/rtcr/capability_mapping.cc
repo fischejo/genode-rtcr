@@ -79,21 +79,16 @@ void Capability_mapping::checkpoint()
 	   new_attached_regions to ck_attached_regions during checkpointing */
 	Attached_region_info *ar_info = nullptr;
 
-
-		Genode::Lock::Guard lock(addr_space._new_attached_regions_lock);
-		ar_info = addr_space._new_attached_regions.first();
-		if(ar_info) ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
-
-		if(!ar_info) {
-			ar_info = addr_space.ck_attached_regions.first();
-			if(ar_info) ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
-		}
+	// TODO FJO: accesing attached_regions is not thread safe
+	ar_info  =addr_space.attached_regions().first();
+	if(ar_info) ar_info = ar_info->find_by_addr(cap_idx_alloc_addr);
 
 	if(!ar_info) {
 		Genode::error("No dataspace found for cap_idx_alloc's datastructure at ",
 					  Hex(cap_idx_alloc_addr));
 		throw Genode::Exception();
-	} 
+	}
+	
 	/* Create new badge_kcap list */
 	size_t const struct_size    = sizeof(Genode::Cap_index_allocator_tpl<Genode::Cap_index,4096>);
 	size_t const array_ele_size = sizeof(Genode::Cap_index);

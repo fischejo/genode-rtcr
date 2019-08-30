@@ -51,8 +51,8 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 	_ep.manage(*new_cpu_thread);
 
 	/* Insert custom CPU thread into list */
-	Genode::Lock::Guard _lock_guard(_new_cpu_threads_lock);
-	_new_cpu_threads.insert(new_cpu_thread);
+	Genode::Lock::Guard _lock_guard(_cpu_threads_lock);
+	_cpu_threads.insert(new_cpu_thread);
 
 	return *new_cpu_thread;
 }
@@ -64,7 +64,7 @@ void Cpu_session::_kill_thread(Cpu_thread &cpu_thread)
 
 	/* Remove custom CPU thread form list */
 	Genode::Lock::Guard lock(_destroyed_cpu_threads_lock);
-	_destroyed_cpu_threads.insert(&cpu_thread);
+	_destroyed_cpu_threads.enqueue(&cpu_thread);
 
 	/* Dissolve custom CPU thread */
 	_ep.dissolve(cpu_thread);
@@ -99,9 +99,7 @@ Cpu_session::Cpu_session(Genode::Env &env,
 
 Cpu_session::~Cpu_session()
 {
-	while(Cpu_thread *cpu_thread = ck_cpu_threads.first()) {
-		_kill_thread(*cpu_thread);
-	}
+
 }
 
 
@@ -131,54 +129,47 @@ void Cpu_session::checkpoint()
 
 	ck_sigh_badge = _sigh.local_name();
   
-	Cpu_thread *cpu_thread = nullptr;
-	while(cpu_thread = _new_cpu_threads.first()) {
-		_new_cpu_threads.remove(cpu_thread);		
-		ck_cpu_threads.insert(cpu_thread);
-	}
-
-	while(cpu_thread = _destroyed_cpu_threads.first()) {
-		_destroyed_cpu_threads.remove(cpu_thread);
-		ck_cpu_threads.remove(cpu_thread);
+	Cpu_thread *cpu_thread;
+	while(cpu_thread = _destroyed_cpu_threads.dequeue()) {
+		_cpu_threads.remove(cpu_thread);
 		Genode::destroy(_md_alloc, &cpu_thread);
 	}
 
-	cpu_thread = ck_cpu_threads.first();
+	cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		cpu_thread->checkpoint();
 		cpu_thread = cpu_thread->next();
-	}  
+	}
+
+	/* checkpoint current state of Cpu_thread list. */
+	ck_cpu_threads = _cpu_threads.first();
 }
 
 void Cpu_session::pause()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	Cpu_thread *cpu_thread = _new_cpu_threads.first();
+	Cpu_thread *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
-		cpu_thread->silent_pause();
+		/* if the object is in the destroyed queue, it means that it is already
+		 * destroyed */
+		if(!cpu_thread->enqueued())
+			cpu_thread->silent_pause();
+		
 		cpu_thread = cpu_thread->next();
 	}
-
-	cpu_thread = ck_cpu_threads.first();
-	while(cpu_thread) {
-		cpu_thread->silent_pause();    
-		cpu_thread = cpu_thread->next();
-	}    
 }
 
 void Cpu_session::resume()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
-	Cpu_thread *cpu_thread = ck_cpu_threads.first();
+	Cpu_thread *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
-		cpu_thread->silent_resume();
-		cpu_thread = cpu_thread->next();
-	}
+		/* if the object is in the destroyed queue, it means that it is already
+		 * destroyed */
+		if(!cpu_thread->enqueued())
+			cpu_thread->silent_resume();
 
-	cpu_thread = _new_cpu_threads.first();
-	while(cpu_thread) {
-		cpu_thread->silent_resume();
 		cpu_thread = cpu_thread->next();
 	}
 }
@@ -225,13 +216,10 @@ Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capabili
 void Cpu_session::kill_thread(Genode::Thread_capability thread_cap)
 {
 	/*  Find CPU thread for the given capability */
-	Genode::Lock::Guard lock (_new_cpu_threads_lock);
-	Cpu_thread *cpu_thread = _new_cpu_threads.first();
+	Genode::Lock::Guard lock (_cpu_threads_lock);
+	Cpu_thread *cpu_thread = _cpu_threads.first();
 	if(cpu_thread) cpu_thread = cpu_thread->find_by_badge(thread_cap.local_name());
-	if(!cpu_thread) {
-		cpu_thread = ck_cpu_threads.first();
-		if(cpu_thread) cpu_thread = cpu_thread->find_by_badge(thread_cap.local_name());	  	}
-	/* If found, delete everything concerning this RPC object */
+
 	if(cpu_thread) {
 		Genode::error("Issuing Rm_session::destroy, which is bugged and hangs up.");
 

@@ -16,6 +16,8 @@
 #include <region_map/client.h>
 #include <dataspace/client.h>
 #include <util/retry.h>
+#include <util/list.h>
+#include <util/fifo.h>
 #include <util/misc_math.h>
 
 /* Rtcr includes */
@@ -54,7 +56,7 @@ public:
 	bool ck_bootstrapped;
 	Genode::uint16_t ck_badge;
 	Genode::addr_t ck_kcap;
-	Genode::List<Ram_dataspace_info> ck_ram_dataspaces;
+	Genode::List<Ram_dataspace_info>::Element *ck_ram_dataspaces;
 	Genode::Ram_session_capability   ck_ref_account_cap;
   
 protected:
@@ -67,11 +69,11 @@ protected:
 	/**
 	 * List of allocated ram dataspaces
 	 */
-	Genode::Lock _new_ram_dataspaces_lock;
-	Genode::List<Ram_dataspace_info> _new_ram_dataspaces;
+	Genode::Lock _ram_dataspaces_lock;
+	Genode::List<Ram_dataspace_info> _ram_dataspaces;
 
 	Genode::Lock _destroyed_ram_dataspaces_lock;  
-	Genode::List<Ram_dataspace_info> _destroyed_ram_dataspaces; 
+	Genode::Fifo<Ram_dataspace_info> _destroyed_ram_dataspaces; 
 
 	/**
 	 * Environment of Rtcr; needed to upgrade RAM quota of the RM session

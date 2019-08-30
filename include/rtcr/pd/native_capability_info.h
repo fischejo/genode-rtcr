@@ -9,6 +9,7 @@
 
 /* Genode includes */
 #include <util/list.h>
+#include <util/fifo.h>
 #include <base/native_capability.h>
 
 /* Rtcr includes */
@@ -24,7 +25,8 @@ namespace Rtcr {
  * a Cpu_thread_capability
  */
 struct Rtcr::Native_capability_info : private Simple_counter<Native_capability_info>,
-			Genode::List<Native_capability_info>::Element
+			Genode::List<Native_capability_info>::Element,
+			Genode::Fifo<Native_capability_info>::Element			
 {
 	/******************
 	 ** COLD STORAGE **
@@ -35,12 +37,23 @@ struct Rtcr::Native_capability_info : private Simple_counter<Native_capability_i
 	Genode::uint16_t ck_badge;
 	Genode::uint16_t ck_ep_badge;
 
+	/*****************
+	 ** HOT STORAGE **
+	 *****************/
+	
 	
 	// Creation arguments and result
 	Genode::Native_capability const cap;
 	Genode::Native_capability const ep_cap;
 	bool bootstrapped;
-  
+
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */	
+	using Genode::List<Native_capability_info>::Element::next;
+
+	
 	Native_capability_info(Genode::Native_capability native_cap,
 						   Genode::Native_capability ep_cap,
 						   bool bootstrapped)

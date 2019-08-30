@@ -12,7 +12,7 @@
 #include <base/allocator.h>
 #include <base/rpc_server.h>
 #include <base/entrypoint.h>
-
+#include <util/fifo.h>
 #include <pd_session/connection.h>
 
 namespace Rtcr {
@@ -20,7 +20,8 @@ namespace Rtcr {
 }
 
 class Rtcr::Cpu_thread : public Genode::Rpc_object<Genode::Cpu_thread>,
-						 public Genode::List<Cpu_thread>::Element
+						 public Genode::List<Cpu_thread>::Element,
+						 public Genode::Fifo<Cpu_thread>::Element		   
 {
 public:
 	/******************
@@ -64,7 +65,12 @@ private:
 	Genode::Cpu_thread_client  _parent_cpu_thread;
 
 public:
-
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */	
+	using Genode::List<Cpu_thread>::Element::next;
+	
 	Cpu_thread(Genode::Allocator &md_alloc,
 			   Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
 			   Genode::Pd_session_capability pd_session_cap,

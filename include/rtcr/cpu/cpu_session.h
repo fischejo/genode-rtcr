@@ -9,6 +9,8 @@
 #define _RTCR_CPU_SESSION_H_
 
 /* Genode includes */
+#include <util/list.h>
+#include <util/fifo.h>
 #include <root/component.h>
 #include <base/allocator.h>
 #include <base/rpc_server.h>
@@ -45,7 +47,7 @@ public:
 	bool ck_bootstrapped;
 	Genode::uint16_t ck_badge;
 	Genode::addr_t ck_kcap;
-	Genode::List<Cpu_thread> ck_cpu_threads;
+	Genode::List<Cpu_thread>::Element *ck_cpu_threads;
 	Genode::uint16_t ck_sigh_badge;
   
 protected:
@@ -58,10 +60,10 @@ protected:
 	/**
 	 * List of client's thread capabilities
 	 */
-	Genode::Lock _new_cpu_threads_lock;
-	Genode::Lock _destroyed_cpu_threads_lock;  
-	Genode::List<Cpu_thread> _new_cpu_threads;
-	Genode::List<Cpu_thread> _destroyed_cpu_threads;
+	Genode::Lock _cpu_threads_lock;
+	Genode::Lock _destroyed_cpu_threads_lock;
+	Genode::List<Cpu_thread> _cpu_threads;
+	Genode::Fifo<Cpu_thread> _destroyed_cpu_threads;
 
 	/**
 	 * Environment of creator component (usually rtcr)
