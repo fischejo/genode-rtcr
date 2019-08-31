@@ -58,8 +58,10 @@ void Capability_mapping::checkpoint()
 	using Genode::size_t;
 	using Genode::uint16_t;
 
-	/* TODO FJO: the list is just on the stack!!! */
-	Genode::List<Kcap_badge> result;
+	while(Kcap_badge *kcap = _kcap_mapping.first()) {
+		Genode::destroy(_alloc, kcap);
+	}	
+
 
 	/* Retrieve cap_idx_alloc_addr */
 	Genode::Pd_session_client pd_client(_pd_session.parent_cap());
@@ -94,15 +96,15 @@ void Capability_mapping::checkpoint()
 	size_t const array_ele_size = sizeof(Genode::Cap_index);
 	size_t const array_size     = array_ele_size*4096;
 
-	addr_t const child_ds_start     = ar->rel_addr;
-	addr_t const child_ds_end       = child_ds_start + ar->size;
+	addr_t const child_ds_start     = ar->info.rel_addr;
+	addr_t const child_ds_end       = child_ds_start + ar->info.size;
 	addr_t const child_struct_start = cap_idx_alloc_addr;
 	addr_t const child_struct_end   = child_struct_start + struct_size;
 	addr_t const child_array_start  = child_struct_start + 8;
 	addr_t const child_array_end    = child_array_start + array_size;
 
-	addr_t const local_ds_start     = _env.rm().attach(ar->attached_ds_cap, ar->size, ar->offset);
-	addr_t const local_ds_end       = local_ds_start + ar->size;
+	addr_t const local_ds_start     = _env.rm().attach(ar->attached_ds_cap, ar->info.size, ar->info.offset);
+	addr_t const local_ds_end       = local_ds_start + ar->info.size;
 	addr_t const local_struct_start = local_ds_start + (cap_idx_alloc_addr - child_ds_start);
 	addr_t const local_struct_end   = local_struct_start + struct_size;
 	addr_t const local_array_start  = local_struct_start + 8;
@@ -125,7 +127,6 @@ void Capability_mapping::checkpoint()
 #endif 
 
 	//dump_mem((void*)local_array_start, 0x1200);
-
 	enum { UNUSED = 0, INVALID_ID = 0xffff };
 	for(addr_t curr = local_array_start; curr < local_array_end; curr += array_ele_size) {
 
@@ -141,30 +142,25 @@ void Capability_mapping::checkpoint()
 
 		if(badge != UNUSED && badge != INVALID_ID) {
 			Kcap_badge *state = new (_alloc) Kcap_badge(kcap, badge);
-			result.insert(state);
-
-#ifdef DEBUG
-			log("+ ", Hex(kcap), ": ", badge, " (", Hex(badge), ")");
-#endif
+			_kcap_mapping.insert(state);
 		}
 	}
 
 	_env.rm().detach(local_ds_start);
+}
 
 
-#ifdef DEBUG
-	Genode::log("Capability map:");
-	Kcap_badge const *info = result.first();
-	if(!info) Genode::log(" <empty>\n");
+void Capability_mapping::print(Genode::Output &output) const {
+	Genode::print(output, " Capability map:\n");
+	Kcap_badge const *info = _kcap_mapping.first();
+	if(!info) Genode::print(output, "  <empty>\n");
 	while(info)
 	{
-		Genode::log(" ", *info);
+		Genode::print(output, "  ", *info, "\n");
 		info = info->next();
-	}
-#endif
-
-	_kcap_mapping = result;
+	}	
 }
+
 
 Genode::addr_t Capability_mapping::find_kcap_by_badge(Genode::uint16_t badge)
 {

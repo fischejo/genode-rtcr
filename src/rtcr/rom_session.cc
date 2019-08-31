@@ -37,7 +37,7 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 	_ep           (ep),
 	_parent_rom   (env, label),
 	_bootstrapped (bootstrapped),
-	ck_creation_args (creation_args)
+	info (creation_args)
 {
 	DEBUG_THIS_CALL
 }
@@ -46,15 +46,15 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 void Rom_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrapped;
-	ck_upgrade_args = _upgrade_args;
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrapped;
+	info.upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 
-	ck_dataspace_badge = _dataspace.local_name();
-	ck_sigh_badge = _sigh.local_name();
+	info.dataspace_badge = _dataspace.local_name();
+	info.sigh_badge = _sigh.local_name();
 }
 
 

@@ -35,7 +35,7 @@ Log_session::Log_session(Genode::Env &env,
 	_ep           (ep),
 	_parent_log   (env, label),
 	_bootstrapped (bootstrapped),
-	ck_creation_args (creation_args)
+	info (creation_args)
 {
 	DEBUG_THIS_CALL
 }
@@ -55,14 +55,13 @@ Genode::size_t Log_session::write(String const &string)
 void Log_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrapped;
-	ck_upgrade_args = _upgrade_args;
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrapped;
+	info.upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 }
-
 
 
 Log_session *Log_session::find_by_badge(Genode::uint16_t badge)

@@ -15,37 +15,15 @@
 
 namespace Rtcr {
 	struct Attached_region;
+	struct Attached_region_info;
 }
 
-/**
- * Record of an attached dataspace
- */
-struct Rtcr::Attached_region : Genode::List<Attached_region>::Element,
-			Genode::Fifo<Attached_region>::Element
 
-{
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
+struct Rtcr::Attached_region_info {
 	Genode::Ram_dataspace_capability memory_content;
-    Genode::uint16_t ck_attached_ds_badge;
-	bool ck_bootstrapped;
-	
-	/*****************
-	 ** HOT STORAGE **
-	 *****************/
+    Genode::uint16_t attached_ds_badge;
+	bool bootstrapped;
 
-	/**
-	 * List and Fifo provide a next() method. In general, you want to use the
-	 * list implementation.
-	 */
-	using Genode::List<Attached_region>::Element::next;
-
-	
-	/**
-	 * Dataspace capability which is attached
-	 */
-	const Genode::Dataspace_capability attached_ds_cap;
 	/**
 	 * Size of occupied region
 	 */
@@ -63,35 +41,75 @@ struct Rtcr::Attached_region : Genode::List<Attached_region>::Element,
 	 */
 	const bool executable;
 
+	Attached_region_info(Genode::size_t size,
+						 Genode::off_t offset,
+						 Genode::addr_t local_addr,
+						 bool executable)
+		:
+		size       (size),
+		offset     (offset),
+		rel_addr   (local_addr),
+		executable (executable) {}
+
+	
+	void print(Genode::Output &output) const {
+		using Genode::Hex;		
+		Genode::print(output, attached_ds_badge);
+		Genode::print(output, " [", Hex(rel_addr, Hex::PREFIX, Hex::PAD));
+		Genode::print(output, ", ", Hex(rel_addr + size - offset, Hex::PREFIX, Hex::PAD));
+		Genode::print(output, ") exec=", executable, "\n");
+	}
+
+};
+
+
+/**
+ * Record of an attached dataspace
+ */
+struct Rtcr::Attached_region : Genode::List<Attached_region>::Element,
+			Genode::Fifo<Attached_region>::Element
+{
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
+	Attached_region_info info;
+	
+	/*****************
+	 ** HOT STORAGE **
+	 *****************/
+	const Genode::Dataspace_capability attached_ds_cap;
+	/**
+	 * List and Fifo provide a next() method. In general, you want to use the
+	 * list implementation.
+	 */
+	using Genode::List<Attached_region>::Element::next;
+
 
 	bool bootstrapped;
 
 	void checkpoint() {
-		ck_bootstrapped = bootstrapped;
-		ck_attached_ds_badge = attached_ds_cap.local_name();
+		info.bootstrapped = bootstrapped;
+		info.attached_ds_badge = attached_ds_cap.local_name();
 	}
   
   
 	Attached_region(Genode::Dataspace_capability attached_ds_cap,
-						 Genode::size_t size,
+					     Genode::size_t size,
 						 Genode::off_t offset,
 						 Genode::addr_t local_addr,
 						 bool executable,
 						 bool bootstrapped)
 		:
 		bootstrapped (bootstrapped),
-		attached_ds_cap (attached_ds_cap),
-		size       (size),
-		offset     (offset),
-		rel_addr   (local_addr),
-		executable (executable)
-		{ }
+		info(size, offset, local_addr, executable),
+		attached_ds_cap(attached_ds_cap)
+		{}
 
 	Attached_region *find_by_addr(Genode::addr_t addr) {
 		Genode::log("find_by_addr attached_ds_cap=", attached_ds_cap,
-					" rel_addr=", rel_addr,
-					" size=", size);
-		if((addr >= rel_addr) && (addr <= rel_addr + size))
+					" rel_addr=", info.rel_addr,
+					" size=", info.size);
+		if((addr >= info.rel_addr) && (addr <= info.rel_addr + info.size))
 			return this;
 		Attached_region *info = next();
 		return info ? info->find_by_addr(addr) : 0;
@@ -104,15 +122,6 @@ struct Rtcr::Attached_region : Genode::List<Attached_region>::Element,
 		return info ? info->find_by_badge(badge) : 0;
 	}
 
-	void print(Genode::Output &output) const {
-		using Genode::Hex;
-		using Genode::print;
-
-		print(output, attached_ds_cap);
-		print(output, " [", Hex(rel_addr, Hex::PREFIX, Hex::PAD));
-		print(output, ", ", Hex(rel_addr + size - offset, Hex::PREFIX, Hex::PAD));
-		print(output, ") exec=", executable, ", ");
-	}
 };
 
 

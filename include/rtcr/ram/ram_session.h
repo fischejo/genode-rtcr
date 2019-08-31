@@ -25,14 +25,39 @@
 #include <rtcr/checkpointable.h>
 
 namespace Rtcr {
-
 	class Ram_session;
 	class Ram_root;
-
-	constexpr bool fh_verbose_debug = false;
-	constexpr bool ram_verbose_debug = false;
-	constexpr bool ram_root_verbose_debug = false;
+	class Ram_session_info;
 }
+
+
+struct Rtcr::Ram_session_info {
+	Genode::String<160> creation_args;
+	Genode::String<160> upgrade_args;
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+	Ram_dataspace *ram_dataspaces;
+	Genode::Ram_session_capability   ref_account_cap;
+
+	Ram_session_info(const char* creation_args) : creation_args(creation_args) {}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, " Ram session:\n");
+		Genode::print(output,
+					  "  bootstrapped=", bootstrapped,
+					  ", cargs='", creation_args, "'",
+					  ", uargs='", upgrade_args, "'\n");
+
+		Ram_dataspace *ds = ram_dataspaces;
+		if(!ds) Genode::print(output, "  <empty>\n");
+		while(ds) {
+			Genode::print(output, "  ", ds->info);
+			ds = ds->next();
+		}
+	}
+};
+
 
 /**
  * Custom RAM session to monitor the allocation, freeing, and ram quota
@@ -51,14 +76,8 @@ public:
 	 ** COLD STORAGE **
 	 ******************/
   
-	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_upgrade_args;
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-	Genode::List<Ram_dataspace>::Element *ck_ram_dataspaces;
-	Genode::Ram_session_capability   ck_ref_account_cap;
-  
+	Ram_session_info info;
+	
 protected:
 	/*****************
 	 ** HOT STORAGE **
@@ -122,12 +141,6 @@ public:
 				bool &bootstrap_phase);
   
 	~Ram_session();
-  
-	void print(Genode::Output &output) const {
-		Genode::print(output,
-					  ", ck_cargs='", ck_creation_args, "'",
-					  ", ck_uargs='", ck_upgrade_args, "'");
-	}
 
 	void checkpoint() override;
 
@@ -176,11 +189,6 @@ public:
 class Rtcr::Ram_root : public Genode::Root_component<Ram_session>
 {
 protected:
-	/**
-	 * Enable log output for debugging
-	 */
-	static constexpr bool verbose_debug = ram_root_verbose_debug;
-
 	/**
 	 * Environment of Rtcr; is forwarded to a created session object
 	 */

@@ -20,7 +20,29 @@
 namespace Rtcr {
 	class Log_session;
 	class Log_root;
+	class Log_session_info;
 }
+
+
+struct Rtcr::Log_session_info {
+	Genode::String<160> creation_args;
+	Genode::String<160> upgrade_args;
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+
+	Log_session_info(const char* creation_args) : creation_args(creation_args) {}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, " Log session:\n");
+		Genode::print(output,
+					  "  bootstrapped=", bootstrapped,
+					  ", cargs='", creation_args, "'",
+					  ", uargs='", upgrade_args, "'\n");
+	}
+};
+
+
 
 /**
  * Custom RPC session object to intercept its creation, modification, and
@@ -35,12 +57,7 @@ public:
 	 ** COLD STORAGE **
 	 ******************/
 
-	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_upgrade_args;
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-
+	Log_session_info info;
 
 protected:
 	/*****************
@@ -82,12 +99,6 @@ public:
 	~Log_session();
 
 	Genode::Log_session_capability parent_cap() { return _parent_log.cap(); }
-
-	void print(Genode::Output &output) const {
-		Genode::print(output,
-					  ", ck_cargs='", ck_creation_args, "'",
-					  ", ck_uargs='", ck_upgrade_args, "'");
-	}
 
 	void checkpoint() override;
 

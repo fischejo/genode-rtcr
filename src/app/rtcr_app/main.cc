@@ -23,7 +23,8 @@
 #include <os/config.h>
 
 #include <rtcr/target_child.h>
-
+#include <rtcr/base_module.h>
+#include <rtcr/module.h>
 
 Genode::size_t Component::stack_size() { return 512*1024; }
 
@@ -44,16 +45,33 @@ struct Rtcr::Main
 	{
 	  Timer::Connection timer(env);
 
-	  Target_child child (env,
-			      heap,
-			      parent_services);
+	  Base_module module(env, heap);
+	  
+	  Target_child sheep (env,
+						  heap,
+						  parent_services,
+						  "sheep_counter",
+						  module);
 
 
-	  child.start();
+	  // Target_child horse (env,
+	  // 					  heap,
+	  // 					  parent_services,
+	  // 					  "horse_counter",
+	  // 					  module);
 
+
+	  sheep.start();
+//	  horse.start();	  
+
+	  
 	  timer.msleep(2000);
-	  child.checkpoint(true);
-//	  Genode::log(state);
+
+	  sheep.pause();
+	  sheep.checkpoint();
+	  sheep.resume();
+
+	  Genode::log(sheep);
 
 
 	  Genode::sleep_forever();

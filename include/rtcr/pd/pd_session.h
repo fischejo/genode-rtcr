@@ -27,7 +27,72 @@
 namespace Rtcr {
 	class Pd_session;
 	class Pd_root;
+	class Pd_session_info;
 }
+
+struct Rtcr::Pd_session_info {
+	Genode::String<160> creation_args;
+	Genode::String<160> upgrade_args;
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+
+	Region_map *region_maps;
+
+	Signal_source* signal_sources;
+	Signal_context* signal_contexts;
+	Native_capability* native_caps;
+
+	Region_map_info &address_space_info;
+	Region_map_info &stack_area_info;
+	Region_map_info &linker_area_info;
+	
+	Pd_session_info(const char* creation_args,
+					Region_map_info &address_space_info,
+					Region_map_info &stack_area_info,
+					Region_map_info &linker_area_info)
+		:
+		creation_args(creation_args),
+		address_space_info(address_space_info),
+		stack_area_info(stack_area_info),
+		linker_area_info(linker_area_info)
+		{}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, " PD session:\n");
+		Genode::print(output,
+					  "  bootstrapped=", bootstrapped,
+					  ", cargs='", creation_args, "'",
+					  ", uargs='", upgrade_args, "'\n");		
+
+		/* Signal contexts */
+		Genode::print(output, "  Signal contexts:\n");
+		Signal_context *context_info = signal_contexts;
+		if(!context_info) Genode::print(output, "   <empty>\n");
+		while(context_info) {
+			Genode::print(output, "   ", *context_info, "\n");
+			context_info = context_info->next();
+		}
+
+		/* Signal sources */
+		Genode::print(output, "  Signal sources:\n");
+		Signal_source *source_info = signal_sources;
+		if(!source_info) Genode::print(output, "   <empty>\n");
+		while(source_info) {
+			Genode::print(output, "   ", *source_info, "\n");
+			source_info = source_info->next();
+		}
+
+		/* Address space */
+		Genode::print(output, "  Address space: \n");
+		Genode::print(output, "   ", address_space_info);
+		Genode::print(output, "  Stack area: \n");		
+		Genode::print(output, "   ", stack_area_info);		
+		Genode::print(output, "  Linker area: \n");
+		Genode::print(output, "   ", linker_area_info);				
+	}
+};
+
 
 /**
  * Custom RPC session object to intercept its creation, modification, and
@@ -36,22 +101,7 @@ namespace Rtcr {
 class Rtcr::Pd_session : public Rtcr::Checkpointable,
 						 public Genode::Rpc_object<Genode::Pd_session>,
 						 public Genode::List<Pd_session>::Element
-{
-public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-  
-	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_upgrade_args;
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-
-	Genode::List<Signal_source>::Element* ck_signal_sources;
-	Genode::List<Signal_context>::Element* ck_signal_contexts;
-	Genode::List<Native_capability>::Element* ck_native_caps;
-
+{	
 protected:
   
 	const char* _upgrade_args;
@@ -122,7 +172,13 @@ protected:
 	void _checkpoint_native_capabilities();  
 
 
+public:
+	/******************
+	 ** COLD STORAGE **
+	 ******************/
 
+	Pd_session_info info;
+	
 	
 public:
 	using Genode::Rpc_object<Genode::Pd_session>::cap;
@@ -137,7 +193,6 @@ public:
   
 	~Pd_session();
 
-	void print(Genode::Output &output) const;
 	void checkpoint() override;
 
 	void upgrade(const char *upgrade_args) {

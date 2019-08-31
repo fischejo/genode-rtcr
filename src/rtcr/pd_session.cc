@@ -37,7 +37,6 @@ Pd_session::Pd_session(Genode::Env &env,
 	_ep (ep),
 	_bootstrap_phase (bootstrap_phase),
 	_parent_pd (env, label),
-	ck_creation_args (creation_args),
 	_address_space (_md_alloc,
 					_parent_pd.address_space(),
 					0,
@@ -52,10 +51,15 @@ Pd_session::Pd_session(Genode::Env &env,
 				  _parent_pd.linker_area(),
 				  0,
 				  "linker_area",
-				  _bootstrap_phase)
+				  _bootstrap_phase),
+	info (creation_args,
+		  _address_space.info,
+		  _stack_area.info,
+		  _linker_area.info)
 {
 	DEBUG_THIS_CALL
-		_ep.manage(_address_space);
+
+	_ep.manage(_address_space);
 	_ep.manage(_stack_area);
 	_ep.manage(_linker_area);
 
@@ -90,6 +94,7 @@ Pd_session::~Pd_session()
 }
 
 
+
 void Pd_session::_checkpoint_signal_contexts()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL	
@@ -106,7 +111,7 @@ void Pd_session::_checkpoint_signal_contexts()
 		sc = sc->next();
 	}
 
-	ck_signal_contexts = _signal_contexts.first();
+	info.signal_contexts = _signal_contexts.first();
 }
 
 
@@ -126,7 +131,7 @@ void Pd_session::_checkpoint_signal_sources()
 		ss = ss->next();
 	}
 
-	ck_signal_sources = _signal_sources.first();
+	info.signal_sources = _signal_sources.first();
 }
 
 
@@ -146,16 +151,17 @@ void Pd_session::_checkpoint_native_capabilities()
 		nc = nc->next();
 	}
 
-	ck_native_caps = _native_caps.first();
+	info.native_caps = _native_caps.first();
 }
  
 
 void Pd_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-		ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrapped;
-	ck_upgrade_args = _upgrade_args;
+
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrapped;
+	info.upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);

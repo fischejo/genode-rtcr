@@ -109,6 +109,8 @@ void Target_child::resume()
 void Target_child::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
+	Rm_session *rm_session = _rm_service.session();
+		
 	if(_parallel) {
 		/* start all checkpointing threads */
 		_capability_mapping.start_checkpoint();
@@ -140,9 +142,10 @@ void Target_child::checkpoint()
 		_ram_session.start_checkpoint();
 		_ram_session.join_checkpoint();
 
-		if(_rm_service.session()) {
-			_rm_service.session()->start_checkpoint();
-			_rm_service.session()->join_checkpoint();
+
+		if(rm_session) {
+			rm_session->start_checkpoint();
+			rm_session->join_checkpoint();
 		}
 		if(_rom_service.session()) {
 			_rom_service.session()->start_checkpoint();
@@ -164,13 +167,39 @@ void Target_child::checkpoint()
 
 
 void Target_child::print(Genode::Output &output) const {
-	_pd_session.print(output);
-	_cpu_session.print(output);
-	_ram_session.print(output);
-	// if(_rm_service.session()) _rm_service.session()->print(output);
-	// if(_rom_service.session()) _rom_service.session()->print(output);
-	// if(_log_service.session()) _log_service.session()->print(output);
-	// if(_timer_service.session()) _timer_service.session()->print(output);		
+	Genode::print(output, "Child: ",_name,"\n");
+
+	/* PD session */
+	Genode::print(output, _pd_session.info);
+
+	/* CPU session */
+	Genode::print(output, _cpu_session.info);
+
+	/* RAM session */
+	Genode::print(output, _ram_session.info);
+
+	/* (optional) RM session */
+	const Rm_session *rm_session = _rm_service.session();
+	if(rm_session) Genode::print(output, rm_session->info);
+	else Genode::print(output, " RM session: <empty>\n");
+
+	/* (optional) LOG session */
+	const Log_session *log_session = _log_service.session();	
+	if(log_session) Genode::print(output, log_session->info);
+	else Genode::print(output, " LOG session: <empty>\n");
+
+	/* (optional) Timer session */
+	const Timer_session *timer_session = _timer_service.session();
+	if(timer_session) Genode::print(output, timer_session->info);
+	else Genode::print(output, " Timer session: <empty>\n");
+
+	/* (optional) Rom session */	
+	const Rom_session *rom_session = _rom_service.session();
+	if(rom_session) Genode::print(output, rom_session->info);
+	else Genode::print(output, " ROM session: <empty>\n");
+
+	/* Capabilities */
+	Genode::print(output, _capability_mapping);
 }
 
 

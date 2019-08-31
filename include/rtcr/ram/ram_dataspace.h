@@ -19,7 +19,30 @@
 
 namespace Rtcr {
 	struct Ram_dataspace;
+	struct Ram_dataspace_info;
 }
+
+struct Rtcr::Ram_dataspace_info {
+	bool bootstrapped;
+	Genode::Ram_dataspace_capability dst_cap;
+	Genode::size_t timestamp;
+	Genode::Ram_dataspace_capability const cap;
+	Genode::size_t                   const size;
+	Genode::Cache_attribute          const cached;
+
+	Ram_dataspace_info(Genode::Ram_dataspace_capability const cap,
+					   Genode::size_t const size,
+					   Genode::Cache_attribute const cached)
+		: cap(cap), size(size), cached(cached) {}
+
+	void print(Genode::Output &output) const {
+		using Genode::Hex;
+		Genode::print(output, cap,
+					  "   size=", Hex(size),
+					  ", cached=", static_cast<unsigned>(cached),
+					  ", timestamp=", timestamp, "\n");
+	}
+};
 
 /**
  * Monitors allocated Ram dataspaces
@@ -32,10 +55,8 @@ struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
 	 ** COLD STORAGE **
 	 ******************/
 	
-	bool ck_bootstrapped;
-	Genode::Ram_dataspace_capability ck_dst_cap;
-	Genode::size_t ck_timestamp;
-
+	Ram_dataspace_info info;
+	
 	/*****************
 	 ** HOT STORAGE **
 	 *****************/
@@ -50,7 +71,8 @@ struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
 	bool is_region_map;
 
 	void checkpoint() {
-		ck_bootstrapped = _bootstrapped;
+		info.bootstrapped = _bootstrapped;
+		info.timestamp = timestamp();
 	}
 
 	/**
@@ -59,24 +81,13 @@ struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
 	 */
 	void *storage;
 
-	/**
-	 * Allocated Ram dataspace
-	 */
-	Genode::Ram_dataspace_capability const ck_cap;
-	Genode::size_t                   const ck_size;
-	Genode::Cache_attribute          const ck_cached;
 
 	Ram_dataspace(Genode::Ram_dataspace_capability ds_cap,
 					   Genode::size_t size,
 					   Genode::Cache_attribute cached,
 					   bool bootstrapped)
 		:
-		_bootstrapped (bootstrapped),
-		ck_cap      (ds_cap),
-		ck_size     (size),
-		ck_cached   (cached),
-	    is_region_map(false),
-		storage (nullptr)
+		Ram_dataspace(ds_cap, size, cached, bootstrapped, nullptr)
 		{ }
 
 	Ram_dataspace(Genode::Ram_dataspace_capability ds_cap,
@@ -86,10 +97,8 @@ struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
 					   void *storage)
 		:
 		_bootstrapped (bootstrapped),
-		ck_cap      (ds_cap),
-		ck_size     (size),
-		ck_cached   (cached),
-		storage (storage)
+		storage (storage),
+		info(ds_cap, size, cached)
 		{ }
 
 	
@@ -98,7 +107,7 @@ struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
 	virtual ~Ram_dataspace() {};
 		
 	Ram_dataspace *find_by_badge(Genode::uint16_t badge) {
-		if(badge == ck_cap.local_name())
+		if(badge == info.cap.local_name())
 			return this;
 		Ram_dataspace *info = next();
 		return info ? info->find_by_badge(badge) : 0;
@@ -115,13 +124,7 @@ struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
 		return Simple_counter<Ram_dataspace>::id();
 	}
 
-	void print(Genode::Output &output) const {
-		using Genode::Hex;
-		Genode::print(output, ck_cap,
-					  ", size=", Hex(ck_size),
-					  ", cached=", static_cast<unsigned>(ck_cached),
-					  ", timestamp=", timestamp(), ", ");
-	}
+
 };
 
 

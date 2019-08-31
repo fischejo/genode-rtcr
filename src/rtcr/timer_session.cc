@@ -34,7 +34,7 @@ Timer_session::Timer_session(Genode::Env &env,
 	_ep           (ep),
 	_parent_timer (env),
 	_bootstrapped (bootstrapped),
-	ck_creation_args (creation_args)
+	info (creation_args)
 {
 	DEBUG_THIS_CALL
 }
@@ -43,17 +43,16 @@ Timer_session::Timer_session(Genode::Env &env,
 void Timer_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrapped;
-	ck_upgrade_args = _upgrade_args;
-	ck_sigh_badge = _sigh.local_name();
-	ck_timeout = _timeout;
-	ck_periodic = _periodic;
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrapped;
+	info.upgrade_args = _upgrade_args;
+	info.sigh_badge = _sigh.local_name();
+	info.timeout = _timeout;
+	info.periodic = _periodic;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 }
-
 
 Timer_session *Timer_session::find_by_badge(Genode::uint16_t badge)
 {

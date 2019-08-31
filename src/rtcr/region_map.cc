@@ -52,16 +52,16 @@ void Region_map::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
-	ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrap_phase;
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
   
-	ck_size = _size;
-	ck_ds_badge = _ds_cap.local_name();
-	ck_sigh_badge = _sigh.local_name();
+	info.size = _size;
+	info.ds_badge = _ds_cap.local_name();
+	info.sigh_badge = _sigh.local_name();
 
 	Attached_region *region = nullptr;
 	while(region = _destroyed_attached_regions.dequeue()) {
@@ -75,7 +75,7 @@ void Region_map::checkpoint()
 		region = region->next();
 	}  
 
-	ck_attached_regions = _attached_regions.first();
+	info.attached_regions = _attached_regions.first();
 }
 
 

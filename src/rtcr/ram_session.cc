@@ -27,7 +27,7 @@ void Ram_session::_destroy_ramds(Ram_dataspace &ramds)
 {
 
 	Genode::Ram_dataspace_capability ds_cap =
-		Genode::static_cap_cast<Genode::Ram_dataspace>(ramds.ck_cap);
+		Genode::static_cap_cast<Genode::Ram_dataspace>(ramds.info.cap);
 
 	/* Destroy Ram_dataspace */
 	Genode::destroy(_md_alloc, &ramds);
@@ -49,7 +49,7 @@ Ram_session::Ram_session(Genode::Env &env,
 	_bootstrap_phase    (bootstrap_phase),
 	_parent_ram         (env, label),
 	_parent_rm          (env),
-	ck_creation_args (creation_args)
+	info (creation_args)
 {
 	DEBUG_THIS_CALL
 	/* Donate ram quota to child */
@@ -90,8 +90,8 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 {
 	Ram_dataspace *dataspace = _ram_dataspaces.first();
 	/* only iterate through the recently added dataspaces. */
-	while(dataspace && dataspace != ck_ram_dataspaces) {
-		if (dataspace->ck_cap == cap) {
+	while(dataspace && dataspace != info.ram_dataspaces) {
+		if (dataspace->info.cap == cap) {
 			dataspace->is_region_map = true;
 		}
 		dataspace = dataspace->next();
@@ -99,13 +99,13 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 }
 
 
-void Ram_session::copy_dataspace(Ram_dataspace &info)
+void Ram_session::copy_dataspace(Ram_dataspace &ds)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-		char *dst_addr_start = _env.rm().attach(info.ck_dst_cap);
-	char *src_addr_start = _env.rm().attach(info.ck_cap);
+		char *dst_addr_start = _env.rm().attach(ds.info.dst_cap);
+	char *src_addr_start = _env.rm().attach(ds.info.cap);
 
-	Genode::memcpy(dst_addr_start, src_addr_start, info.ck_size);
+	Genode::memcpy(dst_addr_start, src_addr_start, ds.info.size);
 	_env.rm().detach(src_addr_start);
 	_env.rm().detach(dst_addr_start);
 }
@@ -114,9 +114,10 @@ void Ram_session::copy_dataspace(Ram_dataspace &info)
 void Ram_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-		ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrap_phase;
-	ck_upgrade_args = _upgrade_args;
+
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrap_phase;
+	info.upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
@@ -130,9 +131,9 @@ void Ram_session::checkpoint()
 
 	/* step 2: allocate cold dataspace for recently added dataspaces */
 	dataspace = _ram_dataspaces.first();	
-	while(dataspace && dataspace != ck_ram_dataspaces) {
+	while(dataspace && dataspace != info.ram_dataspaces) {
 		if(!dataspace->is_region_map)
-			dataspace->ck_dst_cap = _env.ram().alloc(dataspace->ck_size);
+			dataspace->info.dst_cap = _env.ram().alloc(dataspace->info.size);
 		dataspace = dataspace->next();
 	}
 
@@ -148,7 +149,7 @@ void Ram_session::checkpoint()
 	}
 
 	/* step 4: move pointer forward to update ck_ram_dataspaces */
-	ck_ram_dataspaces = _ram_dataspaces.first();
+	info.ram_dataspaces = _ram_dataspaces.first();
 	
 }
 

@@ -25,8 +25,35 @@
 namespace Rtcr {
 	class Cpu_session;
 	class Cpu_root;
+	class Cpu_session_info;
 }
 
+struct Rtcr::Cpu_session_info {
+	Genode::String<160> creation_args;
+	Genode::String<160> upgrade_args;
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+	Cpu_thread *cpu_threads;
+	Genode::uint16_t sigh_badge;
+
+	Cpu_session_info(const char* creation_args) : creation_args(creation_args) {}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, " CPU session:\n");
+		Genode::print(output,
+					  "  bootstrapped=", bootstrapped,
+					  ", cargs='", creation_args, "'",
+					  ", uargs='", upgrade_args, "'\n");
+
+		Cpu_thread *cpu_thread = cpu_threads;
+		if(!cpu_thread) Genode::print(output, "  <empty>\n");
+		while(cpu_thread) {
+		Genode::print(output, "  ", cpu_thread->info, "\n");
+			cpu_thread = cpu_thread->next();
+		}		
+	}
+};
 
 
 /**
@@ -42,14 +69,7 @@ public:
 	 ** COLD STORAGE **
 	 ******************/
 	
-	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_upgrade_args;
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-	Genode::List<Cpu_thread>::Element *ck_cpu_threads;
-	Genode::uint16_t ck_sigh_badge;
-  
+	Cpu_session_info info;
 protected:
 
 	const char* _upgrade_args;
@@ -150,12 +170,6 @@ public:
 	 */	
 	void resume();
 
-  
-	void print(Genode::Output &output) const {
-		Genode::print(output,
-					  ", ck_creation_args='", ck_creation_args, "'",
-					  ", ck_update_args='", ck_upgrade_args, "'");
-	}
 
 	void checkpoint() override;
 

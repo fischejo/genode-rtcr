@@ -50,6 +50,7 @@ public:
 
 	Genode::Session_capability cap() { return _cap; }
 	T *session() { return _session; }
+	const T *session() const { return _session; }	
 };
 
 #endif

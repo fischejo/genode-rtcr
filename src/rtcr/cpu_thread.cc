@@ -34,10 +34,8 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 	:
 	_md_alloc (md_alloc),
 	_parent_cpu_thread (cpu_thread_cap),
-	ck_name (name),
-	ck_pd_session_badge (pd_session_cap.local_name()),
-	ck_weight (weight),
-	ck_utcb (utcb),
+	_pd_session_cap(pd_session_cap),
+	info(name, weight, utcb),
 	_bootstrapped(bootstrap_phase),
 	_affinity(affinity)
 {
@@ -48,71 +46,21 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 void Cpu_thread::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL	
-	ck_badge = cap().local_name();
+	info.badge = cap().local_name();
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
   
-	ck_started = _started;
-	ck_paused = _paused;
-	ck_single_step = _single_step;
-	ck_affinity = _affinity; // TODO FJO: clone it
-	ck_sigh_badge = _sigh.local_name();
-	ck_bootstrapped = _bootstrapped;
+	info.started = _started;
+	info.paused = _paused;
+	info.single_step = _single_step;
+	info.affinity = _affinity; // TODO FJO: clone it
+	info.sigh_badge = _sigh.local_name();
+	info.bootstrapped = _bootstrapped;
+	info.pd_session_badge = _pd_session_cap.local_name();
 
 	/* XXX does not guarantee to return the current thread registers */
-	ck_ts = _parent_cpu_thread.state();
-}
-
-
-void Cpu_thread::print(Genode::Output &output) const
-{
-	using Genode::Hex;
-
-	Genode::print(output,
-				  ", pd_session_badge=", ck_pd_session_badge,
-				  ", name=", ck_name,
-				  ", weight=", ck_weight.value,
-				  ", utcb=", Hex(ck_utcb));
-  
-	Genode::print(output,
-				  ", started=", ck_started,
-				  ", paused=", ck_paused,
-				  ", single_step=", ck_single_step);
-  
-	Genode::print(output,
-				  ", affinity=(", ck_affinity.xpos(),
-				  "x", ck_affinity.ypos(),
-				  ", ", ck_affinity.width(),
-				  "x", ck_affinity.height(), ")");
-  
-	Genode::print(output, ", sigh_badge=", ck_sigh_badge, "\n");
-
-	Genode::print(output, "  r0-r4: ",
-				  Hex(ck_ts.r0, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r1, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r2, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r3, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r4, Hex::PREFIX, Hex::PAD), "\n");
-  
-	Genode::print(output, "  r5-r9: ",
-				  Hex(ck_ts.r5, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r6, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r7, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r8, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r9, Hex::PREFIX, Hex::PAD), "\n");
-
-	Genode::print(output, "  r10-r12: ",
-				  Hex(ck_ts.r10, Hex::PREFIX, Hex::PAD), " ",
-			      Hex(ck_ts.r11, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.r12, Hex::PREFIX, Hex::PAD), "\n");
-
-	Genode::print(output, "  sp, lr, ip, cpsr, cpu_e: ",
-				  Hex(ck_ts.sp, Hex::PREFIX, Hex::PAD), " ",
-			      Hex(ck_ts.lr, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.ip, Hex::PREFIX, Hex::PAD), " ",
-			      Hex(ck_ts.cpsr, Hex::PREFIX, Hex::PAD), " ",
-				  Hex(ck_ts.cpu_exception, Hex::PREFIX, Hex::PAD));
+	info.ts = _parent_cpu_thread.state();
 }
 
 
@@ -127,7 +75,7 @@ Cpu_thread *Cpu_thread::find_by_badge(Genode::uint16_t badge)
 
 Cpu_thread *Cpu_thread::find_by_name(const char* name)
 {
-	if(!Genode::strcmp(name, ck_name.string()))
+	if(!Genode::strcmp(name, info.name.string()))
 		return this;
 	Cpu_thread *obj = next();
 	return obj ? obj->find_by_name(name) : 0;

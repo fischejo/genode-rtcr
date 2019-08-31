@@ -20,7 +20,34 @@
 namespace Rtcr {
 	class Timer_session;
 	class Timer_root;
+	class Timer_session_info;
 }
+
+struct Rtcr::Timer_session_info {
+	Genode::String<160> creation_args;
+	Genode::String<160> upgrade_args;
+	bool bootstrapped;
+	unsigned timeout;
+	bool periodic;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+	Genode::uint16_t sigh_badge;
+
+	Timer_session_info(const char* creation_args) : creation_args(creation_args) {}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, " Timer session:\n");
+		Genode::print(output,
+					  "   sigh_badge ", sigh_badge,
+					  ", timeout=", timeout,
+					  ", periodic=", periodic,
+					  ", bootstrapped=", bootstrapped,
+					  ", cargs='", creation_args, "'",
+					  ", uargs='", upgrade_args, "'\n");
+	}
+};
+
+
 
 /**
  * Custom RPC session object to intercept its creation, modification, and
@@ -34,15 +61,7 @@ public:
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
-
-	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_upgrade_args;
-	bool ck_bootstrapped;
-	unsigned ck_timeout;
-	bool ck_periodic;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-	Genode::uint16_t ck_sigh_badge;
+	Timer_session_info info;
   
 protected:
 	/*****************
@@ -81,18 +100,6 @@ public:
 				  bool bootstrapped);
 
 	~Timer_session() {};
-
-
-	void print(Genode::Output &output) const {
-		Genode::print(output,
-					  "ck_sigh_badge ", ck_sigh_badge,
-					  ", ck_timeout=", ck_timeout,
-					  ", ck_periodic=", ck_periodic,
-					  ", ck_bootstrapped=", ck_bootstrapped,
-					  ", ck_cargs='", ck_creation_args, "'",
-					  ", ck_uargs='", ck_upgrade_args, "'");
-	}
-
 	
 	Timer::Session_capability parent_cap() { return _parent_timer.cap(); }
 

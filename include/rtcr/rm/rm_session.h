@@ -22,7 +22,35 @@
 namespace Rtcr {
 	class Rm_session;
 	class Rm_root;
+	class Rm_session_info;
 }
+
+struct Rtcr::Rm_session_info {
+	Genode::String<160> creation_args;
+	Genode::String<160> upgrade_args;
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+	Region_map *region_maps;
+
+	Rm_session_info(const char* creation_args) : creation_args(creation_args) {}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, " RM session:\n");
+		Genode::print(output,
+					  "  bootstrapped=", bootstrapped,
+					  ", cargs='", creation_args, "'",
+					  ", uargs='", upgrade_args, "'\n");
+		
+		const Region_map *rm = region_maps;
+		if(!rm) Genode::print(output, "   <empty>\n");
+		while(rm) {
+			Genode::print(output, "   ", rm->info);
+			rm = rm->next();
+		}
+	}
+};
+
 
 /**
  * Custom RPC session object to intercept its creation, modification, and
@@ -37,13 +65,7 @@ public:
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
-
-	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_upgrade_args;
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-	Genode::List<Region_map>::Element *ck_region_maps;
+	Rm_session_info info;
    
 protected:
 	/*****************
@@ -104,11 +126,6 @@ public:
 	
 	const char* upgrade_args() { return _upgrade_args; }
 	
-	void print(Genode::Output &output) const {
-		Genode::print(output,
-					  ", ck_cargs='", ck_creation_args, "'",
-					  ", ck_uargs='", ck_upgrade_args, "'");    
-	}
 
 	Rm_session *find_by_badge(Genode::uint16_t badge);
 	

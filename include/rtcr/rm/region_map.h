@@ -21,7 +21,34 @@
 
 namespace Rtcr {
 	class Region_map;
+	struct Region_map_info;
 }
+	
+struct Rtcr::Region_map_info {
+	Genode::size_t size;
+	Genode::uint16_t ds_badge;
+	Genode::uint16_t sigh_badge; 
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+	Attached_region *attached_regions;
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, "  Region Map:\n");
+		Genode::print(output,
+					  ", size=", size,
+					  ", ds_badge=", ds_badge,
+					  ", sigh_badge=", sigh_badge);
+
+		Attached_region *rm = attached_regions;
+		if(!rm) Genode::print(output, "   <empty>\n");
+		while(rm) {
+			Genode::print(output, "   ", rm->info);
+			rm = rm->next();
+		}
+	}
+};
+
 
 /**
  * Custom Region map intercepting RPC methods
@@ -34,16 +61,9 @@ public:
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
+
+	Region_map_info info;
 	
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-  
-	Genode::size_t ck_size;
-	Genode::uint16_t ck_ds_badge;
-	Genode::uint16_t ck_sigh_badge;
-	Genode::List<Attached_region>::Element *ck_attached_regions;
-  
 protected:
 	/*****************
 	 ** HOT STORAGE **
@@ -119,16 +139,6 @@ public:
 	Genode::List<Attached_region> attached_regions() { return _attached_regions; }
 
 	void checkpoint();
-
-	void print(Genode::Output &output) const {
-		using Genode::Hex;
-
-		Genode::print(output,
-					  ", ck_size=", ck_size,
-					  ", ck_ds_badge=", ck_ds_badge,
-					  ", ck_sigh_badge=", ck_sigh_badge);
-	}
-	
   
 	Region_map *find_by_badge(Genode::uint16_t badge);
 

@@ -10,7 +10,7 @@
 # Build
 #
 
-build { core init drivers/timer app/rtcr_app app/sheep_counter }
+build { core init drivers/timer app/rtcr_app app/sheep_counter app/horse_counter }
 
 create_boot_directory
 
@@ -65,7 +65,7 @@ install_config {
 # Boot image
 #
 
-build_boot_image { core init timer rtcr_app sheep_counter }
+build_boot_image { core init timer rtcr_app sheep_counter horse_counter }
 
 append qemu_args " -nographic -smp 2,cores=2 "
 

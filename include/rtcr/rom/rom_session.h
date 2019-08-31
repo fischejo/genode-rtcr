@@ -22,7 +22,32 @@
 namespace Rtcr {
 	class Rom_session;
 	class Rom_root;
+	class Rom_session_info;
 }
+
+
+struct Rtcr::Rom_session_info {
+	Genode::String<160> creation_args;
+	Genode::String<160> upgrade_args;
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+	Genode::uint16_t dataspace_badge;
+	Genode::uint16_t sigh_badge;
+
+	Rom_session_info(const char* creation_args) : creation_args(creation_args) {}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output, " Rom session:\n");
+		Genode::print(output,
+					  "  bootstrapped=", bootstrapped,
+					  ", cargs='", creation_args, "'",
+					  ", uargs='", upgrade_args, 
+					  ", dataspace_badge=", dataspace_badge,
+					  ", sigh_badge=", sigh_badge, "'\n");
+	}
+};
+
 
 class Rtcr::Rom_session : public Rtcr::Checkpointable,
 						  public Genode::Rpc_object<Genode::Rom_session>,
@@ -33,14 +58,8 @@ public:
 	 ** COLD STORAGE **
 	 ******************/
   
-	Genode::String<160> ck_creation_args;
-	Genode::String<160> ck_upgrade_args;
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-	Genode::uint16_t ck_dataspace_badge;
-	Genode::uint16_t ck_sigh_badge;
-  
+	Rom_session_info info;
+	
 protected:
 
 	/*****************
@@ -88,8 +107,7 @@ public:
   
 	void print(Genode::Output &output) const {
 		using Genode::Hex;
-		Genode::print(output, ", ck_dataspace_badge=", ck_dataspace_badge,
-					  ", ck_sigh_badge=", ck_sigh_badge);    
+	
 	}
 
 	void checkpoint() override;

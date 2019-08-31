@@ -90,7 +90,8 @@ Cpu_session::Cpu_session(Genode::Env &env,
 	_bootstrap_phase (bootstrap_phase),
 	_pd_root         (pd_root),
 	_parent_cpu      (env, label),
-	_child_affinity (_read_child_affinity(label))
+	_child_affinity (_read_child_affinity(label)),
+	info(creation_args)
 {
 	DEBUG_THIS_CALL
 		}
@@ -127,14 +128,14 @@ Genode::Affinity::Location Cpu_session::_read_child_affinity(const char* child_n
 void Cpu_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-		ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrapped;
-	ck_upgrade_args = _upgrade_args;
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrapped;
+	info.upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 
-	ck_sigh_badge = _sigh.local_name();
+	info.sigh_badge = _sigh.local_name();
   
 	Cpu_thread *cpu_thread;
 	while(cpu_thread = _destroyed_cpu_threads.dequeue()) {
@@ -149,7 +150,7 @@ void Cpu_session::checkpoint()
 	}
 
 	/* checkpoint current state of Cpu_thread list. */
-	ck_cpu_threads = _cpu_threads.first();
+	info.cpu_threads = _cpu_threads.first();
 }
 
 void Cpu_session::pause()
@@ -170,7 +171,7 @@ void Cpu_session::resume()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
-		Cpu_thread *cpu_thread = _cpu_threads.first();
+	Cpu_thread *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		/* if the object is in the destroyed queue, it means that it is already
 		 * destroyed */

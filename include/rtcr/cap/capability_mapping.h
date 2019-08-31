@@ -48,6 +48,9 @@ public:
 
 	~Capability_mapping();
 
+	void print(Genode::Output &output) const;
+
+	
 	/**
 	 * Method for finiding a capabilitiy based on its badge 
 	 *

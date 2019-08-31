@@ -17,7 +17,85 @@
 
 namespace Rtcr {
 	class Cpu_thread;
+	class Cpu_thread_info;
 }
+
+struct Rtcr::Cpu_thread_info {
+	bool bootstrapped;
+	Genode::uint16_t badge;
+	Genode::addr_t kcap;
+  
+	Genode::uint16_t pd_session_badge;
+	Genode::Cpu_session::Name name;
+	Genode::Cpu_session::Weight weight;
+	Genode::addr_t utcb;
+	bool started;
+	bool paused;
+	bool single_step;
+	Genode::Affinity::Location affinity;
+	Genode::uint16_t sigh_badge;
+	Genode::Thread_state ts;
+	
+	Cpu_thread_info(const char *name,
+					Genode::Cpu_session::Weight weight,
+					Genode::addr_t utcb) 
+		: name(name), weight(weight), utcb(utcb) {}
+		
+
+	void print(Genode::Output &output) const {
+		using Genode::Hex;
+		Genode::print(output, "Thread:\n");
+		Genode::print(output,
+					  "   pd_session_badge=", pd_session_badge,
+					  ", name=", name,
+					  ", weight=", weight.value,
+					  ", utcb=", Hex(utcb),
+					  ",  bootstrapped=", bootstrapped);
+  
+		Genode::print(output,
+					  ", started=", started,
+					  ", paused=", paused,
+					  ", single_step=", single_step);
+  
+		Genode::print(output,
+					  ", affinity=(", affinity.xpos(),
+					  "x", affinity.ypos(),
+					  ", ", affinity.width(),
+					  "x", affinity.height(), ")");
+  
+		Genode::print(output, ", sigh_badge=", sigh_badge, "\n");
+
+		Genode::print(output, "   r0-r4: ",
+					  Hex(ts.r0, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r1, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r2, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r3, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r4, Hex::PREFIX, Hex::PAD), "\n");
+  
+		Genode::print(output, "   r5-r9: ",
+					  Hex(ts.r5, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r6, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r7, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r8, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r9, Hex::PREFIX, Hex::PAD), "\n");
+
+		Genode::print(output, "   r10-r12: ",
+					  Hex(ts.r10, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r11, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.r12, Hex::PREFIX, Hex::PAD), "\n");
+
+		Genode::print(output, "   sp, lr, ip, cpsr, cpu_e: ",
+					  Hex(ts.sp, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.lr, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.ip, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.cpsr, Hex::PREFIX, Hex::PAD), " ",
+					  Hex(ts.cpu_exception, Hex::PREFIX, Hex::PAD));
+		Genode::print(output, "\n");		
+	}
+};
+
+
+
 
 class Rtcr::Cpu_thread : public Genode::Rpc_object<Genode::Cpu_thread>,
 						 public Genode::List<Cpu_thread>::Element,
@@ -27,21 +105,8 @@ public:
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
-	
-	bool ck_bootstrapped;
-	Genode::uint16_t ck_badge;
-	Genode::addr_t ck_kcap;
-  
-	Genode::uint16_t ck_pd_session_badge;
-	Genode::Cpu_session::Name ck_name;
-	Genode::Cpu_session::Weight ck_weight;
-	Genode::addr_t ck_utcb;
-	bool ck_started;
-	bool ck_paused;
-	bool ck_single_step;
-	Genode::Affinity::Location ck_affinity;
-	Genode::uint16_t ck_sigh_badge;
-	Genode::Thread_state ck_ts;
+
+	Cpu_thread_info info;
   
 protected:
 
@@ -52,7 +117,7 @@ protected:
 	Genode::Affinity::Location        _affinity; // Is also used for creation
 	Genode::Signal_context_capability _sigh;
 	bool &_bootstrapped;  
-
+	Genode::Pd_session_capability _pd_session_cap;
 
 private:
 	/**
@@ -81,9 +146,6 @@ public:
 			   bool &bootstrap_phase);
 
 	~Cpu_thread() {}
-
-
-	void print(Genode::Output &output) const;
 
 	void checkpoint();
 	

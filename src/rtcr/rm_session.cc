@@ -68,7 +68,7 @@ Rm_session::Rm_session(Genode::Env &env,
 	_bootstrap_phase  (bootstrap_phase),
 	_parent_rm        (env),
 	_ram_root (ram_root),
-	ck_creation_args (creation_args)
+	info (creation_args)
 {
 	DEBUG_THIS_CALL
 }
@@ -86,9 +86,10 @@ Rm_session::~Rm_session()
 void Rm_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-		ck_badge = cap().local_name();
-	ck_bootstrapped = _bootstrap_phase;
-	ck_upgrade_args = _upgrade_args;
+
+	info.badge = cap().local_name();
+	info.bootstrapped = _bootstrap_phase;
+	info.upgrade_args = _upgrade_args;
 
 	// TODO
 	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
@@ -105,8 +106,9 @@ void Rm_session::checkpoint()
 		region_map = region_map->next();
 	}
 
-	ck_region_maps = _region_maps.first();
+	info.region_maps = _region_maps.first();
 }
+
 
 Rm_session *Rm_session::find_by_badge(Genode::uint16_t badge)
 {
