@@ -13,12 +13,10 @@
 
 namespace Rtcr {
 	template<typename T> class Simple_counter;
-	struct General;
-	struct Session_rpc;
-	struct Normal_rpc;
-	struct Normal_obj;
-}
 
+	struct Normal_info;
+	struct Session_info;
+}
 
 template<typename T>
 class Rtcr::Simple_counter
@@ -41,84 +39,39 @@ public:
 	Genode::size_t id() const { return current_id; }
 };
 
-
-struct Rtcr::General
+struct Rtcr::Normal_info
 {
-	bool const bootstrapped;
+	bool bootstrapped;
+	Genode::uint16_t badge;
 
-	General() : bootstrapped(false)
-		{ }
-
-	General(bool bootstrapped) : bootstrapped(bootstrapped)
-		{ }
-
-	void print(Genode::Output &output) const
-		{
-			Genode::print(output, "bootstrapped=", bootstrapped);
-		}
+	Normal_info() {}
+	
+	void print(Genode::Output &output) const {
+		Genode::print(output,
+					  "bootstrapped=", bootstrapped,
+					  " badge=", badge);
+	}	
 };
 
 
-/**
- * Struct to monitor session RPC objects
- */
-struct Rtcr::Session_rpc : General
+struct Rtcr::Session_info : Rtcr::Normal_info
 {
 	Genode::String<160> creation_args;
 	Genode::String<160> upgrade_args;
 
-	Session_rpc() : General(), creation_args(""), upgrade_args("")
-		{ }
+	Session_info(const char* creation_args)
+		: creation_args (creation_args) { }
 
-	Session_rpc(const char* creation_args, const char* upgrade_args, bool bootstrapped)
-		:
-		General  (bootstrapped),
-		creation_args (creation_args),
-		upgrade_args  (upgrade_args)
-		{ }
+	void print(Genode::Output &output) const {
+		Normal_info::print(output);		
+		Genode::print(output,
+					  ", cargs='", creation_args,
+					  "', uargs='", upgrade_args, "'");
 
-	void print(Genode::Output &output) const
-		{
-			Genode::print(output, "cargs='", creation_args, "', uargs='", upgrade_args, "', ");
-			General::print(output);
-		}
+	}
 };
 
 
-/**
- * Struct to monitor normal RPC object (e.g. Region map, CPU thread)
- */
-struct Rtcr::Normal_rpc : General
-{
-	// Insert common members
-
-	Normal_rpc() : General()
-		{ }
-
-	Normal_rpc(bool bootstrapped)
-		:
-		General(bootstrapped)
-		{ }
-
-};
-
-
-/**
- * Struct to store information about RPC function invokation (e.g. parameter, return value)
- */
-struct Rtcr::Normal_obj : General
-{
-	// Insert common members
-
-	Normal_obj() : General()
-		{ }
-
-	Normal_obj(bool bootstrapped)
-		:
-		General(bootstrapped)
-		{ }
-
-};
 
 
 #endif /* _RTCR_INFO_STRUCTS_H_ */

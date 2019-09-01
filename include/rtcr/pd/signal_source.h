@@ -16,7 +16,11 @@
 
 namespace Rtcr {
 	struct Signal_source;
+	struct Signal_source_info;
 }
+
+struct Rtcr::Signal_source_info : Normal_info {};
+
 
 
 /**
@@ -28,10 +32,7 @@ struct Rtcr::Signal_source : Genode::List<Signal_source>::Element,
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
-
-	bool ck_bootstrapped;
-	Genode::addr_t ck_kcap;
-	Genode::uint16_t ck_badge;
+	Signal_source_info info;
 
 	/*****************
 	 ** HOT STORAGE **
@@ -57,10 +58,9 @@ struct Rtcr::Signal_source : Genode::List<Signal_source>::Element,
 
   
 	void checkpoint() {
-		ck_badge = cap.local_name();
-		ck_bootstrapped = bootstrapped;
+		info.badge = cap.local_name();
+		info.bootstrapped = bootstrapped;
 	}
-
 
   
 	Signal_source *find_by_badge(Genode::uint16_t badge) {

@@ -18,6 +18,7 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
+#include <rtcr/info_structs.h>
 
 namespace Rtcr {
 	class Rom_session;
@@ -26,24 +27,17 @@ namespace Rtcr {
 }
 
 
-struct Rtcr::Rom_session_info {
-	Genode::String<160> creation_args;
-	Genode::String<160> upgrade_args;
-	bool bootstrapped;
-	Genode::uint16_t badge;
-	Genode::addr_t kcap;
+struct Rtcr::Rom_session_info : Session_info {
 	Genode::uint16_t dataspace_badge;
 	Genode::uint16_t sigh_badge;
 
-	Rom_session_info(const char* creation_args) : creation_args(creation_args) {}
+	Rom_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " Rom session:\n");
+		Genode::print(output, " Rom session:\n ");
+		Session_info::print(output);
 		Genode::print(output,
-					  "  bootstrapped=", bootstrapped,
-					  ", cargs='", creation_args, "'",
-					  ", uargs='", upgrade_args, 
-					  ", dataspace_badge=", dataspace_badge,
+					  " dataspace_badge=", dataspace_badge,
 					  ", sigh_badge=", sigh_badge, "'\n");
 	}
 };

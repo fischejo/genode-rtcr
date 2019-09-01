@@ -18,19 +18,18 @@
 
 /* Rtcr includes */
 #include <rtcr/rm/attached_region.h>
+#include <rtcr/info_structs.h>
 
 namespace Rtcr {
 	class Region_map;
 	struct Region_map_info;
 }
 	
-struct Rtcr::Region_map_info {
+struct Rtcr::Region_map_info : Normal_info {
 	Genode::size_t size;
 	Genode::uint16_t ds_badge;
 	Genode::uint16_t sigh_badge; 
-	bool bootstrapped;
-	Genode::uint16_t badge;
-	Genode::addr_t kcap;
+
 	Attached_region *attached_regions;
 	
 	void print(Genode::Output &output) const {

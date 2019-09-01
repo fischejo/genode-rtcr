@@ -22,8 +22,7 @@ namespace Rtcr {
 	struct Ram_dataspace_info;
 }
 
-struct Rtcr::Ram_dataspace_info {
-	bool bootstrapped;
+struct Rtcr::Ram_dataspace_info : Normal_info {
 	Genode::Ram_dataspace_capability dst_cap;
 	Genode::size_t timestamp;
 	Genode::Ram_dataspace_capability const cap;

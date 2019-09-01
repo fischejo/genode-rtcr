@@ -16,6 +16,7 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
+#include <rtcr/info_structs.h>
 
 namespace Rtcr {
 	class Log_session;
@@ -24,21 +25,13 @@ namespace Rtcr {
 }
 
 
-struct Rtcr::Log_session_info {
-	Genode::String<160> creation_args;
-	Genode::String<160> upgrade_args;
-	bool bootstrapped;
-	Genode::uint16_t badge;
-	Genode::addr_t kcap;
-
-	Log_session_info(const char* creation_args) : creation_args(creation_args) {}
+struct Rtcr::Log_session_info : Session_info {
+	Log_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " Log session:\n");
-		Genode::print(output,
-					  "  bootstrapped=", bootstrapped,
-					  ", cargs='", creation_args, "'",
-					  ", uargs='", upgrade_args, "'\n");
+		Genode::print(output, " Log session:\n ");
+		Session_info::print(output);
+		
 	}
 };
 

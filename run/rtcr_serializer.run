@@ -1,0 +1,86 @@
+#
+# brief: Simple checkpoint/restore example with multi-threaded modules
+# Notes: * Child runs on Core 1
+#        * C/R runs on Core 0
+# author: Fischer Johannes
+# date: 2019-06-14
+#
+
+#
+# Build
+#
+
+build { core init drivers/timer app/rtcr_app app/sheep_counter app/horse_counter }
+
+create_boot_directory
+
+
+# Generate config
+#
+
+install_config {
+<config>
+        <affinity-space width="1"/>
+	<parent-provides>
+		<service name="PD"/>
+		<service name="CPU"/>
+		<service name="ROM"/>
+		<service name="RAM"/>
+		<service name="RM"/>
+		<service name="LOG"/>
+		<service name="IO_MEM"/>
+		<service name="IO_PORT"/>
+		<service name="IRQ"/>
+	</parent-provides>
+	<default-route>
+		<any-service> <parent/> <any-child/> </any-service>
+	</default-route>
+	<start name="timer">
+		<resource name="RAM" quantum="1M"/>
+                <provides>
+                    <service name="Timer"/>
+                </provides>
+	</start>
+	<start name="rtcr_app">
+    		<resource name="RAM" quantum="256M"/>
+                <config>
+                    <child name="sheep_counter" quota="1048576" xpos="0" />
+                    <module name="base">
+	                 <checkpoint parallel="false"/>
+                    <checkpointable name="cpu_session" xpos="1" />
+                    <checkpointable name="pd_session" xpos="0" />    
+                    <checkpointable name="ram_session" xpos="0" />    
+                     <checkpointable name="rm_session" xpos="0" />    
+                        <checkpointable name="rom_session" xpos="0" />    
+                        <checkpointable name="log_session" xpos="0" />    
+                        <checkpointable name="timer_session" xpos="0" />    
+                        <checkpointable name="capability_mapping" xpos="0" />    
+</module>
+                </config>
+	</start>
+</config>}
+
+
+#
+# Boot image
+#
+
+build_boot_image {
+core
+init
+timer
+rtcr_app
+sheep_counter
+horse_counter
+ld.lib.so
+libc.lib.so
+pthread.lib.so
+stdcxx.lib.so
+libm.lib.so
+libprotobuf.lib.so
+zlib.lib.so
+}
+
+append qemu_args " -nographic -smp 2,cores=2 "
+
+run_genode_until "hello test completed.*\n" 60

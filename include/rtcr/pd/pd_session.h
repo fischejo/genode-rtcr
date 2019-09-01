@@ -23,6 +23,7 @@
 #include <rtcr/pd/signal_context.h>
 #include <rtcr/pd/signal_source.h>
 #include <rtcr/ram/ram_session.h>
+#include <rtcr/info_structs.h>
 
 namespace Rtcr {
 	class Pd_session;
@@ -30,15 +31,7 @@ namespace Rtcr {
 	class Pd_session_info;
 }
 
-struct Rtcr::Pd_session_info {
-	Genode::String<160> creation_args;
-	Genode::String<160> upgrade_args;
-	bool bootstrapped;
-	Genode::uint16_t badge;
-	Genode::addr_t kcap;
-
-	Region_map *region_maps;
-
+struct Rtcr::Pd_session_info : Session_info {
 	Signal_source* signal_sources;
 	Signal_context* signal_contexts;
 	Native_capability* native_caps;
@@ -52,19 +45,16 @@ struct Rtcr::Pd_session_info {
 					Region_map_info &stack_area_info,
 					Region_map_info &linker_area_info)
 		:
-		creation_args(creation_args),
+		Session_info(creation_args),
 		address_space_info(address_space_info),
 		stack_area_info(stack_area_info),
 		linker_area_info(linker_area_info)
 		{}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " PD session:\n");
-		Genode::print(output,
-					  "  bootstrapped=", bootstrapped,
-					  ", cargs='", creation_args, "'",
-					  ", uargs='", upgrade_args, "'\n");		
-
+		Genode::print(output, " PD session:\n ");
+		Session_info::print(output);
+		
 		/* Signal contexts */
 		Genode::print(output, "  Signal contexts:\n");
 		Signal_context *context_info = signal_contexts;

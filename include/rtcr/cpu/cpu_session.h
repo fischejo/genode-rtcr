@@ -21,6 +21,7 @@
 #include <rtcr/cpu/cpu_thread.h>
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/checkpointable.h>
+#include <rtcr/info_structs.h>
 
 namespace Rtcr {
 	class Cpu_session;
@@ -28,24 +29,16 @@ namespace Rtcr {
 	class Cpu_session_info;
 }
 
-struct Rtcr::Cpu_session_info {
-	Genode::String<160> creation_args;
-	Genode::String<160> upgrade_args;
-	bool bootstrapped;
-	Genode::uint16_t badge;
-	Genode::addr_t kcap;
+struct Rtcr::Cpu_session_info : Session_info {
 	Cpu_thread *cpu_threads;
 	Genode::uint16_t sigh_badge;
 
-	Cpu_session_info(const char* creation_args) : creation_args(creation_args) {}
+	Cpu_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " CPU session:\n");
-		Genode::print(output,
-					  "  bootstrapped=", bootstrapped,
-					  ", cargs='", creation_args, "'",
-					  ", uargs='", upgrade_args, "'\n");
-
+		Genode::print(output, " CPU session:\n ");
+		Session_info::print(output);
+		
 		Cpu_thread *cpu_thread = cpu_threads;
 		if(!cpu_thread) Genode::print(output, "  <empty>\n");
 		while(cpu_thread) {

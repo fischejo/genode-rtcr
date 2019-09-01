@@ -17,7 +17,22 @@
 
 namespace Rtcr {
 	struct Signal_context;
+	struct Signal_context_info;
 }
+
+
+struct Rtcr::Signal_context_info : Normal_info {
+  	Genode::uint16_t signal_source_badge;
+	unsigned long imprint;
+
+	void print(Genode::Output &output) const {
+		using Genode::Hex;
+		Normal_info::print(output);
+		Genode::print(output,
+					  ", signal_source_badge=", signal_source_badge,
+					  ", imprint=",Hex(imprint));
+	}
+};
 
 /**
  * List element to store Signal_context_capabilities created by the pd session
@@ -28,13 +43,8 @@ struct Rtcr::Signal_context : Genode::List<Signal_context>::Element,
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
-	
-  	Genode::uint16_t ck_signal_source_badge;
-	unsigned long ck_imprint;
 
-	bool ck_bootstrapped;
-	Genode::addr_t ck_kcap;
-	Genode::uint16_t ck_badge;
+	Signal_context_info info;
 
 	/*****************
 	 ** HOT STORAGE **
@@ -65,10 +75,10 @@ struct Rtcr::Signal_context : Genode::List<Signal_context>::Element,
 		{ }
 
 	void checkpoint() {
-		ck_badge = cap.local_name();
-		ck_bootstrapped = bootstrapped;
-		ck_imprint = imprint;
-		ck_signal_source_badge = cap.local_name();
+		info.badge = cap.local_name();
+		info.bootstrapped = bootstrapped;
+		info.imprint = imprint;
+		info.signal_source_badge = cap.local_name();
 	}
   
 	Signal_context *find_by_badge(Genode::uint16_t badge) {

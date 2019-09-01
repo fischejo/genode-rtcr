@@ -18,6 +18,7 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/rm/region_map.h>
 #include <rtcr/ram/ram_session.h>
+#include <rtcr/info_structs.h>
 
 namespace Rtcr {
 	class Rm_session;
@@ -25,15 +26,10 @@ namespace Rtcr {
 	class Rm_session_info;
 }
 
-struct Rtcr::Rm_session_info {
-	Genode::String<160> creation_args;
-	Genode::String<160> upgrade_args;
-	bool bootstrapped;
-	Genode::uint16_t badge;
-	Genode::addr_t kcap;
+struct Rtcr::Rm_session_info : Session_info {
 	Region_map *region_maps;
 
-	Rm_session_info(const char* creation_args) : creation_args(creation_args) {}
+	Rm_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output, " RM session:\n");

@@ -13,17 +13,18 @@
 #include <util/fifo.h>
 #include <dataspace/capability.h>
 
+/* Rtcr includes */
+#include <rtcr/info_structs.h>
+
 namespace Rtcr {
 	struct Attached_region;
 	struct Attached_region_info;
 }
 
 
-struct Rtcr::Attached_region_info {
+struct Rtcr::Attached_region_info : Normal_info {
 	Genode::Ram_dataspace_capability memory_content;
     Genode::uint16_t attached_ds_badge;
-	bool bootstrapped;
-
 	/**
 	 * Size of occupied region
 	 */

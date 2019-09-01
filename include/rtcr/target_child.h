@@ -134,7 +134,17 @@ public:
 				 const char *label,
 				 Module &module);
 
-  
+	Cpu_session &cpu_session() { return _cpu_session; }
+	Ram_session &ram_session() { return _ram_session; }
+	Pd_session &pd_session() { return _pd_session; }	
+
+	Timer_session *timer_session() { return _timer_service.session(); }
+	Log_session *log_session() { return _log_service.session(); }
+	Rm_session *rm_session() { return _rm_service.session(); }	
+	Rom_session *rom_session() { return _rom_service.session(); }
+
+	Capability_mapping &capability_mapping() { return _capability_mapping; }
+	
 	~Target_child() {};
   
 	/**

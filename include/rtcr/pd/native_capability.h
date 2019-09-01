@@ -17,7 +17,21 @@
 
 namespace Rtcr {
 	struct Native_capability;
+	struct Native_capability_info;	
 }
+
+
+struct Rtcr::Native_capability_info : Normal_info {
+	Genode::uint16_t ep_badge;
+
+	void print(Genode::Output &output) const {
+		using Genode::Hex;
+		Normal_info::print(output);
+		Genode::print(output, ", ep_badge=", ep_badge);
+
+	}	
+};
+
 
 /**
  * List element to store a capability which is created by the pd session
@@ -31,11 +45,8 @@ struct Rtcr::Native_capability : private Simple_counter<Native_capability>,
 	/******************
 	 ** COLD STORAGE **
 	 ******************/
-	
-	bool ck_bootstrapped;
-	Genode::addr_t ck_kcap;
-	Genode::uint16_t ck_badge;
-	Genode::uint16_t ck_ep_badge;
+	Native_capability_info info;
+
 
 	/*****************
 	 ** HOT STORAGE **
@@ -64,9 +75,9 @@ struct Rtcr::Native_capability : private Simple_counter<Native_capability>,
 		{ }
 
 	void checkpoint() {
-		ck_badge = cap.local_name();
-		ck_bootstrapped = bootstrapped;
-		ck_ep_badge = ep_cap.local_name();
+		info.badge = cap.local_name();
+		info.bootstrapped = bootstrapped;
+		info.ep_badge = ep_cap.local_name();
 	}
   
 	Native_capability *find_by_native_badge(Genode::uint16_t badge) {

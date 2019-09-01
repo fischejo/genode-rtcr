@@ -15,16 +15,15 @@
 #include <util/fifo.h>
 #include <pd_session/connection.h>
 
+/* Rtcr includes */
+#include <rtcr/info_structs.h>
+
 namespace Rtcr {
 	class Cpu_thread;
 	class Cpu_thread_info;
 }
 
-struct Rtcr::Cpu_thread_info {
-	bool bootstrapped;
-	Genode::uint16_t badge;
-	Genode::addr_t kcap;
-  
+struct Rtcr::Cpu_thread_info : Normal_info {
 	Genode::uint16_t pd_session_badge;
 	Genode::Cpu_session::Name name;
 	Genode::Cpu_session::Weight weight;
@@ -38,7 +37,7 @@ struct Rtcr::Cpu_thread_info {
 	
 	Cpu_thread_info(const char *name,
 					Genode::Cpu_session::Weight weight,
-					Genode::addr_t utcb) 
+					Genode::addr_t utcb)
 		: name(name), weight(weight), utcb(utcb) {}
 		
 
@@ -49,8 +48,7 @@ struct Rtcr::Cpu_thread_info {
 					  "   pd_session_badge=", pd_session_badge,
 					  ", name=", name,
 					  ", weight=", weight.value,
-					  ", utcb=", Hex(utcb),
-					  ",  bootstrapped=", bootstrapped);
+					  ", utcb=", Hex(utcb));
   
 		Genode::print(output,
 					  ", started=", started,

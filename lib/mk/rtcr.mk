@@ -15,21 +15,5 @@ vpath % $(REP_DIR)/src/rtcr
 CC_OPT += -DVERBOSE
 CC_OPT += -DDEBUG
 
-
-# optional incremental extension
-#LIBS += rtcr_inc
-
-# optional dma memory copying extension
-#LIBS += rtcr_cdma
-
-# optional fpga capability parsing extension
-#LIBS += rtcr_kcap
-
-# optional redundant memory extension
-#LIBS += rtcr_red
-
-# optional parallized memory copying
-#LIBS += rtcr_para
-
 INC_DIR += $(BASE_DIR)/../base-foc/src/include
 LIBS += config base

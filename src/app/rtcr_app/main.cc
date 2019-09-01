@@ -26,6 +26,8 @@
 #include <rtcr/base_module.h>
 #include <rtcr/module.h>
 
+#include <rtcr_serializer/serializer.h>
+
 Genode::size_t Component::stack_size() { return 512*1024; }
 
 using namespace Rtcr;
@@ -46,13 +48,13 @@ struct Rtcr::Main
 	  Timer::Connection timer(env);
 
 	  Base_module module(env, heap);
+	  Serializer serializer(env, heap);
 	  
 	  Target_child sheep (env,
 						  heap,
 						  parent_services,
 						  "sheep_counter",
 						  module);
-
 
 	  // Target_child horse (env,
 	  // 					  heap,
@@ -71,9 +73,16 @@ struct Rtcr::Main
 	  sheep.checkpoint();
 	  sheep.resume();
 
+
+	  
 	  Genode::log(sheep);
 
-
+	  Genode::size_t serialized_size;
+	  Genode::Ram_dataspace_capability ds_cap =
+		  serializer.serialize(sheep, &serialized_size);
+	  
+	  Genode::log("moin");
+	  serializer.parse(ds_cap);
 	  Genode::sleep_forever();
 	}
 };
