@@ -58,12 +58,10 @@ public:
 	 *
 	 * \param env        Environment
 	 * \param alloc      Heap Allocator
-	 * \param ep         Entrypoint
 	 * \return A instance of a Module class
 	 */
 	virtual Module* create(Genode::Env &env,
-						   Genode::Allocator &alloc,
-						   Genode::Entrypoint &ep) = 0;
+						   Genode::Allocator &alloc) = 0;
     
 	/**
 	 * Name of your module which you want to register.

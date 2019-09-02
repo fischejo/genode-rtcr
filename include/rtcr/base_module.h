@@ -94,8 +94,7 @@ class Rtcr::Base_module_factory : public Module_factory
 {
 public:
 	Module* create(Genode::Env &env,
-				   Genode::Allocator &alloc,
-				   Genode::Entrypoint &ep) override
+				   Genode::Allocator &alloc) override
 		{
 			return new (alloc) Base_module(env, alloc);
 		}
