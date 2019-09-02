@@ -4,18 +4,9 @@ This repository provides several libraries:
 
 * [rtcr](lib/mk/rtcr.mk) is the rtcr library which provides the
   checkpoint/restore functionality
-  
-* [rtcr_core](lib/mk/rtcr_core.mk) provides a minimal implementation of the core
-  module. Required by library `rtcr`.
 
-* [rtcr_ds](lib/mk/rtcr_ds.mk) provides a module implementation for handling
-  dataspaces. Required by library `rtcr`.
-  
-* [rtcr_timer](lib/mk/rtcr_timer.mk) provides a  module implementation for the
-  timer session. Optionally required by library `rtcr`, but included by default.
-
-* [rtcr_log](lib/mk/rtcr_log.mk) provides a  module implementation for the
-  log session. Optionally required by library `rtcr`, but included by default.
+* [rtcr_serializer](lib/mk/rtcr_serializer.mk) provides a protobuf serialization for a
+  checkpointed target child. 
 
 
 # Applications
@@ -29,11 +20,18 @@ This repository provides several libraries:
 
 # Run Scripte
 
-* [run/rtcr_seq](run/rtcr_seq.run) provides an Run Script including `rtcr_test` and
-  `sheep_counter`. This exmaple checkpoints and restores the application
-  `sheep_counter`. All modules are executed sequentially.
+* [run/rtcr](run/rtcr.run) provides an Run Script including `rtcr_test` and
+  `sheep_counter`. 
+  
+* [run/rtcr_multicore](run/rtcr_multicore.run) Same as `run/rtcr` but is configured for
+  dual core CPUs. The child is running on `CPU 0`, while the checkpointing is
+  executed on `CPU 1`.
 
-* [run/rtcr](run/rtcr.run) Same as `run/rtcr` but all modules are
-  executed in parallel.
+* [run/rtcr_serializer](run/rtcr_serializer.run) Same as `run/rtcr` but
+  serializes the child after checkpointing.
+
+
+
+
 
   
