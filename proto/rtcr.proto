@@ -4,7 +4,7 @@ package Rtcr.Pb;
 /**
  * General
  */
-message Target_child_info{
+message Child_info{
 	Cpu_session_info cpu_session_info = 1;
 	Pd_session_info pd_session_info = 2;
 	Ram_session_info ram_session_info = 3;

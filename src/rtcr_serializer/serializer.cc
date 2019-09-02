@@ -27,31 +27,31 @@ Serializer::Serializer(Genode::Env &env, Genode::Allocator &alloc)
 	: _env(env), _rm_connection(env), _alloc(alloc) {}
 
 
-Genode::Ram_dataspace_capability Serializer::serialize(Target_child &target_child,
+Genode::Ram_dataspace_capability Serializer::serialize(Child_info *_child_info,
 													   Genode::size_t *_compressed_size)
 {
 	DEBUG_THIS_CALL; PROFILE_THIS_CALL;
 	
 	/* convert session information to protobuf objects */
-	Pb::Target_child_info &target_child_info = *new(_alloc) Pb::Target_child_info();
-	Capability_mapping &cm = target_child.capability_mapping();
-	set_pd_session(&cm, &target_child_info, &target_child);
-	set_ram_session(&cm, &target_child_info, &target_child);
-	set_cpu_session(&cm, &target_child_info, &target_child);
-	set_timer_session(&cm, &target_child_info, &target_child);
-	set_log_session(&cm, &target_child_info, &target_child);
-	set_rm_session(&cm, &target_child_info, &target_child);
-	set_rom_session(&cm, &target_child_info, &target_child);
+	Pb::Child_info *child_info = new(_alloc) Pb::Child_info();
+	Capability_mapping *cm = _child_info->capability_mapping;
+	set_pd_session(cm, child_info, _child_info);
+	set_ram_session(cm, child_info, _child_info);
+	set_cpu_session(cm, child_info, _child_info);
+	set_timer_session(cm, child_info, _child_info);
+	set_log_session(cm, child_info, _child_info);
+	set_rm_session(cm, child_info, _child_info);
+	set_rom_session(cm, child_info, _child_info);
 
 	/* serialize protobuf objects into a dataspace (pb_ds_cap) */
-	Genode::size_t pb_size = target_child_info.ByteSize();
+	Genode::size_t pb_size = child_info->ByteSize();
 	Genode::size_t pb_offset = sizeof(Genode::uint32_t);
 	Genode::size_t pb_ds_size = page_aligned_size(pb_size + pb_offset);
 	Genode::Ram_dataspace_capability pb_ds_cap = _env.ram().alloc(pb_ds_size);	
 
 	/* create region map which will hold all dataspaces */
 	Genode::size_t total_size = pb_ds_size;
-	Ram_dataspace *ram_dataspace = target_child.ram_session().info.ram_dataspaces;
+	Ram_dataspace *ram_dataspace = _child_info->ram_session->info.ram_dataspaces;
 	while(ram_dataspace) {
 		total_size += ram_dataspace->info.size;
 		ram_dataspace = ram_dataspace->next();
@@ -61,15 +61,15 @@ Genode::Ram_dataspace_capability Serializer::serialize(Target_child &target_chil
 	/* attach protobuf dataspace to region map at position 0 */
 	region_map.attach_at(pb_ds_cap, 0);
 	Genode::log("Protobuf Dataspace", " local_offset=0x0",
-				" size=",Genode::Hex(pb_ds_size),
-				" origin_size=", Genode::Hex(target_child_info.ByteSize()));
+				" ds_size=",Genode::Hex(pb_ds_size),
+				" pb_size=", pb_size);
 
 	/* attach all other dataspaces to region map. The local position of each
 	 * dataspace in the region is directly stored to the corresponding protobuf
 	 * dataspace object. By parsing the protobuf object during deserializion,
 	 * the dataspaces can be extracted again. */
-	ram_dataspace = target_child.ram_session().info.ram_dataspaces;
-	Pb::Ram_session_info *ram_session_info=target_child_info.mutable_ram_session_info();
+	ram_dataspace = _child_info->ram_session->info.ram_dataspaces;
+	Pb::Ram_session_info *ram_session_info=child_info->mutable_ram_session_info();
 	int i = 0;
 	Genode::addr_t local_addr = pb_ds_size;
 	while(ram_dataspace) {
@@ -90,7 +90,7 @@ Genode::Ram_dataspace_capability Serializer::serialize(Target_child &target_chil
 
 	void *pb_array = _env.rm().attach(pb_ds_cap);
 	*((Genode::uint32_t*) pb_array) = pb_size; 
-	target_child_info.SerializeToArray(pb_array + pb_offset, pb_ds_size);
+	child_info->SerializeToArray(pb_array + pb_offset, pb_ds_size);
 	_env.rm().detach(pb_array);
 	
 	/* compress whole region map */
@@ -117,7 +117,7 @@ Genode::Ram_dataspace_capability Serializer::serialize(Target_child &target_chil
 	/* detach all dataspaces from the local region map, otherwise destroying the
 	 * region map results in a hang */
 	region_map.detach(0); /* pb_ds_cap is attached at offset 0 */
-	ram_session_info=target_child_info.mutable_ram_session_info();	
+	ram_session_info=child_info->mutable_ram_session_info();	
 	for(int n = 0; n < ram_session_info->ram_dataspace_info_size(); n++) {
 		Pb::Ram_dataspace_info *info = ram_session_info->mutable_ram_dataspace_info(n);
 		Genode::addr_t local_offset = info->local_offset();
@@ -171,11 +171,11 @@ Pb::Session_info *Serializer::session_info(Capability_mapping *_cm, Session_info
 
 
 void Serializer::set_pd_session(Capability_mapping *_cm,
-								Pb::Target_child_info *tc,
-								Target_child *_tc)
+								Pb::Child_info *tc,
+								Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	Pd_session_info *_info = &_tc->pd_session().info;
+	Pd_session_info *_info = &_tc->pd_session->info;
 	
 	Pb::Pd_session_info *info = new(_alloc) Pb::Pd_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -207,11 +207,11 @@ void Serializer::set_pd_session(Capability_mapping *_cm,
 
 
 void Serializer::set_ram_session(Capability_mapping *_cm,
-								 Pb::Target_child_info *tc,
-								 Target_child *_tc)
+								 Pb::Child_info *tc,
+								 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	Ram_session_info *_info = &_tc->ram_session().info;	
+	Ram_session_info *_info = &_tc->ram_session->info;	
 	Pb::Ram_session_info *info = new(_alloc) Pb::Ram_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
@@ -226,11 +226,11 @@ void Serializer::set_ram_session(Capability_mapping *_cm,
 
 
 void Serializer::set_cpu_session(Capability_mapping *_cm,
-								 Pb::Target_child_info *tc,
-								 Target_child *_tc)
+								 Pb::Child_info *tc,
+								 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	Cpu_session_info *_info = &_tc->cpu_session().info;	
+	Cpu_session_info *_info = &_tc->cpu_session->info;	
 	Pb::Cpu_session_info *info = new(_alloc) Pb::Cpu_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
@@ -245,12 +245,12 @@ void Serializer::set_cpu_session(Capability_mapping *_cm,
 
 
 void Serializer::set_timer_session(Capability_mapping *_cm,
-								   Pb::Target_child_info *tc,
-								   Target_child *_tc)
+								   Pb::Child_info *tc,
+								   Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	if(!_tc->timer_session()) return;
-	Timer_session_info *_info = &_tc->timer_session()->info;
+	if(!_tc->timer_session) return;
+	Timer_session_info *_info = &_tc->timer_session->info;
 	
 	Pb::Timer_session_info *info = new(_alloc) Pb::Timer_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -263,12 +263,12 @@ void Serializer::set_timer_session(Capability_mapping *_cm,
 
 
 void Serializer::set_log_session(Capability_mapping *_cm,
-								 Pb::Target_child_info *tc,
-								 Target_child *_tc)
+								 Pb::Child_info *tc,
+								 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	if(!_tc->log_session()) return;
-	Log_session_info *_info = &_tc->log_session()->info;
+	if(!_tc->log_session) return;
+	Log_session_info *_info = &_tc->log_session->info;
 	
 	Pb::Log_session_info *info = new(_alloc) Pb::Log_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -278,12 +278,12 @@ void Serializer::set_log_session(Capability_mapping *_cm,
 
 
 void Serializer::set_rm_session(Capability_mapping *_cm,
-								Pb::Target_child_info *tc,
-								Target_child *_tc)
+								Pb::Child_info *tc,
+								Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	if(!_tc->rm_session()) return;
-	Rm_session_info *_info = &_tc->rm_session()->info;
+	if(!_tc->rm_session) return;
+	Rm_session_info *_info = &_tc->rm_session->info;
 
 	Pb::Rm_session_info *info = new(_alloc) Pb::Rm_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -299,12 +299,12 @@ void Serializer::set_rm_session(Capability_mapping *_cm,
 
 
 void Serializer::set_rom_session(Capability_mapping *_cm,
-								 Pb::Target_child_info *tc,
-								 Target_child *_tc)
+								 Pb::Child_info *tc,
+								 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	if(!_tc->rom_session()) return;
-	Rom_session_info *_info = &_tc->rom_session()->info;
+	if(!_tc->rom_session) return;
+	Rom_session_info *_info = &_tc->rom_session->info;
 	
 	Pb::Rom_session_info *info = new(_alloc) Pb::Rom_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));	
@@ -513,9 +513,9 @@ void Serializer::parse(Genode::Dataspace_capability compressed_ds_cap)
 	Genode::log("pb_size=",Genode::Hex(pb_size));
 
 	/* parse protobuf in dataspace */
-	Pb::Target_child_info *target_child_info = new(_alloc) Pb::Target_child_info();
+	Pb::Child_info *child_info = new(_alloc) Pb::Child_info();
 	Genode::size_t pb_offset = sizeof(Genode::uint32_t);
-	target_child_info->ParseFromArray(uncompressed_ds_addr + pb_offset, pb_size);
+	child_info->ParseFromArray(uncompressed_ds_addr + pb_offset, pb_size);
 	
 }
 

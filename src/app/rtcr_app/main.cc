@@ -24,9 +24,8 @@
 
 #include <rtcr/target_child.h>
 #include <rtcr/base_module.h>
-#include <rtcr/module.h>
-
 #include <rtcr_serializer/serializer.h>
+
 
 Genode::size_t Component::stack_size() { return 512*1024; }
 
@@ -41,7 +40,6 @@ struct Rtcr::Main
 	enum { ROOT_STACK_SIZE = 512*1024 };
 	Genode::Env              &env;
 	Genode::Heap              heap            { env.ram(), env.rm() };
-	Genode::Service_registry  parent_services { };
 
   	Main(Genode::Env &env_) : env(env_)
 	{
@@ -50,38 +48,22 @@ struct Rtcr::Main
 	  Base_module module(env, heap);
 	  Serializer serializer(env, heap);
 	  
-	  Target_child sheep (env,
-						  heap,
-						  parent_services,
-						  "sheep_1",
-						  module);
-	  // Target_child horse (env,
-	  // 					  heap,
-	  // 					  parent_services,
-	  // 					  "horse_counter",
-	  // 					  module);
-
-
+	   Target_child sheep (env, heap, "sheep_counter",module);
 	  sheep.start();
-//	  horse.start();	  
-
-	  
 	  timer.msleep(2000);
 
-	  sheep.pause();
-	  sheep.checkpoint();
-	  sheep.resume();
+	  Child_info *info = module.child_info("sheep_counter");
+	  module.pause(info);
+	  module.checkpoint(info);
+	  module.resume(info);
 
-
-	  
-	  Genode::log(sheep);
 
 	  Genode::size_t serialized_size;
 	  Genode::Ram_dataspace_capability ds_cap =
-		  serializer.serialize(sheep, &serialized_size);
+		  serializer.serialize(info, &serialized_size);
 	  
-	  Genode::log("moin");
-	  serializer.parse(ds_cap);
+	  // Genode::log("moin");
+	  // serializer.parse(ds_cap);
 	  Genode::sleep_forever();
 	}
 };

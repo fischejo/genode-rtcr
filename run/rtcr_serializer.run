@@ -20,7 +20,7 @@ create_boot_directory
 
 install_config {
 <config>
-        <affinity-space width="1"/>
+    <affinity-space width="1"/>
 	<parent-provides>
 		<service name="PD"/>
 		<service name="CPU"/>
@@ -32,31 +32,45 @@ install_config {
 		<service name="IO_PORT"/>
 		<service name="IRQ"/>
 	</parent-provides>
+
 	<default-route>
-		<any-service> <parent/> <any-child/> </any-service>
+		<any-service> <parent/> <any-child/> </any-service>	
 	</default-route>
+
 	<start name="timer">
-		<resource name="RAM" quantum="1M"/>
-                <provides>
-                    <service name="Timer"/>
-                </provides>
+     	<resource name="RAM" quantum="1M"/>
+        <provides>
+            <service name="Timer"/>
+       </provides>
 	</start>
+
 	<start name="rtcr_app">
+	       <route>
+		       <service name="Timer"> <child name="timer"/> </service>
+               <any-service> <parent/> </any-service>
+       	   </route>
+		   <provides>
+               <service name="Timer"/>
+    		   <service name="PD"/>
+			   <service name="CPU"/>
+			   <service name="ROM"/>
+			   <service name="RAM"/>
+			   <service name="RM"/>
+			   <service name="LOG"/>
+            </provides>
     		<resource name="RAM" quantum="256M"/>
-                <config>
-                    <child name="sheep_1" quota="1048576" xpos="0" binary="sheep_counter"/>
-                    <module name="base">
-	                 <checkpoint parallel="false"/>
-                    <checkpointable name="cpu_session" xpos="1" />
-                    <checkpointable name="pd_session" xpos="0" />    
-                    <checkpointable name="ram_session" xpos="0" />    
-                     <checkpointable name="rm_session" xpos="0" />    
-                        <checkpointable name="rom_session" xpos="0" />    
-                        <checkpointable name="log_session" xpos="0" />    
-                        <checkpointable name="timer_session" xpos="0" />    
-                        <checkpointable name="capability_mapping" xpos="0" />    
-</module>
-                </config>
+            <config>
+                 <child name="sheep_counter" quota="1048576" xpos="0" />
+                 <checkpoint parallel="false"/>
+                 <checkpointable name="cpu_session" xpos="1" />
+                 <checkpointable name="pd_session" xpos="0" />    
+                 <checkpointable name="ram_session" xpos="0" />    
+                 <checkpointable name="rm_session" xpos="0" />    
+                 <checkpointable name="rom_session" xpos="0" />    
+                 <checkpointable name="log_session" xpos="0" />    
+                 <checkpointable name="timer_session" xpos="0" />    
+                 <checkpointable name="capability_mapping" xpos="0" />    
+           </config>
 	</start>
 </config>}
 
@@ -80,6 +94,7 @@ libm.lib.so
 libprotobuf.lib.so
 zlib.lib.so
 }
+
 
 append qemu_args " -nographic -smp 2,cores=2 "
 

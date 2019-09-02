@@ -29,6 +29,7 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 										Genode::Cpu_session::Weight weight,
 										Genode::addr_t utcb)
 {
+	DEBUG_THIS_CALL;
 	/* Create real CPU thread from parent */
 	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap,
 													name,
@@ -37,15 +38,14 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 													utcb);
 
 	/* Create custom CPU thread */
-	Cpu_thread *new_cpu_thread =
-		new (_md_alloc) Cpu_thread(_md_alloc,
-								   cpu_thread_cap,
-								   child_pd_cap,
-								   name.string(),
-								   weight,
-								   utcb,
-								   affinity,
-								   _bootstrap_phase);
+	Cpu_thread *new_cpu_thread = new (_md_alloc) Cpu_thread(_md_alloc,
+															cpu_thread_cap,
+															child_pd_cap,
+															name.string(),
+															weight,
+															utcb,
+															affinity,
+															_child_info->bootstrapped);
 
 	/* Manage custom CPU thread */
 	_ep.manage(*new_cpu_thread);
@@ -77,24 +77,21 @@ void Cpu_session::_kill_thread(Cpu_thread &cpu_thread)
 Cpu_session::Cpu_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
 					     Genode::Entrypoint &ep,
-					     Pd_root &pd_root,
 					     const char *label,
 					     const char *creation_args,
-					     bool &bootstrap_phase)
-
+					     Child_info *child_info)
 	:
 	Checkpointable(env, "cpu_session"),
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
-	_bootstrap_phase (bootstrap_phase),
-	_pd_root         (pd_root),
 	_parent_cpu      (env, label),
 	_child_affinity (_read_child_affinity(label)),
-	info(creation_args)
+	info(creation_args),
+	_child_info (child_info)
 {
-	DEBUG_THIS_CALL
-		}
+	DEBUG_THIS_CALL;
+}
 
 
 Cpu_session::~Cpu_session()
@@ -129,12 +126,8 @@ void Cpu_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	info.badge = cap().local_name();
-	info.bootstrapped = _bootstrapped;
+	info.bootstrapped = _child_info->bootstrapped;
 	info.upgrade_args = _upgrade_args;
-
-	// TODO
-	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
-
 	info.sigh_badge = _sigh.local_name();
   
 	Cpu_thread *cpu_thread;
@@ -183,40 +176,29 @@ void Cpu_session::resume()
 }
 
 
-Cpu_session *Cpu_session::find_by_badge(Genode::uint16_t badge)
-{
-	if(badge == cap().local_name())
-		return this;
-	
-	Cpu_session *obj = next();
-	return obj ? obj->find_by_badge(badge) : 0;
-}
-
-
 Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capability child_pd_cap,
 													 Genode::Cpu_session::Name const &name,
 													 Genode::Affinity::Location affinity,
 													 Genode::Cpu_session::Weight weight,
 													 Genode::addr_t utcb)
 {
+	DEBUG_THIS_CALL;
 	/* Find corresponding parent PD session cap for the given custom PD session
 	 * cap */
-	Pd_session *pd_session = _pd_root.sessions().first();
-	if(pd_session) pd_session = pd_session->find_by_badge(child_pd_cap.local_name());
-	if(!pd_session) {
+	if(!_child_info->pd_session) {
 		Genode::error("Thread creation failed: PD session ",
 					  child_pd_cap, " is unknown.");
 		throw Genode::Exception();
 	}
-	
+
 	/* Create custom CPU thread */
-	Cpu_thread &new_cpu_thread = _create_thread(child_pd_cap,
-												pd_session->parent_cap(),
+	Cpu_thread &new_cpu_thread = _create_thread(_child_info->pd_session->cap(),
+												_child_info->pd_session->parent_cap(),
 												name,
 												affinity,
 												weight,
 												utcb);
-
+	Genode::log("reached");
 	return new_cpu_thread.cap();
 }
 
@@ -325,6 +307,7 @@ void Cpu_session::killed()
 
 Cpu_session *Cpu_root::_create_session(const char *args)
 {
+	DEBUG_THIS_CALL;
 	/* Extracting label from args */
 	char label_buf[128];
 	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
@@ -341,20 +324,22 @@ Cpu_session *Cpu_root::_create_session(const char *args)
 
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
+
+	_childs_lock.lock();
+	Child_info *info = _childs.first();
+	if(info) info = info->find_by_name(label_buf);	
+	if(!info) info = new(_md_alloc) Child_info(label_buf);
+	_childs.insert(info);
+	_childs_lock.unlock();	
 	
 	/* Create custom Rm_session */
-	Cpu_session *new_session =
-		new (md_alloc()) Cpu_session(_env,
-									 _md_alloc,
-									 _ep,
-									 _pd_root,
-									 label_buf,
-									 readjusted_args,
-									 _bootstrap_phase);
-
-	Genode::Lock::Guard lock(_objs_lock);
-	_session_rpc_objs.insert(new_session);
-
+	Cpu_session *new_session = new (md_alloc()) Cpu_session(_env,
+															_md_alloc,
+															_ep,
+															label_buf,
+															readjusted_args,
+															info);
+	info->cpu_session = new_session;	
 	return new_session;
 }
 
@@ -379,33 +364,39 @@ void Cpu_root::_upgrade_session(Cpu_session *session, const char *upgrade_args)
 
 void Cpu_root::_destroy_session(Cpu_session *session)
 {
-	_session_rpc_objs.remove(session);
-	Genode::destroy(_md_alloc, session);
+	// Genode::Lock::Guard lock(_childs_lock);
+	// Child_info *info = _childs.find_by_name(label_buf);
+	// info->cpu_session = nullptr;
+	// Genode::destroy(_md_alloc, session);
+	// if(info->child_destroyed()) _childs.remove(info);
 }
 
 
 Cpu_root::Cpu_root(Genode::Env &env,
 				   Genode::Allocator &md_alloc,
 				   Genode::Entrypoint &session_ep,
-				   Pd_root &pd_root,
-				   bool &bootstrap_phase)
+				   Genode::Lock &childs_lock,
+				   Genode::List<Child_info> &childs)
 	:
 	Root_component<Cpu_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
-	_bootstrap_phase  (bootstrap_phase),
-	_pd_root          (pd_root),
-	_objs_lock        (),
-	_session_rpc_objs ()
+	_childs_lock(childs_lock),
+	_childs(childs)
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
 }
 
 
 Cpu_root::~Cpu_root()
 {
-	while(Cpu_session *obj = _session_rpc_objs.first()) {
-		_session_rpc_objs.remove(obj);
-		Genode::destroy(_md_alloc, obj);
+	Genode::Lock::Guard lock(_childs_lock);
+	Child_info *info = _childs.first();
+	while(info) {
+		Genode::destroy(_md_alloc, info->cpu_session);		
+		info->cpu_session = nullptr;
+		if(info->child_destroyed()) _childs.remove(info);
+		info = info->next();
 	}
 }

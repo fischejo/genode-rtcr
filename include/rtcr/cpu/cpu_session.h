@@ -22,8 +22,10 @@
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/checkpointable.h>
 #include <rtcr/info_structs.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
+	class Child_info;
 	class Cpu_session;
 	class Cpu_root;
 	class Cpu_session_info;
@@ -54,8 +56,7 @@ struct Rtcr::Cpu_session_info : Session_info {
  * the client
  */
 class Rtcr::Cpu_session : public virtual Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Cpu_session>,
-						  public Genode::List<Cpu_session>::Element
+						  public Genode::Rpc_object<Genode::Cpu_session>
 {
 public:	
 	/******************
@@ -63,11 +64,11 @@ public:
 	 ******************/
 	
 	Cpu_session_info info;
+
 protected:
 
+	Child_info *_child_info;
 	const char* _upgrade_args;
-	bool _bootstrapped;
-	bool &_bootstrap_phase;
 	
 	Genode::Signal_context_capability _sigh;
 	/**
@@ -91,12 +92,6 @@ protected:
 	 */
 	Genode::Entrypoint &_ep;
 
-	/**
-	 * PD root for the list of all PD sessions known to child
-	 *
-	 * Is used to translate child's known PD session (= custom PD session) to parent's PD session.
-	 */
-	Pd_root            &_pd_root;
 	/**
 	 * Connection to parent's Cpu session, usually from core; this class wraps this session
 	 */
@@ -146,10 +141,9 @@ public:
 	Cpu_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,
 				Genode::Entrypoint &ep,
-				Pd_root &pd_root,
 				const char *label,
 				const char *creation_args,
-				bool &bootstrap_phase);
+				Child_info *child_info);
 	
 	~Cpu_session();
 
@@ -174,8 +168,6 @@ public:
 	const char* upgrade_args() { return _upgrade_args; }
 	
 	Genode::Cpu_session_capability parent_cap() { return _parent_cpu.cap(); }
-
-	Cpu_session *find_by_badge(Genode::uint16_t badge);
 
 	/***************************
 	 ** Cpu_session interface **
@@ -238,17 +230,10 @@ private:
 	 * custom CPU session uses parent's CPU session (e.g. core's CPU session), it also has
 	 * to pass a PD session which is known by the parent.
 	 */
-	Pd_root            &_pd_root;
-	/**
-	 * Lock for infos list
-	 */
-	Genode::Lock        _objs_lock;
-	/**
-	 * List for monitoring session objects
-	 */
-	Genode::List<Cpu_session> _session_rpc_objs;
 
-	bool &_bootstrap_phase;
+	Genode::Lock &_childs_lock;
+	Genode::List<Child_info> &_childs;
+
 	
 protected:
 	Cpu_session *_create_session(const char *args);
@@ -262,12 +247,11 @@ public:
 	Cpu_root(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
-			 Pd_root &pd_root,
-			 bool &bootstrapped);
-
+			 Genode::Lock &childs_lock,
+			 Genode::List<Child_info> &childs);
+			 
 	~Cpu_root();
 
-	Genode::List<Cpu_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_CPU_SESSION_H_ */

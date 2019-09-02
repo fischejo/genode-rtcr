@@ -30,7 +30,7 @@ using namespace Rtcr;
 
 Capability_mapping::Capability_mapping(Genode::Env &env,
 									   Genode::Allocator &alloc,
-									   Pd_session &pd_session)
+									   Pd_session *pd_session)
 	:
 	Checkpointable(env, "capability_mapping"),
 	_env(env),
@@ -40,12 +40,7 @@ Capability_mapping::Capability_mapping(Genode::Env &env,
 	DEBUG_THIS_CALL
 }
 
-Capability_mapping::~Capability_mapping()
-{
-	while(Kcap_badge *kcap = _kcap_mapping.first()) {
-		Genode::destroy(_alloc, kcap);
-	}
-}
+Capability_mapping::~Capability_mapping(){}
 
 
 void Capability_mapping::checkpoint()
@@ -58,13 +53,11 @@ void Capability_mapping::checkpoint()
 	using Genode::size_t;
 	using Genode::uint16_t;
 
-	while(Kcap_badge *kcap = _kcap_mapping.first()) {
-		Genode::destroy(_alloc, kcap);
-	}	
 
-
+	index = 0;
+	
 	/* Retrieve cap_idx_alloc_addr */
-	Genode::Pd_session_client pd_client(_pd_session.parent_cap());
+	Genode::Pd_session_client pd_client(_pd_session->parent_cap());
 	addr_t const cap_idx_alloc_addr = Genode::Foc_native_pd_client(
 		pd_client.native_pd()).cap_map_info();
 	_cap_idx_alloc_addr = cap_idx_alloc_addr;
@@ -75,7 +68,7 @@ void Capability_mapping::checkpoint()
 	
 	/* Find child's dataspace containing the capability map
 	 * It is found via cap_idx_alloc_addr */
-	Region_map &addr_space = _pd_session.address_space_component();
+	Region_map &addr_space = _pd_session->address_space_component();
 
 	/* This lock is necessary as the rm_session is also moving items from
 	   new_attached_regions to ck_attached_regions during checkpointing */
@@ -141,8 +134,9 @@ void Capability_mapping::checkpoint()
 		addr_t const kcap  = ((curr - local_array_start) / array_ele_size) << 12;
 
 		if(badge != UNUSED && badge != INVALID_ID) {
-			Kcap_badge *state = new (_alloc) Kcap_badge(kcap, badge);
-			_kcap_mapping.insert(state);
+			_kcap_mapping[index].kcap = kcap;
+			_kcap_mapping[index].badge = badge;
+			index++;
 		}
 	}
 
@@ -152,12 +146,10 @@ void Capability_mapping::checkpoint()
 
 void Capability_mapping::print(Genode::Output &output) const {
 	Genode::print(output, " Capability map:\n");
-	Kcap_badge const *info = _kcap_mapping.first();
-	if(!info) Genode::print(output, "  <empty>\n");
-	while(info)
-	{
-		Genode::print(output, "  ", *info, "\n");
-		info = info->next();
+	for(int i = 0; i < index; i++) {
+		Genode::print(output,
+					  " kcap=", _kcap_mapping[i].kcap,
+					  " badge=", _kcap_mapping[i].badge, "\n");
 	}	
 }
 
@@ -166,8 +158,9 @@ Genode::addr_t Capability_mapping::find_kcap_by_badge(Genode::uint16_t badge)
 {
 	Genode::addr_t kcap = 0;
 
-	Kcap_badge *info = _kcap_mapping.first();
-	if(info) info = info->find_by_badge(badge);
-	if(info) kcap = info->kcap;
-	return kcap;
+	for(int i = 0; i < index; i++) {
+		if(_kcap_mapping[i].badge == badge)
+			return _kcap_mapping[i].kcap;
+	}		
+	return 0;
 }

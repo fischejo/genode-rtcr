@@ -17,6 +17,7 @@
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
 #include <rtcr/info_structs.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
 	class Log_session;
@@ -42,8 +43,7 @@ struct Rtcr::Log_session_info : Session_info {
  * destruction through its interface
  */
 class Rtcr::Log_session : public Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Log_session>,
-						  public Genode::List<Log_session>::Element
+						  public Genode::Rpc_object<Genode::Log_session>
 {
 public:
 	/******************
@@ -58,7 +58,7 @@ protected:
 	 *****************/
 
 	const char* _upgrade_args;
-	bool _bootstrapped;
+
 
 	/**
 	 * Allocator for Rpc objects created by this session and also for monitoring
@@ -76,7 +76,7 @@ protected:
 	 */
 	Genode::Log_connection _parent_log;
 
-
+	Child_info *_child_info;
 
 
 public:
@@ -87,7 +87,7 @@ public:
 				Genode::Entrypoint &ep,
 				const char *label,
 				const char *creation_args,
-				bool bootstrapped);
+				Child_info *child_info);
 
 	~Log_session();
 
@@ -101,7 +101,6 @@ public:
 	
 	const char* upgrade_args() { return _upgrade_args; }
 
-	Log_session *find_by_badge(Genode::uint16_t badge);		
 
 	/*******************************
 	 ** Log session Rpc interface **
@@ -130,19 +129,10 @@ private:
 	 * Entrypoint for managing session objects
 	 */
 	Genode::Entrypoint &_ep;
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool &_bootstrap_phase;
-	/**
-	 * Lock for infos list
-	 */
-	Genode::Lock        _objs_lock;
-	/**
-	 * List for monitoring session RPC objects
-	 */
-	Genode::List<Log_session> _session_rpc_objs;
 
+	Genode::Lock &_childs_lock;
+	Genode::List<Child_info> &_childs;
+	
 protected:
 	Log_session *_create_session(const char *args);
 	void _upgrade_session(Log_session *session, const char *upgrade_args);
@@ -152,12 +142,11 @@ public:
 	Log_root(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
-			 bool &bootstrap_phase);
+			 Genode::Lock &childs_lock,
+			 Genode::List<Child_info> &childs);
+			 
 	~Log_root();
 
-
-  
-	Genode::List<Log_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_LOG_SESSION_H_ */

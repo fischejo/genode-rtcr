@@ -19,8 +19,10 @@
 #include <rtcr/rm/region_map.h>
 #include <rtcr/ram/ram_session.h>
 #include <rtcr/info_structs.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
+	struct Child_info;
 	class Rm_session;
 	class Rm_root;
 	class Rm_session_info;
@@ -53,8 +55,7 @@ struct Rtcr::Rm_session_info : Session_info {
  * destruction through its interface
  */
 class Rtcr::Rm_session : public Rtcr::Checkpointable,
-						 public Genode::Rpc_object<Genode::Rm_session>,
-						 public Genode::List<Rm_session>::Element
+						 public Genode::Rpc_object<Genode::Rm_session>
 {
 
 public:
@@ -85,11 +86,6 @@ protected:
 	Genode::Entrypoint &_ep;
 
 	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool &_bootstrap_phase;
-
-	/**
 	 * Parent's session connection which is used by the intercepted methods
 	 */
 	Genode::Rm_connection  _parent_rm;
@@ -97,7 +93,7 @@ protected:
 	Region_map &_create(Genode::size_t size);
 	void _destroy(Region_map &region_map);
 
-	Ram_root &_ram_root;
+	Child_info *_child_info;
 
 	
 public:
@@ -107,8 +103,7 @@ public:
 		       Genode::Allocator &md_alloc,
 		       Genode::Entrypoint &ep,
 		       const char *creation_args,
-		       Ram_root &ram_root,
-		       bool &bootstrap_phase);
+			   Child_info *child_info);
   
 	~Rm_session();
 
@@ -122,8 +117,6 @@ public:
 	
 	const char* upgrade_args() { return _upgrade_args; }
 	
-
-	Rm_session *find_by_badge(Genode::uint16_t badge);
 	
 	/******************************
 	 ** Rm session Rpc interface **
@@ -167,37 +160,24 @@ private:
 	 */
 	Genode::Entrypoint &_ep;
 
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool &_bootstrap_phase;
-
-	/**
-	 * Lock for infos list
-	 */
-	Genode::Lock _objs_lock;
-	/**
-	 * List for monitoring session objects
-	 */
-	Genode::List<Rm_session> _session_rpc_objs;
+	Genode::Lock &_childs_lock;
+	Genode::List<Child_info> &_childs;
 
 protected:
 	Rm_session *_create_session(const char *args);
 	void _upgrade_session(Rm_session *session, const char *upgrade_args);
 	void _destroy_session(Rm_session *session);
 
-	Ram_root &_ram_root;
   
 public:
 	Rm_root(Genode::Env &env,
 			Genode::Allocator &md_alloc,
 			Genode::Entrypoint &session_ep,
-			Ram_root &ram_root,		
-			bool &bootstrap_phase);
+			Genode::Lock &childs_lock,
+			Genode::List<Child_info> &childs);
+			
   
 	~Rm_root();
-
-	Genode::List<Rm_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_RM_SESSION_H_ */

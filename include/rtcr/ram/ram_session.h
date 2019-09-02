@@ -24,8 +24,10 @@
 #include <rtcr/ram/ram_dataspace.h>
 #include <rtcr/checkpointable.h>
 #include <rtcr/info_structs.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
+	class Child_info;
 	class Ram_session;
 	class Ram_root;
 	class Ram_session_info;
@@ -61,8 +63,7 @@ struct Rtcr::Ram_session_info : Session_info {
  * dataspaces
  */
 class Rtcr::Ram_session : public Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Ram_session>,
-						  public Genode::List<Ram_session>::Element
+						  public Genode::Rpc_object<Genode::Ram_session>
 {
 public:
 	/******************
@@ -98,11 +99,6 @@ protected:
 	Genode::Allocator &_md_alloc;
 
 	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool &_bootstrap_phase;
-
-	/**
 	 * Connection to the parent Ram session (usually core's Ram session)
 	 */
 	Genode::Ram_connection _parent_ram;
@@ -123,6 +119,8 @@ protected:
 	Genode::Xml_node *_config;
 
 	Genode::size_t _read_child_quota(const char* child_name);
+
+	Child_info *_child_info;
 	
 public:
 	using Genode::Rpc_object<Genode::Ram_session>::cap;
@@ -131,7 +129,7 @@ public:
 				Genode::Allocator &md_alloc,
 				const char *label,
 				const char *creation_args,
-				bool &bootstrap_phase);
+				Child_info *child_info);
   
 	~Ram_session();
 
@@ -147,7 +145,6 @@ public:
 	
 	Genode::Ram_session_capability parent_cap() { return _parent_ram.cap(); }
 
-	Ram_session *find_by_badge(Genode::uint16_t badge);
 
 	/***************************
 	 ** Ram_session interface **
@@ -194,19 +191,10 @@ protected:
 	 * Entrypoint for managing session objects
 	 */
 	Genode::Entrypoint &_ep;
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool               &_bootstrap_phase;
-	/**
-	 * Lock for infos list
-	 */
-	Genode::Lock        _objs_lock;
-	/**
-	 * List for monitoring session objects
-	 */
-	Genode::List<Ram_session> _session_rpc_objs;
 
+	Genode::Lock &_childs_lock;
+	Genode::List<Child_info> &_childs;
+	
 
 	Ram_session *_create_session(const char *args);
 	void _upgrade_session(Ram_session *session, const char *upgrade_args);
@@ -217,10 +205,11 @@ public:
 	Ram_root(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
-			 bool &bootstrap_phase);
+			 Genode::Lock &childs_lock,
+			 Genode::List<Child_info> &childs);
+			 
 	~Ram_root();
 
-	Genode::List<Ram_session> &sessions() { return _session_rpc_objs; }
 };
 
 

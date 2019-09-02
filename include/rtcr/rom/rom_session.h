@@ -19,6 +19,7 @@
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
 #include <rtcr/info_structs.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
 	class Rom_session;
@@ -44,8 +45,7 @@ struct Rtcr::Rom_session_info : Session_info {
 
 
 class Rtcr::Rom_session : public Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Rom_session>,
-						  public Genode::List<Rom_session>::Element
+						  public Genode::Rpc_object<Genode::Rom_session>
 {
 public:
 	/******************
@@ -61,7 +61,7 @@ protected:
 	 *****************/
 	
 	const char* _upgrade_args;
-	bool _bootstrapped;
+
 	Genode::Rom_dataspace_capability  _dataspace;
 	Genode::size_t                    _size;
 	Genode::Signal_context_capability _sigh;
@@ -86,6 +86,7 @@ protected:
 	 */
 	Genode::Rom_connection _parent_rom;
 
+	Child_info *_child_info;
 	
 public:
 	using Genode::Rpc_object<Genode::Rom_session>::cap;
@@ -95,15 +96,10 @@ public:
 				Genode::Entrypoint &ep,
 				const char *label,
 				const char *creation_args,
-				bool &bootstrap_phase);
+				Child_info *child_info);
 
 	~Rom_session() {};
   
-	void print(Genode::Output &output) const {
-		using Genode::Hex;
-	
-	}
-
 	void checkpoint() override;
 
 	void upgrade(const char *upgrade_args) {
@@ -111,8 +107,6 @@ public:
 	}
 	
 	const char* upgrade_args() { return _upgrade_args; }
-
-	Rom_session *find_by_badge(Genode::uint16_t badge);		
 	
 	Genode::Rom_session_capability parent_cap() { return _parent_rom.cap(); }
 
@@ -148,19 +142,8 @@ private:
 	 */
 	Genode::Entrypoint &_ep;
 
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool               &_bootstrap_phase;
-
-	/**
-	 * Lock for infos list
-	 */
-	Genode::Lock        _objs_lock;
-	/**
-	 * List for monitoring session objects
-	 */
-	Genode::List<Rom_session> _session_rpc_objs;
+	Genode::Lock &_childs_lock;
+	Genode::List<Child_info> &_childs;
 
 protected:
 	Rom_session *_create_session(const char *args);
@@ -174,11 +157,11 @@ public:
 	Rom_root(Genode::Env &env,
 			 Genode::Allocator &md_alloc,
 			 Genode::Entrypoint &session_ep,
-			 bool &bootstrap_phase);
+			 Genode::Lock &childs_lock,
+			 Genode::List<Child_info> &childs);
 
 	~Rom_root();
-  
-	Genode::List<Rom_session> &sessions() { return _session_rpc_objs; }
+
 };
 
 #endif /* _RTCR_ROM_SESSION_COMPONENT_H_ */

@@ -17,6 +17,7 @@
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
 #include <rtcr/info_structs.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
 	class Timer_session;
@@ -48,8 +49,7 @@ struct Rtcr::Timer_session_info : Session_info {
  * destruction through its interface
  */
 class Rtcr::Timer_session : public Rtcr::Checkpointable,
-							public Genode::Rpc_object<Timer::Session>,
-							public Genode::List<Timer_session>::Element
+							public Genode::Rpc_object<Timer::Session>
 {
 public:
 	/******************
@@ -63,7 +63,6 @@ protected:
 	 *****************/
 
 	const char* _upgrade_args;
-	bool _bootstrapped;
 	Genode::Signal_context_capability _sigh;
 	unsigned _timeout;
 	bool _periodic;
@@ -83,6 +82,8 @@ protected:
 	 * Parent's session connection which is used by the intercepted methods
 	 */
 	Timer::Connection   _parent_timer;
+
+	Child_info *_child_info;
 	
 public:
 	using Genode::Rpc_object<Timer::Session>::cap;
@@ -91,7 +92,7 @@ public:
 				  Genode::Allocator &md_alloc,
 				  Genode::Entrypoint &ep,
 				  const char *creation_args,
-				  bool bootstrapped);
+				  Child_info *child_info);
 
 	~Timer_session() {};
 	
@@ -104,8 +105,6 @@ public:
 	}
 	
 	const char* upgrade_args() { return _upgrade_args; }
-
-	Timer_session *find_by_badge(Genode::uint16_t badge);	
 
 	/************************************
 	 ** Timer session Rpc interface **
@@ -146,20 +145,8 @@ private:
 	 */
 	Genode::Entrypoint &_ep;
 
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool               &_bootstrap_phase;
-
-	/**
-	 * Lock for infos list
-	 */
-	Genode::Lock        _objs_lock;
-
-	/**
-	 * List for monitoring session objects
-	 */
-	Genode::List<Timer_session> _session_rpc_objs;
+	Genode::Lock &_childs_lock;
+	Genode::List<Child_info> &_childs;
 
 protected:
 
@@ -174,14 +161,11 @@ public:
 	Timer_root(Genode::Env &env,
 			   Genode::Allocator &md_alloc,
 			   Genode::Entrypoint &session_ep,
-			   bool &bootstrap_phase);
+			   Genode::Lock &childs_lock,
+			   Genode::List<Child_info> &childs);
 
 	~Timer_root();
 
-	Timer_session *find_by_badge(Genode::uint16_t badge);
-
-  
-	Genode::List<Timer_session> &sessions() { return _session_rpc_objs;  }
 };
 
 

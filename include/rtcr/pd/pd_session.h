@@ -24,8 +24,11 @@
 #include <rtcr/pd/signal_source.h>
 #include <rtcr/ram/ram_session.h>
 #include <rtcr/info_structs.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
+	class Capability_mapping;
+	class Child_info;
 	class Pd_session;
 	class Pd_root;
 	class Pd_session_info;
@@ -89,13 +92,11 @@ struct Rtcr::Pd_session_info : Session_info {
  * destruction through its interface
  */
 class Rtcr::Pd_session : public Rtcr::Checkpointable,
-						 public Genode::Rpc_object<Genode::Pd_session>,
-						 public Genode::List<Pd_session>::Element
+						 public Genode::Rpc_object<Genode::Pd_session>
 {	
 protected:
   
 	const char* _upgrade_args;
-	bool _bootstrapped;
 
 	/**
 	 * List for monitoring the creation and destruction of
@@ -134,10 +135,7 @@ protected:
 	 * Entrypoint to manage itself
 	 */
 	Genode::Entrypoint &_ep;
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool &_bootstrap_phase;
+
 	/**
 	 * Connection to parent's pd session, usually from core
 	 */
@@ -156,11 +154,11 @@ protected:
 	 */
 	Region_map   _linker_area;
 
+	Child_info *_child_info;
 	
 	void _checkpoint_signal_sources();
 	void _checkpoint_signal_contexts();  	
 	void _checkpoint_native_capabilities();  
-
 
 public:
 	/******************
@@ -178,8 +176,8 @@ public:
 			   Genode::Entrypoint &ep,
 			   const char *label,
 			   const char *creation_args,
-			   Ram_root &ram_root,
-			   bool &bootstrap_phase);
+			   Child_info *child_info);
+
   
 	~Pd_session();
 
@@ -203,8 +201,6 @@ public:
 	// Region_map &linker_area_component() { return _linker_area; }
 	// Region_map const &linker_area_component() const { return _linker_area; }
 
-
-	Pd_session *find_by_badge(Genode::uint16_t badge);
 
 	/**************************
 	 ** Pd_session interface **
@@ -262,21 +258,9 @@ private:
 	 * Entrypoint for managing session objects
 	 */
 	Genode::Entrypoint &_ep;
-	/**
-	 * Reference to Target_child's bootstrap phase
-	 */
-	bool &_bootstrap_phase;
-	/**
-	 * Lock for infos list
-	 */
-	Genode::Lock _objs_lock;
-	/**
-	 * List for monitoring session objects
-	 */
-	Genode::List<Pd_session> _session_rpc_objs;
 
-	Ram_root &_ram_root;  
-
+	Genode::Lock &_childs_lock;
+	Genode::List<Child_info> &_childs;
   
 protected:
 	Pd_session *_create_session(const char *args);
@@ -287,11 +271,10 @@ public:
 	Pd_root(Genode::Env &env,
 			Genode::Allocator &md_alloc,
 			Genode::Entrypoint &session_ep,
-			Ram_root &ram_root,
-			bool &bootstrap_phase);
+			Genode::Lock &childs_lock,
+			Genode::List<Child_info> &childs);
+			
 	~Pd_root();
-
-	Genode::List<Pd_session> &sessions() { return _session_rpc_objs; }
 };
 
 #endif /* _RTCR_PD_SESSION_H_ */

@@ -27,14 +27,14 @@ Timer_session::Timer_session(Genode::Env &env,
 							 Genode::Allocator &md_alloc,
 							 Genode::Entrypoint &ep,
 							 const char *creation_args,
-							 bool bootstrapped)
+							 Child_info *child_info)
 	:
 	Checkpointable(env, "timer_session"),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
 	_parent_timer (env),
-	_bootstrapped (bootstrapped),
-	info (creation_args)
+	info (creation_args),
+	_child_info (child_info)
 {
 	DEBUG_THIS_CALL
 }
@@ -44,23 +44,11 @@ void Timer_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	info.badge = cap().local_name();
-	info.bootstrapped = _bootstrapped;
+	info.bootstrapped = _child_info->bootstrapped;
 	info.upgrade_args = _upgrade_args;
 	info.sigh_badge = _sigh.local_name();
 	info.timeout = _timeout;
 	info.periodic = _periodic;
-
-	// TODO
-	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
-}
-
-Timer_session *Timer_session::find_by_badge(Genode::uint16_t badge)
-{
-	if(badge == cap().local_name())
-		return this;
-	
-	Timer_session *obj = next();
-	return obj ? obj->find_by_badge(badge) : 0;
 }
 
 
@@ -116,6 +104,7 @@ void Timer_session::usleep(unsigned us)
 
 Timer_session *Timer_root::_create_session(const char *args)
 {
+	DEBUG_THIS_CALL;	
 	/* Revert ram_quota calculation, because the monitor needs the original
 	 * session creation argument */
 	char ram_quota_buf[32];
@@ -139,18 +128,29 @@ Timer_session *Timer_root::_create_session(const char *args)
 								"ram_quota",
 								ram_quota_buf);
 
+	/* Extracting label from args */
+	char label_buf[128];
+	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
+	label_arg.string(label_buf, sizeof(label_buf), "");
+	
+	_childs_lock.lock();
+	Child_info *info = _childs.first();
+	if(info) info = info->find_by_name(label_buf);
+	if(!info) info = new(_md_alloc) Child_info(label_buf);
+	_childs.insert(info);	
+	_childs_lock.unlock();
+	
 	/* Create virtual session object */
-	Timer_session *new_session =
-		new (md_alloc()) Timer_session(_env,
-									   _md_alloc,
-									   _ep,
-									   readjusted_args,
-									   _bootstrap_phase);
+	Timer_session *new_session = new (md_alloc()) Timer_session(_env,
+																_md_alloc,
+																_ep,
+																readjusted_args,
+																info);
 
-	Genode::Lock::Guard guard(_objs_lock);
-	_session_rpc_objs.insert(new_session);
-
+	info->timer_session = new_session;
+	Genode::log("new_world");
 	return new_session;
+
 }
 
 
@@ -180,31 +180,36 @@ void Timer_root::_upgrade_session(Timer_session *session, const char *upgrade_ar
 
 void Timer_root::_destroy_session(Timer_session *session)
 {
-	_session_rpc_objs.remove(session);
-	destroy(_md_alloc, session);
-
+	// TODO FJO
 }
 
 
 Timer_root::Timer_root(Genode::Env &env,
 					   Genode::Allocator &md_alloc,
 					   Genode::Entrypoint &session_ep,
-					   bool &bootstrap_phase)
+					   Genode::Lock &childs_lock,
+					   Genode::List<Child_info> &childs)					   
+
 	:
 	Root_component<Timer_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
-	_bootstrap_phase  (bootstrap_phase),
-	_objs_lock        (),
-	_session_rpc_objs ()
-{}
+	_childs_lock(childs_lock),
+	_childs(childs)
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
+}
 
 
 Timer_root::~Timer_root()
 {
-	while(Timer_session *obj = _session_rpc_objs.first()) {
-		_session_rpc_objs.remove(obj);
-		Genode::destroy(_md_alloc, obj);
+	Genode::Lock::Guard lock(_childs_lock);
+	Child_info *info = _childs.first();
+	while(info) {
+		Genode::destroy(_md_alloc, info->timer_session);		
+		info->timer_session = nullptr;
+		if(info->child_destroyed()) _childs.remove(info);
+		info = info->next();
 	}
 }

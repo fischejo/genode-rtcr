@@ -95,6 +95,7 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 												  Region_map::Local_addr local_addr,
 												  bool executable)
 {
+	DEBUG_THIS_CALL
 #ifdef DEBUG
 	if(use_local_addr) {
 		Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
@@ -136,7 +137,7 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 																		 offset,
 																		 addr,
 																		 executable,
-																		 _bootstrap_phase);
+																		 _bootstrap_phase);	
 
 #ifdef DEBUG
 	Genode::size_t num_pages = actual_size/4096;

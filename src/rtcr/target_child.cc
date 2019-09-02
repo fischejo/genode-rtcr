@@ -31,39 +31,30 @@ using namespace Rtcr;
 
 Target_child::Target_child(Genode::Env &env,
 						   Genode::Allocator &alloc,
-						   Genode::Service_registry &parent_services,
 						   const char* name,
 						   Module &module)
 	:
 	_name (name),
 	_env (env),
-	_parallel(false),
 	_alloc (alloc),
 	_module(module),
-	_ram_service("RAM", &module.ram_root()),
-	_ram_session(_find_ram_session(name, module.ram_root())),
-	_pd_service("PD", &module.pd_root()),
-	_pd_session(_find_pd_session(name, module.pd_root())),
-	_cpu_service("CPU", &module.cpu_root()),
-	_cpu_session(_find_cpu_session(name, module.cpu_root())),
-	_rm_service("RM", &module.rm_root()),
-	_rom_service("ROM", &module.rom_root()),
-	_binary_rom(env, read_binary_name(name)),
+	_pd_service(module.pd_service()),
+	_cpu_service(module.cpu_service()),
+	_ram_service(module.ram_service()),
+	_ram_session(create_ram_session()),
+	_pd_session(create_pd_session()),	
+	_cpu_session(create_cpu_session()),
+	_binary_rom(env, name),
 	_binary_rom_ds(_binary_rom.dataspace()),
-	_log_service("LOG", &module.log_root()),
-	_timer_service("Timer", &module.timer_root()),
-	_capability_mapping(env, alloc, _pd_session),
 	_entrypoint(&_cap_session,
 				ENTRYPOINT_STACK_SIZE,
 				"entrypoint",
 				false,
 				_affinity_location), /* TODO: FJO still necessary? */
-	_in_bootstrap    (true),
-	_parent_services (parent_services),
 	_address_space(_pd_session.address_space()),
 	_initial_thread(_cpu_session,
 					_pd_session.cap(),
-					_name.string()),
+					_name),
 	_child(_binary_rom_ds,
 		   Genode::Dataspace_capability(),
 		   _pd_session.cap(), _pd_session,
@@ -79,38 +70,7 @@ Target_child::Target_child(Genode::Env &env,
 		   _cpu_service)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-
-#ifdef VERBOSE		
-		Genode::log("Execute checkpointable ",_parallel ? "parallel" : "sequential");
-#endif
 }
-
-
-inline const char *Target_child::read_binary_name(const char* child_name)
-{
-	Genode::String<100> binary_node_name;
-	Genode::String<100> child_node_name;
-	Genode::Xml_node child_node = Genode::config()->xml_node().sub_node("child");
-	for (; ; child_node = child_node.next("child")) {
-		child_node_name = child_node.attribute_value("name", child_node_name);
-		Genode::log("child=",child_node_name);
-		if(!Genode::strcmp(child_name, child_node_name.string())) {
-			if(child_node.has_attribute("binary")) {
-				binary_node_name = child_node.attribute_value(
-					"binary", binary_node_name);
-				Genode::log("binary found=",binary_node_name);				
-				return binary_node_name.string();
-			}
-			/* child node found, but no binary defined. Fallback to child
-			 * name */
-			return child_name;
-		}
-		if (child_node.last("child")) break;
-	}
-	/* if no child node is configured, use child name as binary name*/
-	return child_name;
-}
-
 
 
 void Target_child::start()
@@ -119,156 +79,14 @@ void Target_child::start()
 	_entrypoint.activate();
 }
 
-void Target_child::pause()
+
+Genode::Service *Target_child::resolve_session_request(const char *service_name,
+													   const char *args)
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	_cpu_session.pause();
-}
-
-void Target_child::resume()
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	_cpu_session.resume();	
-}
-
-
-void Target_child::checkpoint()
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	Rm_session *rm_session = _rm_service.session();
-		
-	if(_parallel) {
-		/* start all checkpointing threads */
-		_capability_mapping.start_checkpoint();
-		_pd_session.start_checkpoint();
-		_cpu_session.start_checkpoint();
-		_ram_session.start_checkpoint();
-		if(_rm_service.session()) _rm_service.session()->start_checkpoint();
-		if(_rom_service.session()) _rom_service.session()->start_checkpoint();
-		if(_log_service.session()) _log_service.session()->start_checkpoint();
-		if(_timer_service.session()) _timer_service.session()->start_checkpoint();
-		
-		/* wait until all threads finished */
-		_pd_session.join_checkpoint();
-		_cpu_session.join_checkpoint();
-		_ram_session.join_checkpoint();
-		if(_rm_service.session()) _rm_service.session()->join_checkpoint();
-		if(_rom_service.session()) _rom_service.session()->join_checkpoint();
-		if(_log_service.session()) _log_service.session()->join_checkpoint();
-		if(_timer_service.session()) _timer_service.session()->join_checkpoint();
-		
-		_capability_mapping.join_checkpoint();
-	} else {
-		_pd_session.start_checkpoint();
-		_pd_session.join_checkpoint();
-    
-		_cpu_session.start_checkpoint();
-		_cpu_session.join_checkpoint();    
-
-		_ram_session.start_checkpoint();
-		_ram_session.join_checkpoint();
-
-
-		if(rm_session) {
-			rm_session->start_checkpoint();
-			rm_session->join_checkpoint();
-		}
-		if(_rom_service.session()) {
-			_rom_service.session()->start_checkpoint();
-			_rom_service.session()->join_checkpoint();				
-		}
-		if(_log_service.session()) {
-			_log_service.session()->start_checkpoint();
-			_log_service.session()->join_checkpoint();			
-		}
-		if(_timer_service.session()) {
-			_timer_service.session()->start_checkpoint();
-			_timer_service.session()->join_checkpoint();			
-		}
-		
-		_capability_mapping.start_checkpoint();
-		_capability_mapping.join_checkpoint();    
-	}
-}
-
-
-void Target_child::print(Genode::Output &output) const {
-	Genode::print(output, "Child: ",_name,"\n");
-
-	/* PD session */
-	Genode::print(output, _pd_session.info);
-
-	/* CPU session */
-	Genode::print(output, _cpu_session.info);
-
-	/* RAM session */
-	Genode::print(output, _ram_session.info);
-
-	/* (optional) RM session */
-	const Rm_session *rm_session = _rm_service.session();
-	if(rm_session) Genode::print(output, rm_session->info);
-	else Genode::print(output, " RM session: <empty>\n");
-
-	/* (optional) LOG session */
-	const Log_session *log_session = _log_service.session();	
-	if(log_session) Genode::print(output, log_session->info);
-	else Genode::print(output, " LOG session: <empty>\n");
-
-	/* (optional) Timer session */
-	const Timer_session *timer_session = _timer_service.session();
-	if(timer_session) Genode::print(output, timer_session->info);
-	else Genode::print(output, " Timer session: <empty>\n");
-
-	/* (optional) Rom session */	
-	const Rom_session *rom_session = _rom_service.session();
-	if(rom_session) Genode::print(output, rom_session->info);
-	else Genode::print(output, " ROM session: <empty>\n");
-
-	/* Capabilities */
-	Genode::print(output, _capability_mapping);
-}
-
-
-Genode::Service *Target_child::resolve_session_request(const char *service_name, const char *args)
-{
-#ifdef DEBUG
-	Genode::log("\033[36m", __func__,"(",service_name, ", ", args, ")", "\033[0m");
-#endif
-
-
-	if(!Genode::strcmp(service_name, "LOG") && _in_bootstrap) {
-#ifdef DEBUG		
-		Genode::log("  Unsetting bootstrap_phase");
-#endif		
-		_in_bootstrap = false;
-	}
+	Genode::Service *service = _module.resolve_session_request(service_name, args);
 	
-	/* Service known from parent? */
-	Genode::Service *service = _parent_services.find(service_name);
-	if(service) {
-		return service;
-	}
-
-	if(!Genode::strcmp(service_name, "PD")) {
-		return &_pd_service;
-	} else if(!Genode::strcmp(service_name, "CPU")) {
-		return &_cpu_service;
-	} else if(!Genode::strcmp(service_name, "RAM")) {
-		return &_ram_service;
-	} else if(!Genode::strcmp(service_name, "RM")) {
-		return &_rm_service;	
-	} else if(!Genode::strcmp(service_name, "ROM")) {
-		return &_rom_service;
-	} else if(!Genode::strcmp(service_name, "LOG")) {
-		return &_log_service;
-	} else if(!Genode::strcmp(service_name, "Timer")) {
-		return &_timer_service;			
-	}
-
 	/* Service not known, cannot intercept it */
 	if(!service) {
-		service = new (_alloc) Genode::Parent_service(service_name);
-		_parent_services.insert(service);
 		Genode::warning("Unknown service: ", service_name);
 	}
 
@@ -285,28 +103,29 @@ void Target_child::filter_session_args(const char *service,
 #endif
 	Genode::Session_label const old_label = Genode::label_from_args(args);
 	if (old_label == "") {
-		Genode::Arg_string::set_arg_string(args, args_len, "label", _name.string());
+		Genode::Arg_string::set_arg_string(args, args_len, "label", _name);
 	} else {
-		Genode::Session_label const name(_name.string());
+		Genode::Session_label const name(_name);
 		Genode::Session_label const new_label = prefixed_label(name, old_label);
 		Genode::Arg_string::set_arg_string(args, args_len, "label", new_label.string());
 	}
 }
 
-Cpu_session &Target_child::_find_cpu_session(const char *label,Cpu_root &cpu_root)
+
+Cpu_session &Target_child::create_cpu_session()
 {
+	DEBUG_THIS_CALL;	
 	/* Preparing argument string */
 	char args_buf[160];
 	Genode::snprintf(args_buf, sizeof(args_buf),
 					 "priority=0x%x, ram_quota=%u, label=\"%s\"",
-					 Genode::Cpu_session::DEFAULT_PRIORITY, 128*1024, label);
-	
-	/* Issuing session method of Cpu_root */
-	Genode::Session_capability cpu_cap = cpu_root.session(args_buf, Genode::Affinity());
+					 Genode::Cpu_session::DEFAULT_PRIORITY, 128*1024, _name);
 
-	/* Find created RPC object in Cpu_root's list */
-	Cpu_session *cpu_session = cpu_root.sessions().first();
-	if(cpu_session) cpu_session = cpu_session->find_by_badge(cpu_cap.local_name());
+	/* Issuing session method of Cpu_root */
+	Genode::Session_capability cpu_cap = _cpu_service.session(args_buf,
+															   Genode::Affinity());
+	
+	Cpu_session *cpu_session = _module.child_info(_name)->cpu_session;
 	if(!cpu_session) {
 		Genode::error("Creating custom CPU session failed: "
 					  "Could not find PD session in PD root");
@@ -317,19 +136,22 @@ Cpu_session &Target_child::_find_cpu_session(const char *label,Cpu_root &cpu_roo
 }
 
 
-Pd_session &Target_child::_find_pd_session(const char *label, Pd_root &pd_root)
+Pd_session &Target_child::create_pd_session()
 {
+	DEBUG_THIS_CALL;	
 	/* Preparing argument string */
 	char args_buf[160];
-	Genode::snprintf(args_buf, sizeof(args_buf), "ram_quota=%u, label=\"%s\"", 20*1024*sizeof(long), label);
+	Genode::snprintf(args_buf, sizeof(args_buf), "ram_quota=%u, label=\"%s\"", 20*1024*sizeof(long), _name);
+	
 	/* Issuing session method of pd_root */
-	Genode::Session_capability pd_cap = pd_root.session(args_buf, Genode::Affinity());
+	Genode::Session_capability pd_cap = _pd_service.session(args_buf,
+															  Genode::Affinity());
 
-	/* Find created RPC object in pd_root's list */
-	Pd_session *pd_session = pd_root.sessions().first();
-	if(pd_session) pd_session = pd_session->find_by_badge(pd_cap.local_name());
+	Pd_session *pd_session = _module.child_info(_name)->pd_session;
+	
 	if(!pd_session) {
-		Genode::error("Creating custom PD session failed: Could not find PD session in PD root");
+		Genode::error("Creating custom PD session failed: Could",
+					  " not find PD session in PD root");
 		throw Genode::Exception();
 	}
 
@@ -337,22 +159,25 @@ Pd_session &Target_child::_find_pd_session(const char *label, Pd_root &pd_root)
 }
 
 
-Ram_session &Target_child::_find_ram_session(const char *label, Ram_root &ram_root)
-{ 
+Ram_session &Target_child::create_ram_session()
+{
+	DEBUG_THIS_CALL;
 	/* Preparing argument string */
 	char args_buf[160];
 	Genode::snprintf(args_buf, sizeof(args_buf),
 					 "ram_quota=%u, phys_start=0x%lx, phys_size=0x%lx, label=\"%s\"",
-					 4*1024*sizeof(long), 0UL, 0UL, label);
+					 4*1024*sizeof(long), 0UL, 0UL, _name);
 
 	/* Issuing session method of Ram_root */
-	Genode::Session_capability ram_cap = ram_root.session(args_buf, Genode::Affinity());
+	Genode::Session_capability ram_cap = _ram_service.session(args_buf,
+															   Genode::Affinity());
 
 	/* Find created RPC object in Ram_root's list */
-	Ram_session *ram_session = ram_root.sessions().first();
-	if(ram_session) ram_session = ram_session->find_by_badge(ram_cap.local_name());
+	Ram_session *ram_session = _module.child_info(_name)->ram_session;
+	Genode::log("b");	
 	if(!ram_session) {
-		Genode::error("Creating custom RAM session failed: Could not find RAM session in RAM root");
+		Genode::error("Creating custom RAM session failed",
+					  ": Could not find RAM session in RAM root");
 		throw Genode::Exception();
 	}
 

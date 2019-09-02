@@ -19,6 +19,7 @@
 #include <rtcr/rom/rom_session.h>
 #include <rtcr/timer/timer_session.h>
 #include <rtcr/log/log_session.h>
+#include <rtcr/child_info.h>
 
 namespace Rtcr {
 	class Module;
@@ -36,7 +37,7 @@ using namespace Rtcr;
  *
  * In order to provide your own module, create a class and inherit from `Rtcr::Module`.
  */
-class Rtcr::Module : public Genode::List<Module_name>::Element
+class Rtcr::Module : public Genode::List<Module>::Element
 {
 public:
 	/**
@@ -46,14 +47,12 @@ public:
 	 */
 	virtual Module_name name() = 0;
 
-	virtual Pd_root &pd_root() = 0;
-	virtual Cpu_root &cpu_root() = 0;
-	virtual Ram_root &ram_root() = 0;
-	virtual Rm_root &rm_root() = 0;
-	virtual Rom_root &rom_root() = 0;
-	virtual Timer_root &timer_root() = 0;
-	virtual Log_root &log_root() = 0;	
-
+	virtual Genode::Service &ram_service() = 0;
+	virtual Genode::Service &cpu_service() = 0;
+	virtual Genode::Service &pd_service() = 0;
+	virtual Child_info *child_info(const char* name) = 0;
+	virtual Genode::Service *resolve_session_request(const char *service_name,
+													 const char *args) = 0;
 };
 
 

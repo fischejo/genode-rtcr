@@ -6,6 +6,7 @@
  */
 
 #include <rtcr/rm/rm_session.h>
+#include <rtcr/child_info.h>
 
 #ifdef PROFILE
 #include <util/profiler.h>
@@ -28,9 +29,11 @@ Region_map &Rm_session::_create(Genode::size_t size)
 	auto parent_cap = _parent_rm.create(size);
 
 	/* Create custom Region map */
-	Region_map *new_region_map = new (_md_alloc) Region_map(
-		_md_alloc, parent_cap, size, "custom", _bootstrap_phase);
-
+	Region_map *new_region_map = new (_md_alloc) Region_map(_md_alloc,
+															parent_cap,
+															size,
+															"custom",
+															_child_info->bootstrapped);
 	/* Manage custom Region map */
 	_ep.manage(*new_region_map);
 
@@ -59,15 +62,13 @@ Rm_session::Rm_session(Genode::Env &env,
 					   Genode::Allocator &md_alloc,
 					   Genode::Entrypoint &ep,
 					   const char *creation_args,
-					   Ram_root &ram_root,
-					   bool &bootstrap_phase)
+					   Child_info *child_info)
 	:
 	Checkpointable(env, "rm_session"),
 	_md_alloc         (md_alloc),
 	_ep               (ep),
-	_bootstrap_phase  (bootstrap_phase),
 	_parent_rm        (env),
-	_ram_root (ram_root),
+	_child_info (child_info),
 	info (creation_args)
 {
 	DEBUG_THIS_CALL
@@ -88,7 +89,7 @@ void Rm_session::checkpoint()
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
 	info.badge = cap().local_name();
-	info.bootstrapped = _bootstrap_phase;
+	info.bootstrapped = _child_info->bootstrapped;
 	info.upgrade_args = _upgrade_args;
 
 	// TODO
@@ -110,18 +111,9 @@ void Rm_session::checkpoint()
 }
 
 
-Rm_session *Rm_session::find_by_badge(Genode::uint16_t badge)
-{
-	if(badge == cap().local_name())
-		return this;
-	
-	Rm_session *obj = next();
-	return obj ? obj->find_by_badge(badge) : 0;	
-}
-
-
 Genode::Capability<Genode::Region_map> Rm_session::create(Genode::size_t size)
 {
+	DEBUG_THIS_CALL
 	/* Create custom Region map */
 	Region_map &new_region_map = _create(size);
 	return new_region_map.cap();
@@ -148,6 +140,7 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 
 Rm_session *Rm_root::_create_session(const char *args)
 {
+	DEBUG_THIS_CALL;
 	/* Revert ram_quota calculation, because the monitor needs the original
 	 * session creation argument */
 	char ram_quota_buf[32];
@@ -160,18 +153,26 @@ Rm_session *Rm_root::_create_session(const char *args)
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
+
+	/* Extracting label from args */
+	char label_buf[128];
+	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
+	label_arg.string(label_buf, sizeof(label_buf), "");
+
+	//	_childs_lock.lock();	
+	Child_info *info = _childs.first();
+	if(info) info = info->find_by_name(label_buf);	
+	if(!info) info = new(_md_alloc) Child_info(label_buf);
+	_childs.insert(info);	
+//	_childs_lock.unlock();
+	
 	/* Create custom Rm_session */
-	Rm_session *new_session =
-		new (md_alloc()) Rm_session(_env,
-									_md_alloc,
-									_ep,
-									readjusted_args,
-									_ram_root,
-									_bootstrap_phase);
-
-	Genode::Lock::Guard lock(_objs_lock);
-	_session_rpc_objs.insert(new_session);
-
+	Rm_session *new_session = new (md_alloc()) Rm_session(_env,
+														  _md_alloc,
+														  _ep,
+														  readjusted_args,
+														  info);
+	info->rm_session = new_session;	
 	return new_session;
 }
 
@@ -196,33 +197,35 @@ void Rm_root::_upgrade_session(Rm_session *session, const char *upgrade_args)
 
 void Rm_root::_destroy_session(Rm_session *session)
 {
-	_session_rpc_objs.remove(session);
-	Genode::destroy(_md_alloc, session);
+
 }
 
 
 Rm_root::Rm_root(Genode::Env &env,
 				 Genode::Allocator &md_alloc,
 				 Genode::Entrypoint &session_ep,
-				 Ram_root &ram_root,		 
-				 bool &bootstrap_phase)
+				   Genode::Lock &childs_lock,
+				   Genode::List<Child_info> &childs)
 	:
 	Root_component<Rm_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
-	_bootstrap_phase  (bootstrap_phase),
-	_ram_root (ram_root),
-	_objs_lock        (),
-	_session_rpc_objs ()
+	_childs_lock (childs_lock),
+	_childs (childs)
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
 }
 
 Rm_root::~Rm_root()
 {
-	while(Rm_session *obj = _session_rpc_objs.first()) {
-		_session_rpc_objs.remove(obj);
-		Genode::destroy(_md_alloc, obj);
+	Genode::Lock::Guard lock(_childs_lock);
+	Child_info *info = _childs.first();
+	while(info) {
+		Genode::destroy(_md_alloc, info->rm_session);		
+		info->rm_session = nullptr;
+		if(info->child_destroyed()) _childs.remove(info);
+		info = info->next();
 	}
 }
 

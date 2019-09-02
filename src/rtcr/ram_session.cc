@@ -41,14 +41,14 @@ Ram_session::Ram_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
 					     const char *label,
 					     const char *creation_args,
-					     bool &bootstrap_phase)
+					     Child_info *child_info)
 	:
 	Checkpointable(env, "ram_session"),
 	_env                (env),
 	_md_alloc           (md_alloc),
-	_bootstrap_phase    (bootstrap_phase),
 	_parent_ram         (env, label),
 	_parent_rm          (env),
+	_child_info (child_info),
 	info (creation_args)
 {
 	DEBUG_THIS_CALL
@@ -101,8 +101,8 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 
 void Ram_session::copy_dataspace(Ram_dataspace &ds)
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-		char *dst_addr_start = _env.rm().attach(ds.info.dst_cap);
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
+	char *dst_addr_start = _env.rm().attach(ds.info.dst_cap);
 	char *src_addr_start = _env.rm().attach(ds.info.cap);
 
 	Genode::memcpy(dst_addr_start, src_addr_start, ds.info.size);
@@ -116,11 +116,8 @@ void Ram_session::checkpoint()
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
 	info.badge = cap().local_name();
-	info.bootstrapped = _bootstrap_phase;
+	info.bootstrapped = _child_info->bootstrapped;
 	info.upgrade_args = _upgrade_args;
-
-	// TODO
-	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
 
 	/* step 1: remove all destroyed dataspaces */
 	Ram_dataspace *dataspace = nullptr;	
@@ -154,23 +151,19 @@ void Ram_session::checkpoint()
 }
 
 
-Ram_session *Ram_session::find_by_badge(Genode::uint16_t badge)
-{
-	if(badge == cap().local_name())
-		return this;
-	Ram_session *obj = next();
-	return obj ? obj->find_by_badge(badge) : 0;
-}
-
-
 Genode::Ram_dataspace_capability Ram_session::alloc(Genode::size_t size, Genode::Cache_attribute cached)
 {
+	DEBUG_THIS_CALL;
 	auto result_cap = _parent_ram.alloc(size, cached);
 
 	/* Create a Ram_dataspace to monitor the newly created Ram_dataspace */
-	Ram_dataspace *new_rds = new (_md_alloc) Ram_dataspace(result_cap, size, cached, _bootstrap_phase);
+	Ram_dataspace *new_rds = new (_md_alloc) Ram_dataspace(result_cap,
+														   size,
+														   cached,
+														   _child_info->bootstrapped);
 	Genode::Lock::Guard guard(_ram_dataspaces_lock);
 	_ram_dataspaces.insert(new_rds);
+
 	return result_cap;
 
 }
@@ -225,10 +218,7 @@ void Ram_session::set_label(char *label)
 
 Ram_session *Ram_root::_create_session(const char *args)
 {
-	/* Extracting label from args */
-	char label_buf[128];
-	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
-	label_arg.string(label_buf, sizeof(label_buf), "");
+	DEBUG_THIS_CALL;
 
 	/* Revert ram_quota calculation, because the monitor needs the original
 	 * session creation argument */
@@ -242,17 +232,26 @@ Ram_session *Ram_root::_create_session(const char *args)
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
-	/* Create custom RAM session */
-	Ram_session *new_session =
-		new (md_alloc()) Ram_session(_env,
-									 _md_alloc,
-									 label_buf,
-									 readjusted_args,
-									 _bootstrap_phase);
 
-	Genode::Lock::Guard lock(_objs_lock);
-	_session_rpc_objs.insert(new_session);
+	/* Extracting label from args */
+	char label_buf[128];
+	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
+	label_arg.string(label_buf, sizeof(label_buf), "");
 	
+	_childs_lock.lock();
+	Child_info *info = _childs.first();
+	if(info) info = info->find_by_name(label_buf);
+	if(!info) info = new(_md_alloc) Child_info(label_buf);
+	_childs.insert(info);	
+	_childs_lock.unlock();
+
+	/* Create custom RAM session */
+	Ram_session *new_session = new (md_alloc()) Ram_session(_env,
+															_md_alloc,
+															label_buf,
+															readjusted_args,
+															info);
+	info->ram_session = new_session;	
 	return new_session;
 }
 
@@ -277,32 +276,36 @@ void Ram_root::_upgrade_session(Ram_session *session, const char *upgrade_args)
 
 void Ram_root::_destroy_session(Ram_session *session)
 {
-	_session_rpc_objs.remove(session);
-	Genode::destroy(_md_alloc, session);
+
 }
 
 
 Ram_root::Ram_root(Genode::Env &env,
 				   Genode::Allocator &md_alloc,
 				   Genode::Entrypoint &session_ep,
-				   bool &bootstrap_phase)
+				   Genode::Lock &childs_lock,
+				   Genode::List<Child_info> &childs)
 	:
 	Root_component<Ram_session>(session_ep, md_alloc),
 	_env              (env),
 	_md_alloc         (md_alloc),
 	_ep               (session_ep),
-	_bootstrap_phase  (bootstrap_phase),
-	_objs_lock        (),
-	_session_rpc_objs ()
+	_childs_lock(childs_lock),
+	_childs(childs)
 {
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 }
 
 
 Ram_root::~Ram_root()
 {
-	while(Ram_session *obj = _session_rpc_objs.first()) {
-		_session_rpc_objs.remove(obj);
-		Genode::destroy(_md_alloc, obj);
+	Genode::Lock::Guard lock(_childs_lock);
+	Child_info *info = _childs.first();
+	while(info) {
+		Genode::destroy(_md_alloc, info->ram_session);
+		info->ram_session = nullptr;
+		if(info->child_destroyed()) _childs.remove(info);
+		info = info->next();
 	}
 }
 

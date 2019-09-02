@@ -12,7 +12,6 @@
 #include <region_map/client.h>
 
 /* Rtcr includes */
-#include <rtcr/target_child.h>
 #include <rtcr/info_structs.h>
 #include <rtcr/cpu/cpu_session.h>
 #include <rtcr/pd/pd_session.h>
@@ -22,6 +21,7 @@
 #include <rtcr/timer/timer_session.h>
 #include <rtcr/rom/rom_session.h>
 #include <rtcr/cap/capability_mapping.h>
+#include <rtcr/child_info.h>
 
 /* Protobuf includes */
 #include "rtcr.pb.h"
@@ -54,32 +54,32 @@ protected:
 	Pb::Session_info *session_info(Capability_mapping *cm, Session_info *info);	
 	
     void set_pd_session(Capability_mapping *cm,
-						Pb::Target_child_info *tc,
-						Target_child *_tc);
+						Pb::Child_info *tc,
+						Child_info *_tc);
 	
 	void set_ram_session(Capability_mapping *cm,
-						 Pb::Target_child_info *tc,
-						 Target_child *_tc);
+						 Pb::Child_info *tc,
+						 Child_info *_tc);
 	
 	void set_cpu_session(Capability_mapping *cm,
-						 Pb::Target_child_info *tc,
-						 Target_child *_tc);
+						 Pb::Child_info *tc,
+						 Child_info *_tc);
 	
 	void set_timer_session(Capability_mapping *cm,
-						   Pb::Target_child_info *tc,
-						   Target_child *_tc);
+						   Pb::Child_info *tc,
+						   Child_info *_tc);
 	
 	void set_log_session(Capability_mapping *cm,
-						 Pb::Target_child_info *tc,
-						 Target_child *_tc);
+						 Pb::Child_info *tc,
+						 Child_info *_tc);
 	
 	void set_rm_session(Capability_mapping *cm,
-						Pb::Target_child_info *tc,
-						Target_child *_tc);
+						Pb::Child_info *tc,
+						Child_info *_tc);
 	
 	void set_rom_session(Capability_mapping *cm,
-						 Pb::Target_child_info *tc,
-						 Target_child *_tc);
+						 Pb::Child_info *tc,
+						 Child_info *_tc);
 
 	void add_region_map(Capability_mapping *cm,
 						Pb::Rm_session_info *rm_session,
@@ -130,7 +130,7 @@ public:
 	Serializer(Genode::Env &env, Genode::Allocator &alloc);
 	~Serializer() {}
 
-	Genode::Ram_dataspace_capability serialize(Target_child &child, Genode::size_t *size);
+	Genode::Ram_dataspace_capability serialize(Child_info *child, Genode::size_t *size);
 	void parse(Genode::Dataspace_capability ds_cap);
 };
 
