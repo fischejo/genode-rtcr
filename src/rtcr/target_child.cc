@@ -32,23 +32,24 @@ using namespace Rtcr;
 Target_child::Target_child(Genode::Env &env,
 						   Genode::Allocator &alloc,
 						   Genode::Service_registry &parent_services,
-						   const char* label,
+						   const char* name,
 						   Module &module)
 	:
-	_name (label),
+	_name (name),
 	_env (env),
 	_parallel(false),
 	_alloc (alloc),
 	_module(module),
 	_ram_service("RAM", &module.ram_root()),
-	_ram_session(_find_ram_session(label, module.ram_root())),
+	_ram_session(_find_ram_session(name, module.ram_root())),
 	_pd_service("PD", &module.pd_root()),
-	_pd_session(_find_pd_session(label, module.pd_root())),
+	_pd_session(_find_pd_session(name, module.pd_root())),
 	_cpu_service("CPU", &module.cpu_root()),
-	_cpu_session(_find_cpu_session(label, module.cpu_root())),
+	_cpu_session(_find_cpu_session(name, module.cpu_root())),
 	_rm_service("RM", &module.rm_root()),
 	_rom_service("ROM", &module.rom_root()),
-	_rom_connection(env, label),
+	_binary_rom(env, read_binary_name(name)),
+	_binary_rom_ds(_binary_rom.dataspace()),
 	_log_service("LOG", &module.log_root()),
 	_timer_service("Timer", &module.timer_root()),
 	_capability_mapping(env, alloc, _pd_session),
@@ -63,12 +64,10 @@ Target_child::Target_child(Genode::Env &env,
 	_initial_thread(_cpu_session,
 					_pd_session.cap(),
 					_name.string()),
-	_child(_rom_connection.dataspace(),
+	_child(_binary_rom_ds,
 		   Genode::Dataspace_capability(),
-		   _pd_session.cap(),
-		   _pd_session,
-		   _ram_session.cap(),
-		   _ram_session,
+		   _pd_session.cap(), _pd_session,
+		   _ram_session.cap(), _ram_session,
 		   _cpu_session.cap(),
 		   _initial_thread,
 		   _env.rm(),
@@ -85,6 +84,33 @@ Target_child::Target_child(Genode::Env &env,
 		Genode::log("Execute checkpointable ",_parallel ? "parallel" : "sequential");
 #endif
 }
+
+
+inline const char *Target_child::read_binary_name(const char* child_name)
+{
+	Genode::String<100> binary_node_name;
+	Genode::String<100> child_node_name;
+	Genode::Xml_node child_node = Genode::config()->xml_node().sub_node("child");
+	for (; ; child_node = child_node.next("child")) {
+		child_node_name = child_node.attribute_value("name", child_node_name);
+		Genode::log("child=",child_node_name);
+		if(!Genode::strcmp(child_name, child_node_name.string())) {
+			if(child_node.has_attribute("binary")) {
+				binary_node_name = child_node.attribute_value(
+					"binary", binary_node_name);
+				Genode::log("binary found=",binary_node_name);				
+				return binary_node_name.string();
+			}
+			/* child node found, but no binary defined. Fallback to child
+			 * name */
+			return child_name;
+		}
+		if (child_node.last("child")) break;
+	}
+	/* if no child node is configured, use child name as binary name*/
+	return child_name;
+}
+
 
 
 void Target_child::start()

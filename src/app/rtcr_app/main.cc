@@ -53,9 +53,8 @@ struct Rtcr::Main
 	  Target_child sheep (env,
 						  heap,
 						  parent_services,
-						  "sheep_counter",
+						  "sheep_1",
 						  module);
-
 	  // Target_child horse (env,
 	  // 					  heap,
 	  // 					  parent_services,

@@ -20,7 +20,7 @@ create_boot_directory
 
 install_config {
 <config>
-        <affinity-space width="1"/>
+    <affinity-space width="1"/>
 	<parent-provides>
 		<service name="PD"/>
 		<service name="CPU"/>
@@ -44,7 +44,8 @@ install_config {
 	<start name="rtcr_app">
     		<resource name="RAM" quantum="256M"/>
                 <config>
-                    <child name="sheep_counter" quota="1048576" xpos="0" />
+	                <child name="sheep_1" quota="1048576" xpos="0" binary="sheep_counter" />
+                    <child name="sheep_2" quota="1048576" xpos="0" binary="sheep_counter" />	
                     <module name="base">
 	                 <checkpoint parallel="false"/>
                     <checkpointable name="cpu_session" xpos="1" />

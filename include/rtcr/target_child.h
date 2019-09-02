@@ -80,7 +80,8 @@ private:
 	Genode::Local_service _cpu_service;
 	Cpu_session &_cpu_session;
 
-	Genode::Rom_connection _rom_connection;
+	Genode::Rom_connection _binary_rom;
+	Genode::Dataspace_capability _binary_rom_ds;
 
 	Session_service<Rm_session,Rm_root> _rm_service;
 	Session_service<Log_session,Log_root> _log_service;
@@ -117,7 +118,8 @@ private:
 	Ram_session &_find_ram_session(const char *label, Ram_root &ram_root);  
 
 	bool _parallel;
-	
+
+	inline const char* read_binary_name(const char* name);
 public:
 
 	/**
@@ -167,7 +169,6 @@ public:
 	const char *name() const { return _name.string(); }
 	Genode::Service *resolve_session_request(const char *service_name, const char *args);
 	void filter_session_args(const char *service, char *args, Genode::size_t args_len);
-
 	
 };
 
