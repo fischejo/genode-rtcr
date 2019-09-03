@@ -342,6 +342,7 @@ Pd_session *Pd_root::_create_session(const char *args)
 														  label_buf,
 														  readjusted_args,
 														  info);
+
 	Capability_mapping *cap_mapping = new(md_alloc()) Capability_mapping(_env,
 																	   _md_alloc,
 																	   new_session);

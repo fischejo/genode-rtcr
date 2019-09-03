@@ -24,6 +24,7 @@
 
 #include <rtcr/target_child.h>
 #include <rtcr/base_module.h>
+#include <rtcr_cdma/cdma_module.h>
 #include <rtcr_serializer/serializer.h>
 
 
@@ -46,7 +47,7 @@ struct Rtcr::Main
 	{
 	  Timer::Connection timer(env);
 
-	  Base_module module(env, heap);
+	  Cdma_module module(env, heap);
 	  Serializer serializer(env, heap);
 	  
 	  

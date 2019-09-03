@@ -33,7 +33,7 @@ Target_child::Target_child(Genode::Env &env,
 						   Genode::Allocator &alloc,
 						   const char* name,
 						   Genode::Service_registry &parent_services,
-						   Module &module)
+						   Init_module &module)
 	:
 	_name (name),
 	_env (env),
@@ -67,9 +67,9 @@ Target_child::Target_child(Genode::Env &env,
 		   _address_space,
 		   _entrypoint,
 		   *this,
-		   _pd_service,
-		   _ram_service,
-		   _cpu_service)
+		   *_pd_service,
+		   *_ram_service,
+		   *_cpu_service)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 }
@@ -131,8 +131,7 @@ Cpu_session &Target_child::create_cpu_session()
 					 Genode::Cpu_session::DEFAULT_PRIORITY, 128*1024, _name);
 
 	/* Issuing session method of Cpu_root */
-	Genode::Session_capability cpu_cap = _cpu_service.session(args_buf,
-															   Genode::Affinity());
+	Genode::Session_capability cpu_cap = _cpu_service->session(args_buf,Genode::Affinity());
 	
 	Cpu_session *cpu_session = _module.child_info(_name)->cpu_session;
 	if(!cpu_session) {
@@ -153,9 +152,7 @@ Pd_session &Target_child::create_pd_session()
 	Genode::snprintf(args_buf, sizeof(args_buf), "ram_quota=%u, label=\"%s\"", 20*1024*sizeof(long), _name);
 	
 	/* Issuing session method of pd_root */
-	Genode::Session_capability pd_cap = _pd_service.session(args_buf,
-															  Genode::Affinity());
-
+	Genode::Session_capability pd_cap = _pd_service->session(args_buf, Genode::Affinity());
 	Pd_session *pd_session = _module.child_info(_name)->pd_session;
 	
 	if(!pd_session) {
@@ -178,8 +175,7 @@ Ram_session &Target_child::create_ram_session()
 					 4*1024*sizeof(long), 0UL, 0UL, _name);
 
 	/* Issuing session method of Ram_root */
-	Genode::Session_capability ram_cap = _ram_service.session(args_buf,
-															   Genode::Affinity());
+	Genode::Session_capability ram_cap = _ram_service->session(args_buf,Genode::Affinity());
 
 	/* Find created RPC object in Ram_root's list */
 	Ram_session *ram_session = _module.child_info(_name)->ram_session;

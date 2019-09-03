@@ -1,6 +1,7 @@
 TARGET = rtcr_app
 SRC_CC += main.cc
-LIBS += base rtcr
+LIBS += base rtcr rtcr_cdma
+
 
 
 # include serializer

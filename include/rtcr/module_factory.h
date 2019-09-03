@@ -15,7 +15,7 @@
 #include <util/string.h>
 
 /* Rtcr includes */
-#include <rtcr/module.h>
+#include <rtcr/init_module.h>
 
 
 using namespace Rtcr;
@@ -60,7 +60,7 @@ public:
 	 * \param alloc      Heap Allocator
 	 * \return A instance of a Module class
 	 */
-	virtual Module* create(Genode::Env &env,
+	virtual Init_module* create(Genode::Env &env,
 						   Genode::Allocator &alloc) = 0;
     
 	/**

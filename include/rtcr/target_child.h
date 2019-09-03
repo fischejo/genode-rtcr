@@ -19,7 +19,7 @@
 #include <util/list.h>
 
 /* Rtcr includes */
-#include <rtcr/module.h>
+#include <rtcr/init_module.h>
 #include <rtcr/cpu/cpu_session.h>
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/ram/ram_session.h>
@@ -52,7 +52,7 @@ private:
 	 */
 	Genode::Allocator &_alloc;
 
-	Module &_module;
+	Init_module &_module;
 
 	/**
 	 * Registry for parent's services (parent of RTCR component). It is shared
@@ -74,9 +74,9 @@ private:
 	Genode::Rpc_entrypoint _entrypoint;
 
 	
-	Genode::Service &_ram_service;
-	Genode::Service &_pd_service;
-	Genode::Service &_cpu_service;
+	Genode::Service *_ram_service;
+	Genode::Service *_pd_service;
+	Genode::Service *_cpu_service;
 	
 	Ram_session &_ram_session;
 	Pd_session &_pd_session;
@@ -117,7 +117,7 @@ public:
 				 Genode::Allocator &alloc,
 				 const char *name,
 				 Genode::Service_registry &parent_services,
-				 Module &module);
+				 Init_module &module);
 	
 	~Target_child() {};
   

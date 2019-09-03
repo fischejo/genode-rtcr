@@ -25,14 +25,13 @@ using namespace Rtcr;
 
 Ram_session::Ram_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
-					     const char *label,
 					     const char *creation_args,
 					     Child_info *child_info)
 	:
 	Checkpointable(env, "ram_session"),
 	_env                (env),
 	_md_alloc           (md_alloc),
-	_parent_ram         (env, label),
+	_parent_ram         (env, child_info->name.string()),
 	_parent_rm          (env),
 	_child_info (child_info),
 	info (creation_args)
@@ -41,7 +40,7 @@ Ram_session::Ram_session(Genode::Env &env,
 	/* Donate ram quota to child */
 	ref_account(env.ram_session_cap());
 	// Note: transfer goes directly to parent's ram session
-	Genode::size_t quota = _read_child_quota(label);
+	Genode::size_t quota = _read_child_quota(child_info->name.string());
 	env.ram().transfer_quota(parent_cap(), quota);
 }
 
@@ -85,7 +84,7 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 }
 
 
-void Ram_session::_destroy_ramds(Ram_dataspace &ds)
+void Ram_session::_destroy_dataspace(Ram_dataspace &ds)
 {
 	/* detach */
 	 _env.rm().detach(ds.dst);
@@ -100,11 +99,23 @@ void Ram_session::_destroy_ramds(Ram_dataspace &ds)
 }
 
 
-void Ram_session::copy_dataspace(Ram_dataspace &ds)
+void Ram_session::_copy_dataspace(Ram_dataspace &ds)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
 	Genode::memcpy(ds.dst, ds.src, ds.info.size);
+}
+
+
+void Ram_session::_alloc_dataspace(Ram_dataspace &ds)
+{
+	ds.info.dst_cap = _env.ram().alloc(ds.info.size);	
+}
+
+void Ram_session::_attach_dataspace(Ram_dataspace &ds)
+{
+	ds.dst = _env.rm().attach(ds.info.dst_cap);
+	ds.src = _env.rm().attach(ds.info.cap);		
 }
 
 
@@ -120,16 +131,15 @@ void Ram_session::checkpoint()
 	Ram_dataspace *dataspace = nullptr;	
 	while(dataspace = _destroyed_ram_dataspaces.dequeue()) {
 		_ram_dataspaces.remove(dataspace);
-		_destroy_ramds(*dataspace);    
+		_destroy_dataspace(*dataspace);    
 	}
 
 	/* step 2: allocate cold dataspace for recently added dataspaces */
 	dataspace = _ram_dataspaces.first();	
 	while(dataspace && dataspace != info.ram_dataspaces) {
 		if(!dataspace->is_region_map) {
-			dataspace->info.dst_cap = _env.ram().alloc(dataspace->info.size);
-			dataspace->dst = _env.rm().attach(dataspace->info.dst_cap);
-			dataspace->src = _env.rm().attach(dataspace->info.cap);		
+			_alloc_dataspace(*dataspace);
+			_attach_dataspace(*dataspace);
 		}
 		
 		dataspace = dataspace->next();
@@ -141,7 +151,7 @@ void Ram_session::checkpoint()
 		dataspace->checkpoint();
 
 		if(!dataspace->is_region_map)
-			copy_dataspace(*dataspace);
+			_copy_dataspace(*dataspace);
     
 		dataspace = dataspace->next();
 	}
@@ -216,6 +226,11 @@ void Ram_session::set_label(char *label)
 	_parent_ram.set_label(label);
 }
 
+Ram_session *Ram_root::_create_ram_session(Child_info *info, const char *args)
+{
+	return new (md_alloc()) Ram_session(_env, _md_alloc, args, info);
+}
+
 
 Ram_session *Ram_root::_create_session(const char *args)
 {
@@ -249,11 +264,8 @@ Ram_session *Ram_root::_create_session(const char *args)
 	_childs_lock.unlock();
 
 	/* Create custom RAM session */
-	Ram_session *new_session = new (md_alloc()) Ram_session(_env,
-															_md_alloc,
-															label_buf,
-															readjusted_args,
-															info);
+	Ram_session *new_session = _create_ram_session(info, readjusted_args);
+
 	info->ram_session = new_session;	
 	return new_session;
 }

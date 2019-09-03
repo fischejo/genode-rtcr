@@ -112,9 +112,10 @@ protected:
 	/**
 	 * Destroy rds and all its sub infos)
 	 */
-	void _destroy_ramds(Ram_dataspace &rds);
-
-	void copy_dataspace(Ram_dataspace &info);
+	virtual void _destroy_dataspace(Ram_dataspace &ds);
+	virtual void _attach_dataspace(Ram_dataspace &ds);	
+	virtual void _alloc_dataspace(Ram_dataspace &ds);
+	virtual void _copy_dataspace(Ram_dataspace &ds);
 
 	Genode::Xml_node *_config;
 
@@ -127,13 +128,12 @@ public:
 	
 	Ram_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,
-				const char *label,
 				const char *creation_args,
 				Child_info *child_info);
   
 	~Ram_session();
 
-	void checkpoint() override;
+	virtual void checkpoint() override;
 
 	void upgrade(const char *upgrade_args) {
 		_upgrade_args = upgrade_args;		
@@ -153,7 +153,7 @@ public:
 	/**
 	 * Allocate a Ram_dataspace
 	 */
-	Genode::Ram_dataspace_capability alloc(Genode::size_t size,
+	virtual Genode::Ram_dataspace_capability alloc(Genode::size_t size,
 										   Genode::Cache_attribute cached) override;
 	/**
 	 * Frees the Ram_dataspace and destroys all monitoring structures
@@ -194,6 +194,11 @@ protected:
 
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
+
+	/**
+	 * Wrapper for creating a ram session
+	 */
+	virtual Ram_session *_create_ram_session(Child_info *info, const char *args);
 	
 
 	Ram_session *_create_session(const char *args);
