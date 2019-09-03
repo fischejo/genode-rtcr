@@ -150,6 +150,11 @@ private:
 
 protected:
 
+	/**
+	 * Wrapper for creating a ram session
+	 */
+	virtual Timer_session *_create_timer_session(Child_info *info, const char *args);
+	
 	Timer_session *_create_session(const char *args);
 
 	void _upgrade_session(Timer_session *session, const char *upgrade_args);

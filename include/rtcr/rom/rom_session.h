@@ -94,7 +94,6 @@ public:
 	Rom_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,
 				Genode::Entrypoint &ep,
-				const char *label,
 				const char *creation_args,
 				Child_info *child_info);
 
@@ -146,6 +145,13 @@ private:
 	Genode::List<Child_info> &_childs;
 
 protected:
+
+
+	/**
+	 * Wrapper for creating a ram session
+	 */
+	virtual Rom_session *_create_rom_session(Child_info *info, const char *args);
+	
 	Rom_session *_create_session(const char *args);
 
 	void _upgrade_session(Rom_session *session, const char *upgrade_args);

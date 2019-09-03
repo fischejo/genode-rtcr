@@ -26,14 +26,13 @@ using namespace Rtcr;
 Log_session::Log_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
 					     Genode::Entrypoint &ep,
-					     const char *label,
 					     const char *creation_args,
 					     Child_info *child_info)
 	:
 	Checkpointable(env, "log_session"),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
-	_parent_log   (env, label),
+	_parent_log   (env, child_info->name.string()),
 	info (creation_args),
 	_child_info (child_info)
 {
@@ -58,6 +57,12 @@ void Log_session::checkpoint()
 	info.badge = cap().local_name();
 	info.bootstrapped = _child_info->bootstrapped;
 	info.upgrade_args = _upgrade_args;
+}
+
+
+Log_session *Log_root::_create_log_session(Child_info *info, const char *args)
+{
+	return new (md_alloc()) Log_session(_env, _md_alloc, _ep, args, info);
 }
 
 
@@ -91,12 +96,7 @@ Log_session *Log_root::_create_session(const char *args)
 	_childs_lock.unlock();
 	
 	/* Create virtual session object */
-	Log_session *new_session = new (md_alloc()) Log_session(_env,
-															_md_alloc,
-															_ep,
-															label_buf,
-															readjusted_args,
-															info);
+	Log_session *new_session = _create_log_session(info, readjusted_args);
 	info->log_session = new_session;	
 	return new_session;
 }

@@ -164,6 +164,12 @@ private:
 	Genode::List<Child_info> &_childs;
 
 protected:
+
+	/**
+	 * Wrapper for creating a ram session
+	 */
+	virtual Rm_session *_create_rm_session(Child_info *info, const char *args);
+	
 	Rm_session *_create_session(const char *args);
 	void _upgrade_session(Rm_session *session, const char *upgrade_args);
 	void _destroy_session(Rm_session *session);

@@ -77,7 +77,6 @@ void Cpu_session::_kill_thread(Cpu_thread &cpu_thread)
 Cpu_session::Cpu_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
 					     Genode::Entrypoint &ep,
-					     const char *label,
 					     const char *creation_args,
 					     Child_info *child_info)
 	:
@@ -85,8 +84,8 @@ Cpu_session::Cpu_session(Genode::Env &env,
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
-	_parent_cpu      (env, label),
-	_child_affinity (_read_child_affinity(label)),
+	_parent_cpu      (env, child_info->name.string()),
+	_child_affinity (_read_child_affinity(child_info->name.string())),
 	info(creation_args),
 	_child_info (child_info)
 {
@@ -305,6 +304,12 @@ void Cpu_session::killed()
 }
 
 
+Cpu_session *Cpu_root::_create_cpu_session(Child_info *info, const char *args)
+{
+	return new (md_alloc()) Cpu_session(_env, _md_alloc, _ep, args, info);
+}
+
+
 Cpu_session *Cpu_root::_create_session(const char *args)
 {
 	DEBUG_THIS_CALL;
@@ -335,12 +340,8 @@ Cpu_session *Cpu_root::_create_session(const char *args)
 	_childs_lock.unlock();	
 	
 	/* Create custom Rm_session */
-	Cpu_session *new_session = new (md_alloc()) Cpu_session(_env,
-															_md_alloc,
-															_ep,
-															label_buf,
-															readjusted_args,
-															info);
+	Cpu_session *new_session = _create_cpu_session(info, readjusted_args);
+
 	info->cpu_session = new_session;	
 	return new_session;
 }

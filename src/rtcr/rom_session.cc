@@ -27,7 +27,6 @@ using namespace Rtcr;
 Rtcr::Rom_session::Rom_session(Genode::Env& env,
 							   Genode::Allocator& md_alloc,
 							   Genode::Entrypoint& ep,
-							   const char *label,
 							   const char *creation_args,
 							   Child_info *child_info)
 	:
@@ -35,7 +34,7 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 	_env          (env),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
-	_parent_rom   (env, label),
+	_parent_rom   (env, child_info->name.string()),
 	_child_info (child_info),
 	info (creation_args)
 {
@@ -76,6 +75,12 @@ void Rtcr::Rom_session::sigh(Genode::Signal_context_capability sigh)
 }
 
 
+Rom_session *Rom_root::_create_rom_session(Child_info *info, const char *args)
+{
+	return new (md_alloc()) Rom_session(_env, _md_alloc, _ep, args, info);
+}
+
+
 Rom_session *Rom_root::_create_session(const char *args)
 {
 	DEBUG_THIS_CALL;	
@@ -106,12 +111,7 @@ Rom_session *Rom_root::_create_session(const char *args)
 	_childs_lock.unlock();
 	
 	/* Create custom Rom_session */
-	Rom_session *new_session = new (md_alloc()) Rom_session(_env,
-															_md_alloc,
-															_ep,
-															label_buf,
-															readjusted_args,
-															info);
+	Rom_session *new_session =  _create_rom_session(info, readjusted_args);
 	info->rom_session = new_session;
 	Genode::log("rom leaving");
 	return new_session;

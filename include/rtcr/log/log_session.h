@@ -85,7 +85,6 @@ public:
 	Log_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,
 				Genode::Entrypoint &ep,
-				const char *label,
 				const char *creation_args,
 				Child_info *child_info);
 
@@ -134,6 +133,12 @@ private:
 	Genode::List<Child_info> &_childs;
 	
 protected:
+
+	/**
+	 * Wrapper for creating a ram session
+	 */
+	virtual Log_session *_create_log_session(Child_info *info, const char *args);
+	
 	Log_session *_create_session(const char *args);
 	void _upgrade_session(Log_session *session, const char *upgrade_args);
 	void _destroy_session(Log_session *session);

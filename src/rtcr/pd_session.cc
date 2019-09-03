@@ -26,7 +26,6 @@ using namespace Rtcr;
 Pd_session::Pd_session(Genode::Env &env,
 					   Genode::Allocator &md_alloc,
 					   Genode::Entrypoint &ep,
-					   const char *label,
 					   const char *creation_args,
 					   Child_info *child_info)
 	:
@@ -35,7 +34,7 @@ Pd_session::Pd_session(Genode::Env &env,
 	_md_alloc (md_alloc),
 	_ep (ep),
 	_child_info (child_info),
-	_parent_pd (env, label),
+	_parent_pd (env, child_info->name.string()),
 	_address_space (_md_alloc,
 					_parent_pd.address_space(),
 					0,
@@ -306,6 +305,12 @@ Genode::Capability<Genode::Pd_session::Native_pd> Pd_session::native_pd()
 }
 
 
+Pd_session *Pd_root::_create_pd_session(Child_info *info, const char *args)
+{
+	return new (md_alloc()) Pd_session(_env, _md_alloc, _ep, args, info);
+}
+
+
 Pd_session *Pd_root::_create_session(const char *args)
 {
 	DEBUG_THIS_CALL;	
@@ -336,17 +341,10 @@ Pd_session *Pd_root::_create_session(const char *args)
 	_childs_lock.unlock();
 	
 	/* Create custom Pd_session */
-	Pd_session *new_session = new (md_alloc()) Pd_session(_env,
-														  _md_alloc,
-														  _ep,
-														  label_buf,
-														  readjusted_args,
-														  info);
-
+	Pd_session *new_session = _create_pd_session(info, readjusted_args);
 	Capability_mapping *cap_mapping = new(md_alloc()) Capability_mapping(_env,
 																	   _md_alloc,
 																	   new_session);
-
 	info->pd_session = new_session;
 	info->capability_mapping = cap_mapping;		
 	return new_session;

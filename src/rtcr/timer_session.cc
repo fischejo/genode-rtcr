@@ -102,6 +102,13 @@ void Timer_session::usleep(unsigned us)
 	_parent_timer.usleep(us);
 }
 
+
+Timer_session *Timer_root::_create_timer_session(Child_info *info, const char *args)
+{
+	return new (md_alloc()) Timer_session(_env, _md_alloc, _ep, args, info);
+}
+
+
 Timer_session *Timer_root::_create_session(const char *args)
 {
 	DEBUG_THIS_CALL;	
@@ -143,12 +150,7 @@ Timer_session *Timer_root::_create_session(const char *args)
 	_childs_lock.unlock();
 	
 	/* Create virtual session object */
-	Timer_session *new_session = new (md_alloc()) Timer_session(_env,
-																_md_alloc,
-																_ep,
-																readjusted_args,
-																info);
-
+	Timer_session *new_session = _create_timer_session(info, readjusted_args);
 	info->timer_session = new_session;
 	return new_session;
 

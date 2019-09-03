@@ -141,7 +141,6 @@ public:
 	Cpu_session(Genode::Env &env,
 				Genode::Allocator &md_alloc,
 				Genode::Entrypoint &ep,
-				const char *label,
 				const char *creation_args,
 				Child_info *child_info);
 	
@@ -236,6 +235,11 @@ private:
 
 	
 protected:
+	/**
+	 * Wrapper for creating a ram session
+	 */
+	virtual Cpu_session *_create_cpu_session(Child_info *info, const char *args);
+	
 	Cpu_session *_create_session(const char *args);
 	void _upgrade_session(Cpu_session *session, const char *upgrade_args);
 	void _destroy_session(Cpu_session *session);

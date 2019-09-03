@@ -138,6 +138,13 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 }
 
 
+
+Rm_session *Rm_root::_create_rm_session(Child_info *info, const char *args)
+{
+	return new (md_alloc()) Rm_session(_env, _md_alloc, _ep, args, info);
+}
+
+
 Rm_session *Rm_root::_create_session(const char *args)
 {
 	DEBUG_THIS_CALL;
@@ -169,11 +176,7 @@ Rm_session *Rm_root::_create_session(const char *args)
 	_childs_lock.unlock();
 	
 	/* Create custom Rm_session */
-	Rm_session *new_session = new (md_alloc()) Rm_session(_env,
-														  _md_alloc,
-														  _ep,
-														  readjusted_args,
-														  info);
+	Rm_session *new_session =  _create_rm_session(info, readjusted_args);
 	info->rm_session = new_session;	
 	return new_session;
 }
