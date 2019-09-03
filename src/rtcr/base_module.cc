@@ -77,13 +77,6 @@ Child_info *Base_module::child_info(const char* name)
 }
 
 
-void Base_module::pause(Child_info *child)
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
-	child->cpu_session->pause();
-}
-
-
 void Base_module::pause()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
@@ -91,18 +84,12 @@ void Base_module::pause()
 	_childs_lock.lock();
 	Child_info *child = _childs.first();
 	while(child) {
-		pause(child);
+		child->cpu_session->pause();		
 		child = child->next();
 	}
 	_childs_lock.unlock();
 }
 
-
-void Base_module::resume(Child_info *child)
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;		
-	child->cpu_session->resume();	
-}
 
 void Base_module::resume()
 {
@@ -111,10 +98,40 @@ void Base_module::resume()
 	_childs_lock.lock();
 	Child_info *child = _childs.first();
 	while(child) {
-		resume(child);
+		child->cpu_session->resume();
 		child = child->next();
 	}
 	_childs_lock.unlock();	
+}
+
+
+bool Base_module::ready()
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
+
+	_childs_lock.lock();
+	Child_info *child = _childs.first();
+	while(child) {
+		if(!child->cpu_session || !child->cpu_session->is_ready())
+			return false;
+		if(!child->pd_session || !child->pd_session->is_ready())
+			return false;
+		if(!child->ram_session || !child->ram_session->is_ready())
+			return false;
+		if(child->rom_session && !child->rom_session->is_ready())
+			return false;
+		if(child->rm_session && !child->rm_session->is_ready())
+			return false;
+		if(child->timer_session && !child->timer_session->is_ready())
+			return false;
+		if(child->log_session && !child->log_session->is_ready())
+			return false;
+		if(child->capability_mapping  && !child->capability_mapping->is_ready())
+			return false;
+		child = child->next();
+	}
+	_childs_lock.unlock();
+	return true;
 }
 
 

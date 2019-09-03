@@ -40,7 +40,8 @@ struct Rtcr::Main
 	enum { ROOT_STACK_SIZE = 512*1024 };
 	Genode::Env              &env;
 	Genode::Heap              heap            { env.ram(), env.rm() };
-
+	Genode::Service_registry  parent_services { };
+	
   	Main(Genode::Env &env_) : env(env_)
 	{
 	  Timer::Connection timer(env);
@@ -48,17 +49,19 @@ struct Rtcr::Main
 	  Base_module module(env, heap);
 	  Serializer serializer(env, heap);
 	  
-	   Target_child sheep (env, heap, "sheep_counter",module);
+	  
+	  Target_child sheep (env, heap, "sheep_counter", parent_services, module);
 	  sheep.start();
 	  timer.msleep(2000);
 
-	  Child_info *info = module.child_info("sheep_counter");
-	  module.pause(info);
-	  module.checkpoint(info);
-	  module.resume(info);
+	  Genode::log("is ready: ", module.ready());
+	  module.pause();
+	  module.checkpoint();
+	  module.resume();
 
 
 	  Genode::size_t serialized_size;
+	  Child_info *info = module.child_info("sheep_counter");
 	  Genode::Ram_dataspace_capability ds_cap =
 		  serializer.serialize(info, &serialized_size);
 	  

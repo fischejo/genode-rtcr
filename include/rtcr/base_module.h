@@ -82,15 +82,9 @@ protected:
 	bool _parallel;
 
 	inline bool read_parallel();
-/*
-	 Pd_root &pd_root() override { return _pd_root; }
-	 Cpu_root &cpu_root() override { return _cpu_root;}
-	 Ram_root &ram_root() override {return _ram_root;}
-	 Rm_root &rm_root() override {return _rm_root;}
-	 Rom_root &rom_root() override {return _rom_root;}
-	 Log_root &log_root() override {return _log_root;}
-	 Timer_root &timer_root() override {return _timer_root;}
-*/	
+
+	void checkpoint(Child_info *child);
+	
 public:  
 
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);
@@ -104,12 +98,10 @@ public:
 	Genode::Service &pd_service() override { return _pd_service; }
 	Child_info *child_info(const char* name) override;
 	
-	void pause();
-	void pause(Child_info *info);
-	void resume();
-	void resume(Child_info *info);	
-	void checkpoint();
-	void checkpoint(Child_info *info);	
+	void pause() override;
+	void resume() override;
+	void checkpoint() override;
+	bool ready() override;
 
 	Genode::Service *resolve_session_request(const char *service_name,
 											 const char *args) override;

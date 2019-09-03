@@ -54,9 +54,9 @@ private:
 	Job _next_job;
 
 	/**
-	 * Indicator if the current job is finished
+	 * Indicator if the current checkpoint is finished
 	 */
-	Event _job_finished;
+	Event _checkpoint_finished;
 
 	/**
 	 * If `_running` is false, no further jobs are processed and the
@@ -69,6 +69,11 @@ private:
 	void entry();
 
 	/**
+	 * event for signaling that a checkpoint is possible
+	 */
+	Event _ready_event;
+	
+	/**
 	 * Reads the affinity of the thread from the XML config
 	 *
 	 * Example configuration:
@@ -79,30 +84,41 @@ private:
 	 */
 	inline Genode::Affinity::Location _read_affinity(const char* node_name);
 
-  
+protected:
+	void ready();
+
+	/**
+	 * Abstract method which is called for a checkpoint by the thread. This
+	 * method must be implemented by the inheriting class.
+	 *
+	 * /return true, if the next checkpoint is directly possible. If false is
+	 * returned, the thread has to call ready().
+	 */
+	virtual void checkpoint() = 0;
+
+	/**
+	 * Abstract method which is called after a checkpoint by the thread.
+	 */
+	virtual void post_checkpoint() { }
+	
+	
 public:
 	/**
 	 * \param env reference to a Genode environment
 	 * \param name which represents the * thread name and the name attribute in
+	 * \param ready is set by default and notifies that this thread is able to
+	 *        directly start a checkpoint.
 	 * the XML configuration.
 	 */
-	Checkpointable(Genode::Env &env, const char* name);
-
+	Checkpointable(Genode::Env &env, const char* name, bool ready = true);
 
 	/**
 	 * Pause the calling thread until this thread finished its current job.
 	 *
 	 * If no job is in progress, this method will directly return.
 	 */
-	virtual void join_checkpoint();
-
-	/**
-	 * Abstract method which is called for a checkpoint by the thread. This
-	 * method must be implemented by the inheriting class.
-	 */
-	virtual void checkpoint() = 0;
-
-  
+	void join_checkpoint();
+		
 	/**
 	 * Starts a checkpoint
 	 */
@@ -112,6 +128,16 @@ public:
 	 * stop this thread
 	 */
 	void stop();
+
+	/** 
+	 * wait until this checkpointable is ready for a checkpoint 
+	 */
+	void wait_ready();
+
+	/**
+	 * \return true, if thread is ready to checkpoint
+	 */
+	bool is_ready() { return _ready_event.is_set(); }
 };
 
 

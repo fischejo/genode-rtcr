@@ -8,7 +8,7 @@
 
 using namespace Rtcr;
 
-Checkpointable::Checkpointable(Genode::Env &env, const char* name)
+Checkpointable::Checkpointable(Genode::Env &env, const char* name, bool ready)
 	:
 	_affinity(_read_affinity(name)),
 	Thread(env,
@@ -18,7 +18,8 @@ Checkpointable::Checkpointable(Genode::Env &env, const char* name)
 		   Genode::Thread::Weight(),
 		   env.cpu()),
 	_running(true),
-	_next_job(NONE)
+	_next_job(NONE),
+	_ready_event(ready) // not ready by default
 {
 	Thread::start();
 
@@ -67,29 +68,46 @@ void Checkpointable::entry()
 		/* start next job */
 		Job _current_job = _next_job;
 		_next_job = NONE;
-
 		switch(_current_job) {
 		case CHECKPOINT:
+			_ready_event.unset();
 			checkpoint();
-			break;
+			_checkpoint_finished.set();
+			post_checkpoint();
+			_ready_event.set();
 			break;
 		case NONE:
 			break;
 		}
-		_job_finished.set();
 	}
 }
 
 
 void Checkpointable::start_checkpoint()
 {
+	_ready_event.wait(); // wait until a checkpoint is possible.
 	_next_job = CHECKPOINT;
-	_job_finished.unset(); // must come before trigger next job.
+	_checkpoint_finished.unset(); // must come before trigger next job.
 	_next_event.set();
 }
 
 
 void Checkpointable::join_checkpoint()
 {
-	_job_finished.wait();
+	_checkpoint_finished.wait();
 }
+
+
+void Checkpointable::wait_ready()
+{
+	_ready_event.wait();
+}
+
+
+void Checkpointable::ready()
+{
+	_ready_event.set();
+}
+
+
+

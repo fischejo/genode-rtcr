@@ -65,6 +65,10 @@ public:
 	{
 		_set = false;
 	}
+
+	bool is_set() {
+		return _set;
+	}
 };
 
 
