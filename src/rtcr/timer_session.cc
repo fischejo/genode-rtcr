@@ -136,8 +136,10 @@ Timer_session *Timer_root::_create_session(const char *args)
 	_childs_lock.lock();
 	Child_info *info = _childs.first();
 	if(info) info = info->find_by_name(label_buf);
-	if(!info) info = new(_md_alloc) Child_info(label_buf);
-	_childs.insert(info);	
+	if(!info) {
+		info = new(_md_alloc) Child_info(label_buf);
+		_childs.insert(info);		
+	}
 	_childs_lock.unlock();
 	
 	/* Create virtual session object */
@@ -148,7 +150,6 @@ Timer_session *Timer_root::_create_session(const char *args)
 																info);
 
 	info->timer_session = new_session;
-	Genode::log("new_world");
 	return new_session;
 
 }

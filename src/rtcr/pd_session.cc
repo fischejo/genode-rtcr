@@ -329,8 +329,10 @@ Pd_session *Pd_root::_create_session(const char *args)
 	_childs_lock.lock();
 	Child_info *info = _childs.first();
 	if(info) info = info->find_by_name(label_buf);
-	if(!info) info = new(_md_alloc) Child_info(label_buf);
-	_childs.insert(info);	
+	if(!info) {
+		info = new(_md_alloc) Child_info(label_buf);
+		_childs.insert(info);		
+	}
 	_childs_lock.unlock();
 	
 	/* Create custom Pd_session */

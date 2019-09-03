@@ -53,7 +53,7 @@ Genode::Ram_dataspace_capability Serializer::serialize(Child_info *_child_info,
 	Genode::size_t total_size = pb_ds_size;
 	Ram_dataspace *ram_dataspace = _child_info->ram_session->info.ram_dataspaces;
 	while(ram_dataspace) {
-		total_size += ram_dataspace->info.size;
+		total_size += page_aligned_size(ram_dataspace->info.size);
 		ram_dataspace = ram_dataspace->next();
 	}
 	Genode::Region_map_client region_map(_rm_connection.create(total_size));
@@ -83,7 +83,7 @@ Genode::Ram_dataspace_capability Serializer::serialize(Child_info *_child_info,
 
 		ram_dataspace_info->set_local_offset(local_addr);
 
-		local_addr += ram_dataspace->info.size;
+		local_addr += page_aligned_size(ram_dataspace->info.size);
 		ram_dataspace = ram_dataspace->next();
 		i++;
 	}

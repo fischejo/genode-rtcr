@@ -53,6 +53,13 @@ private:
 	Genode::Allocator &_alloc;
 
 	Module &_module;
+
+	/**
+	 * Registry for parent's services (parent of RTCR component). It is shared
+	 * between all children.
+	 */
+	Genode::Service_registry      &_parent_services;
+
 	
 	/**
 	 * Entrypoint for child's creation
@@ -109,6 +116,7 @@ public:
 	Target_child(Genode::Env &env,
 				 Genode::Allocator &alloc,
 				 const char *name,
+				 Genode::Service_registry &parent_services,
 				 Module &module);
 	
 	~Target_child() {};

@@ -32,12 +32,14 @@ using namespace Rtcr;
 Target_child::Target_child(Genode::Env &env,
 						   Genode::Allocator &alloc,
 						   const char* name,
+						   Genode::Service_registry &parent_services,
 						   Module &module)
 	:
 	_name (name),
 	_env (env),
 	_alloc (alloc),
 	_module(module),
+	_parent_services(parent_services),
 	_pd_service(module.pd_service()),
 	_cpu_service(module.cpu_service()),
 	_ram_service(module.ram_service()),
@@ -84,12 +86,19 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 													   const char *args)
 {
 	Genode::Service *service = _module.resolve_session_request(service_name, args);
-	
+
+	/* Service known from parent? */
+	if(!service) service = _parent_services.find(service_name);
+
+	Genode::log("service name=",service_name, "found by parent ", service);
 	/* Service not known, cannot intercept it */
 	if(!service) {
+		service = new (_alloc) Genode::Parent_service(service_name);
+		_parent_services.insert(service);
 		Genode::warning("Unknown service: ", service_name);
 	}
-
+	
+	
 	return service;
 }
 

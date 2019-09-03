@@ -98,9 +98,11 @@ Rom_session *Rom_root::_create_session(const char *args)
 
 	_childs_lock.lock();
 	Child_info *info = _childs.first();
-	if(info) info = info->find_by_name(label_buf);		
-	if(!info) info = new(_md_alloc) Child_info(label_buf);
-	_childs.insert(info);	
+	if(info) info = info->find_by_name(label_buf);
+	if(!info) {
+		info = new(_md_alloc) Child_info(label_buf);
+		_childs.insert(info);		
+	}
 	_childs_lock.unlock();
 	
 	/* Create custom Rom_session */
@@ -110,7 +112,8 @@ Rom_session *Rom_root::_create_session(const char *args)
 															label_buf,
 															readjusted_args,
 															info);
-	info->rom_session = new_session;	
+	info->rom_session = new_session;
+	Genode::log("rom leaving");
 	return new_session;
 }
 

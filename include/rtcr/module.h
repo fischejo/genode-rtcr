@@ -50,7 +50,13 @@ public:
 	virtual Genode::Service &ram_service() = 0;
 	virtual Genode::Service &cpu_service() = 0;
 	virtual Genode::Service &pd_service() = 0;
+
 	virtual Child_info *child_info(const char* name) = 0;
+	virtual void pause(Child_info *info) = 0;
+	virtual void resume(Child_info *info) = 0;
+	virtual void checkpoint(Child_info *info) = 0;
+
+
 	virtual Genode::Service *resolve_session_request(const char *service_name,
 													 const char *args) = 0;
 };

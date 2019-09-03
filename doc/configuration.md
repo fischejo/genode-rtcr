@@ -5,16 +5,14 @@
 A child is initialized with a label, which corresponds to an `child` node in the
 XML config. Following parameters exists:
 
-* `label` Name of the child
+* `name` Name of the child
 * `quota` A portion of memory which is transfered to the child. Default is `512 KB`
-* `binary` Rom Binary
 * `xpos` and `ypos` assign the child to a specific CPU core. Default is `0`
 
 ```xml
 <start name="rtcr_app">
 	<config>
-		<child label="sheep_counter_1" quota="1048576" binary="sheep_counter" xpos="1" ypos="1"/>
-		<child label="sheep_counter_2" quota="1048576" binary="sheep_counter" xpos="1" ypos="1"/>		
+		<child name="sheep_counter" quota="1048576"  xpos="1" ypos="1"/>
 		...
 	</config>
 </start>
@@ -49,12 +47,12 @@ Parameters:
 ```
 
 In order to run all threads in parallel, it is necessary to activate it with the
-`parallel` node. For debugging purposes, this flag is deactivated by default.
+`checkpoint` node. For debugging purposes, this flag is deactivated by default.
 
 ```xml
 <start name="rtcr_app">
 	<config>
-       <parallel>true</parallel>
+       <checkpoint parallel="true"/>
 		...
 	</config>
 </start>
