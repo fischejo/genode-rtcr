@@ -23,20 +23,6 @@ using namespace Rtcr;
 #endif
 
 
-void Ram_session::_destroy_ramds(Ram_dataspace &ramds)
-{
-
-	Genode::Ram_dataspace_capability ds_cap =
-		Genode::static_cap_cast<Genode::Ram_dataspace>(ramds.info.cap);
-
-	/* Destroy Ram_dataspace */
-	Genode::destroy(_md_alloc, &ramds);
-
-	/* Free from parent */
-	_parent_ram.free(ds_cap);
-}
-
-
 Ram_session::Ram_session(Genode::Env &env,
 					     Genode::Allocator &md_alloc,
 					     const char *label,
@@ -99,15 +85,26 @@ void Ram_session::mark_region_map_dataspace(Genode::Dataspace_capability cap)
 }
 
 
+void Ram_session::_destroy_ramds(Ram_dataspace &ds)
+{
+	/* detach */
+	 _env.rm().detach(ds.dst);
+	 _env.rm().detach(ds.src);
+
+	 /* free */
+	_parent_ram.free(ds.info.cap);
+	_env.ram().free(ds.info.dst_cap);
+	
+	/* Destroy Ram_dataspace */
+	Genode::destroy(_md_alloc, &ds);
+}
+
+
 void Ram_session::copy_dataspace(Ram_dataspace &ds)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-	char *dst_addr_start = _env.rm().attach(ds.info.dst_cap);
-	char *src_addr_start = _env.rm().attach(ds.info.cap);
 
-	Genode::memcpy(dst_addr_start, src_addr_start, ds.info.size);
-	_env.rm().detach(src_addr_start);
-	_env.rm().detach(dst_addr_start);
+	Genode::memcpy(ds.dst, ds.src, ds.info.size);
 }
 
 
@@ -129,8 +126,12 @@ void Ram_session::checkpoint()
 	/* step 2: allocate cold dataspace for recently added dataspaces */
 	dataspace = _ram_dataspaces.first();	
 	while(dataspace && dataspace != info.ram_dataspaces) {
-		if(!dataspace->is_region_map)
+		if(!dataspace->is_region_map) {
 			dataspace->info.dst_cap = _env.ram().alloc(dataspace->info.size);
+			dataspace->dst = _env.rm().attach(dataspace->info.dst_cap);
+			dataspace->src = _env.rm().attach(dataspace->info.cap);		
+		}
+		
 		dataspace = dataspace->next();
 	}
 

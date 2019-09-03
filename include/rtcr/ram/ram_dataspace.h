@@ -60,6 +60,11 @@ struct Rtcr::Ram_dataspace : private Simple_counter<Ram_dataspace>,
 	 ** HOT STORAGE **
 	 *****************/
 
+	/* pointers where ds are attached */
+	void *src = nullptr;
+	void *dst = nullptr;
+	
+	
 	/**
 	 * List and Fifo provide a next() method. In general, you want to use the
 	 * list implementation.
