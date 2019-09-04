@@ -5,8 +5,8 @@
  * \date   2019-08-29
  */
 
-#ifndef _RTCR_TARGET_CHILD_H_
-#define _RTCR_TARGET_CHILD_H_
+#ifndef _RTCR_CHILD_H_
+#define _RTCR_CHILD_H_
 
 /* Genode includes */
 #include <base/env.h>
@@ -26,15 +26,15 @@
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
-	class Target_child;
+	class Child;
 	typedef Genode::String<32> Child_name;	
 }
 
 /**
  * Encapsulates the policy and creation of the child
  */
-class Rtcr::Target_child : public Genode::Child_policy,
-						   public Genode::List<Rtcr::Target_child>
+class Rtcr::Child : public Genode::Child_policy,
+						   public Genode::List<Rtcr::Child>
 {
 private:
 	/**
@@ -113,13 +113,13 @@ public:
 	 * \param parent_services   Services which are already provided by the parents
 	 * \param name              Name of child component
 	 */
-	Target_child(Genode::Env &env,
+	Child(Genode::Env &env,
 				 Genode::Allocator &alloc,
 				 const char *name,
 				 Genode::Service_registry &parent_services,
 				 Init_module &module);
 	
-	~Target_child() {};
+	~Child() {};
   
 	/**
 	 * Start child from scratch
@@ -136,4 +136,4 @@ public:
 	
 };
 
-#endif /* _RTCR_TARGET_CHILD_H_ */
+#endif /* _RTCR_CHILD_H_ */

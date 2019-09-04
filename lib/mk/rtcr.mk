@@ -1,4 +1,4 @@
-SRC_CC = target_child.cc module_factory.cc base_module.cc init_module.cc checkpointable.cc child_info.cc
+SRC_CC = child.cc module_factory.cc base_module.cc init_module.cc checkpointable.cc child_info.cc
 SRC_CC += cpu_session.cc cpu_thread.cc
 SRC_CC += pd_session.cc
 SRC_CC += rm_session.cc region_map.cc

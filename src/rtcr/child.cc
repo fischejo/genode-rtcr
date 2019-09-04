@@ -5,7 +5,7 @@
  * \date   2019-08-29
  */
 
-#include <rtcr/target_child.h>
+#include <rtcr/child.h>
 
 #include <base/rpc_server.h>
 #include <base/session_label.h>
@@ -29,7 +29,7 @@
 using namespace Rtcr;
 
 
-Target_child::Target_child(Genode::Env &env,
+Child::Child(Genode::Env &env,
 						   Genode::Allocator &alloc,
 						   const char* name,
 						   Genode::Service_registry &parent_services,
@@ -75,14 +75,14 @@ Target_child::Target_child(Genode::Env &env,
 }
 
 
-void Target_child::start()
+void Child::start()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 	_entrypoint.activate();
 }
 
 
-Genode::Service *Target_child::resolve_session_request(const char *service_name,
+Genode::Service *Child::resolve_session_request(const char *service_name,
 													   const char *args)
 {
 	Genode::Service *service = _module.resolve_session_request(service_name, args);
@@ -103,7 +103,7 @@ Genode::Service *Target_child::resolve_session_request(const char *service_name,
 }
 
 
-void Target_child::filter_session_args(const char *service,
+void Child::filter_session_args(const char *service,
 									   char *args,
 									   Genode::size_t args_len)
 {
@@ -121,7 +121,7 @@ void Target_child::filter_session_args(const char *service,
 }
 
 
-Cpu_session &Target_child::create_cpu_session()
+Cpu_session &Child::create_cpu_session()
 {
 	DEBUG_THIS_CALL;	
 	/* Preparing argument string */
@@ -144,7 +144,7 @@ Cpu_session &Target_child::create_cpu_session()
 }
 
 
-Pd_session &Target_child::create_pd_session()
+Pd_session &Child::create_pd_session()
 {
 	DEBUG_THIS_CALL;	
 	/* Preparing argument string */
@@ -165,7 +165,7 @@ Pd_session &Target_child::create_pd_session()
 }
 
 
-Ram_session &Target_child::create_ram_session()
+Ram_session &Child::create_ram_session()
 {
 	DEBUG_THIS_CALL;
 	/* Preparing argument string */

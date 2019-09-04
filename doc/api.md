@@ -21,7 +21,7 @@ to initialize the module.
 # Child Creation
 
 ```C++
-Target_child sheep (env, heap, "sheep_counter", module);
+Child sheep (env, heap, "sheep_counter", module);
 sheep.start();
 
 ```
@@ -30,18 +30,19 @@ Multiple child are supported.
 
 
 # Checkpointing
+All childs are paused, checkpointed and resumed in parallel.
 
 ```C++
 Child_info *info = module.child_info("sheep_counter");
-module.pause(info);
-module.checkpoint(info);
-module.resume(info);
+module.pause();
+module.checkpoint();
+module.resume();
 ```
 
 The last checkpointed state can be examined:
 
 ```C++
-Genode::log(child_info);
+Genode::log(module.child_info("sheep_counter));
 ```
 
 # Serialization
@@ -54,6 +55,6 @@ variable `size`.
 Serializer s(env, heap);
 
 Genode::size_t size;
-Genode::Ram_dataspace_capability ds_cap = s.serialize(info, &size);
+Genode::Ram_dataspace_capability ds_cap = s.serialize(module.child_info(), &size);
 ```
 

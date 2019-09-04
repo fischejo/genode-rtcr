@@ -22,7 +22,7 @@
 
 #include <os/config.h>
 
-#include <rtcr/target_child.h>
+#include <rtcr/child.h>
 #include <rtcr/base_module.h>
 #include <rtcr_cdma/cdma_module.h>
 #include <rtcr_serializer/serializer.h>
@@ -51,10 +51,10 @@ struct Rtcr::Main
 	  Serializer serializer(env, heap);
 	  
 	  
-	  Target_child sheep (env, heap, "sheep_counter", parent_services, module);
+	  Child sheep (env, heap, "sheep_counter", parent_services, module);
 	  sheep.start();
 
-	  Target_child horse (env, heap, "horse_counter", parent_services, module);
+	  Child horse (env, heap, "horse_counter", parent_services, module);
 	  horse.start();
 
 	  timer.msleep(2000);
@@ -69,7 +69,7 @@ struct Rtcr::Main
 	  
 	  Genode::size_t serialized_size;
 	  Genode::Dataspace_capability ds_cap = serializer.serialize(
-		  module.childs(), &serialized_size);
+		  module.child_info(), &serialized_size);
 	  
 	  // Genode::log("moin");
 	  // serializer.parse(ds_cap);

@@ -67,7 +67,7 @@ public:
 	 * Name of your module which you want to register.
 	 * 
 	 * This should return exactly the same name as the `name()` of your module.
-	 * The `Target_child` uses it in order to load the correct modules which are
+	 * The `Child` uses it in order to load the correct modules which are
 	 * defined in the XML configuration.
 	 *
 	 * \return Name of your module

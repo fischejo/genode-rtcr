@@ -106,7 +106,7 @@ protected:
 	Genode::Allocator &_md_alloc;
 
 	/**
-	 * Reference to Target_child's bootstrap phase
+	 * Reference to Child's bootstrap phase
 	 */
 	bool &_bootstrap_phase;
 
