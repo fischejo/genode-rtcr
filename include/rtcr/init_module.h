@@ -102,7 +102,7 @@ public:
 	Genode::Service *pd_service() { return _pd_service; }
 
 	Child_info *child_info(const char* name);
-	
+	Genode::List<Child_info> *childs() { return &_childs; }
 	void pause();
 	void resume();
 	void checkpoint();

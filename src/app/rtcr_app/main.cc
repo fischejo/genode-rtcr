@@ -47,24 +47,27 @@ struct Rtcr::Main
 	{
 	  Timer::Connection timer(env);
 
-	  Cdma_module module(env, heap);
+	  Base_module module(env, heap);
 	  Serializer serializer(env, heap);
 	  
 	  
 	  Target_child sheep (env, heap, "sheep_counter", parent_services, module);
 	  sheep.start();
+
+	  Target_child horse (env, heap, "horse_counter", parent_services, module);
+	  horse.start();
+
 	  timer.msleep(2000);
 
+	  
 	  Genode::log("is ready: ", module.ready());
 	  module.pause();
 	  module.checkpoint();
 	  module.resume();
-
-
+	  
 	  Genode::size_t serialized_size;
-	  Child_info *info = module.child_info("sheep_counter");
-	  Genode::Ram_dataspace_capability ds_cap =
-		  serializer.serialize(info, &serialized_size);
+	  Genode::Dataspace_capability ds_cap = serializer.serialize(
+		  module.childs(), &serialized_size);
 	  
 	  // Genode::log("moin");
 	  // serializer.parse(ds_cap);

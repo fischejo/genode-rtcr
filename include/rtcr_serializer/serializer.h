@@ -43,6 +43,18 @@ class Rtcr::Serializer
 {
 protected:
 
+	struct Attachment : Genode::List<Attachment>::Element {
+		Pb::Attachment *pb;
+		Genode::size_t size;
+		void *addr;
+		Genode::Dataspace_capability cap;
+		
+		Attachment(Genode::Dataspace_capability _cap, Genode::size_t _size, Pb::Attachment *_pb)
+			: pb(_pb), size(_size), cap(_cap) {};
+		Attachment(Genode::Dataspace_capability _cap, Genode::size_t _size)
+			: pb(nullptr), size(_size), cap(_cap) {};		
+	};
+	
 	Genode::Env &_env;
 	Genode::Rm_connection _rm_connection;
 	Genode::Allocator &_alloc;	
@@ -50,6 +62,25 @@ protected:
 	const Genode::size_t _PAGE_SIZE = 4096;
 	inline Genode::size_t page_aligned_size(Genode::size_t size);
 
+
+	void free(Genode::List<Attachment> &as);	
+	void detach(Genode::Region_map_client &rm, Genode::List<Attachment> &as);
+	void attach(Genode::Region_map_client &rm, Genode::List<Attachment> &as);	
+	Genode::size_t size(Genode::List<Attachment> &as);
+	
+	Genode::Dataspace_capability compress(Genode::Dataspace_capability src_cap,
+										  Genode::size_t src_size,
+										  Genode::size_t *dst_size);
+	
+	void add_child_info(Pb::Child_list *ts,
+						Child_info *_tc,
+						bool include_binary,
+						Genode::List<Attachment> &as);
+	
+    void set_binary_info(Pb::Child_info *tc,
+						 Child_info *_tc,
+						 Genode::List<Attachment> &as);
+	
 	Pb::Normal_info *normal_info(Capability_mapping *cm, Normal_info *info);
 	Pb::Session_info *session_info(Capability_mapping *cm, Session_info *info);	
 	
@@ -59,7 +90,8 @@ protected:
 	
 	void set_ram_session(Capability_mapping *cm,
 						 Pb::Child_info *tc,
-						 Child_info *_tc);
+						 Child_info *_tc,
+						 Genode::List<Attachment> &as);
 	
 	void set_cpu_session(Capability_mapping *cm,
 						 Pb::Child_info *tc,
@@ -91,7 +123,8 @@ protected:
 	
 	void add_ram_dataspace(Capability_mapping *cm,
 						   Pb::Ram_session_info *ram_session,
-						   Ram_dataspace_info *info);
+						   Ram_dataspace_info *info,
+						   Genode::List<Attachment> &as);
 	
 	void add_cpu_thread(Capability_mapping *cm,
 						Pb::Cpu_session_info *cpu_session,
@@ -130,8 +163,13 @@ public:
 	Serializer(Genode::Env &env, Genode::Allocator &alloc);
 	~Serializer() {}
 
-	Genode::Ram_dataspace_capability serialize(Child_info *child, Genode::size_t *size);
+
 	void parse(Genode::Dataspace_capability ds_cap);
+
+
+	Genode::Dataspace_capability serialize(Genode::List<Child_info> *_child_list,
+											   Genode::size_t *compressed_size,
+											   bool include_binary = false);
 };
 
 

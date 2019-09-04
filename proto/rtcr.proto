@@ -4,6 +4,16 @@ package Rtcr.Pb;
 /**
  * General
  */
+
+message Child_list{
+	repeated Child_info child_info = 1;
+}
+
+
+message Attachment{
+	uint32 offset =1;
+}
+
 message Child_info{
 	Cpu_session_info cpu_session_info = 1;
 	Pd_session_info pd_session_info = 2;
@@ -13,6 +23,8 @@ message Child_info{
 	Log_session_info log_session_info = 6;
 	Timer_session_info timer_session_info = 7;
 	Capability_mapping capability_mapping = 8;
+	Attachment binary = 9;
+	string name = 10;
 }
 
 
@@ -127,7 +139,7 @@ message Ram_dataspace_info{
 	uint32                   size = 1;
 	uint32                   cached = 2;
 	uint32                   timestamp = 4;
-	uint32					 local_offset =5;
+	Attachment               attachment = 5;
 	Normal_info normal_info = 3;
 }
 
