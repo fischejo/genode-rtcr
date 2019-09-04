@@ -33,12 +33,12 @@ struct Rtcr::Timer_session_info : Session_info {
 	Timer_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " Timer session:\n ");
+		Genode::print(output, " Timer session:\n  ");
 		Session_info::print(output);
 		Genode::print(output,
 					  ", sigh_badge ", sigh_badge,
 					  ", timeout=", timeout,
-					  ", periodic=", periodic);
+					  ", periodic=", periodic, "\n");
 	}
 };
 

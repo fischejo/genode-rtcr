@@ -34,7 +34,7 @@ struct Rtcr::Rm_session_info : Session_info {
 	Rm_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " RM session:\n");
+		Genode::print(output, " RM session:\n  ");
 		Genode::print(output,
 					  "  bootstrapped=", bootstrapped,
 					  ", cargs='", creation_args, "'",

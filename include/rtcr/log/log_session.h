@@ -30,8 +30,9 @@ struct Rtcr::Log_session_info : Session_info {
 	Log_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " Log session:\n ");
+		Genode::print(output, " Log session:\n  ");
 		Session_info::print(output);
+		Genode::print(output, "\n");
 		
 	}
 };

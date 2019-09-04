@@ -46,45 +46,12 @@ struct Rtcr::Child_info : Genode::List<Child_info>::Element
 	Capability_mapping *capability_mapping;
 
 	Child_info(const char* _name) : name(_name) {};
-
 	~Child_info() {};	
 	
-	Child_info *find_by_name(const char *_name) {
-		if(!Genode::strcmp(name.string(), _name))
-			return this;
-		Child_info *obj = next();
-		return obj ? obj->find_by_name(_name) : 0;
-	}
+	Child_info *find_by_name(const char *_name);
+	bool child_destroyed();
 
-	bool child_destroyed() { return (!ram_session || !cpu_session || !pd_session); }
-
-
-	// void print(Genode::Output &output) const {
-	// 	Genode::print(output, "Child: ",name,"\n");
-	// 	Genode::print(output, pd_session->info);
-	// 	Genode::print(output, cpu_session->info);
-	// 	Genode::print(output, ram_session->info);
-
-	// 	/* (optional) RM session */
-	// 	if(rm_session) Genode::print(output, rm_session->info);
-	// 	else Genode::print(output, " RM session: <empty>\n");
-
-	// 	/* (optional) LOG session */
-	// 	if(log_session) Genode::print(output, log_session->info);
-	// 	else Genode::print(output, " LOG session: <empty>\n");
-
-	// 	/* (optional) Timer session */
-	// 	if(timer_session) Genode::print(output, timer_session->info);
-	// 	else Genode::print(output, " Timer session: <empty>\n");
-
-	// 	/* (optional) Rom session */	
-	// 	if(rom_session) Genode::print(output, rom_session->info);
-	// 	else Genode::print(output, " ROM session: <empty>\n");
-
-	// 	/* Capabilities */
-	// 	Genode::print(output, &capability_mapping);
-	// }
-	
+	void print(Genode::Output &output) const;
 };
 
 

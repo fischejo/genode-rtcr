@@ -38,15 +38,16 @@ struct Rtcr::Cpu_session_info : Session_info {
 	Cpu_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " CPU session:\n ");
+		Genode::print(output, " CPU session:\n  ");
 		Session_info::print(output);
+		Genode::print(output, "\n");
 		
 		Cpu_thread *cpu_thread = cpu_threads;
 		if(!cpu_thread) Genode::print(output, "  <empty>\n");
 		while(cpu_thread) {
 		Genode::print(output, "  ", cpu_thread->info, "\n");
 			cpu_thread = cpu_thread->next();
-		}		
+		}
 	}
 };
 

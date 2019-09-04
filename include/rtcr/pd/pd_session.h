@@ -55,8 +55,9 @@ struct Rtcr::Pd_session_info : Session_info {
 		{}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " PD session:\n ");
+		Genode::print(output, " PD session:\n  ");
 		Session_info::print(output);
+		Genode::print(output, "\n");
 		
 		/* Signal contexts */
 		Genode::print(output, "  Signal contexts:\n");

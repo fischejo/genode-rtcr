@@ -97,7 +97,8 @@ Log_session *Log_root::_create_session(const char *args)
 	
 	/* Create virtual session object */
 	Log_session *new_session = _create_log_session(info, readjusted_args);
-	info->log_session = new_session;	
+	info->log_session = new_session;
+	info->bootstrapped = true; /* set the bootstrapped flag */
 	return new_session;
 }
 

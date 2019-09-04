@@ -35,7 +35,7 @@ struct Rtcr::Rom_session_info : Session_info {
 	Rom_session_info(const char* creation_args) : Session_info(creation_args) {}
 	
 	void print(Genode::Output &output) const {
-		Genode::print(output, " Rom session:\n ");
+		Genode::print(output, " Rom session:\n  ");
 		Session_info::print(output);
 		Genode::print(output,
 					  " dataspace_badge=", dataspace_badge,

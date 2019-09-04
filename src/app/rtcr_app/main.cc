@@ -64,6 +64,8 @@ struct Rtcr::Main
 	  module.pause();
 	  module.checkpoint();
 	  module.resume();
+
+	  Genode::log(*module.child_info("sheep_counter"));
 	  
 	  Genode::size_t serialized_size;
 	  Genode::Dataspace_capability ds_cap = serializer.serialize(
