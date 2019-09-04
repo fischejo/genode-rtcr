@@ -46,14 +46,14 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 															utcb,
 															affinity,
 															_child_info->bootstrapped);
-
+	
 	/* Manage custom CPU thread */
 	_ep.manage(*new_cpu_thread);
 
 	/* Insert custom CPU thread into list */
 	Genode::Lock::Guard _lock_guard(_cpu_threads_lock);
 	_cpu_threads.insert(new_cpu_thread);
-
+	
 	return *new_cpu_thread;
 }
 
@@ -147,8 +147,9 @@ void Cpu_session::checkpoint()
 
 void Cpu_session::pause()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-		Cpu_thread *cpu_thread = _cpu_threads.first();
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
+	
+	Cpu_thread *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		/* if the object is in the destroyed queue, it means that it is already
 		 * destroyed */
@@ -157,6 +158,7 @@ void Cpu_session::pause()
 		
 		cpu_thread = cpu_thread->next();
 	}
+	_cpu_threads_lock.unlock();	
 }
 
 void Cpu_session::resume()
@@ -188,7 +190,7 @@ Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capabili
 		Genode::error("Thread creation failed: PD session ",
 					  child_pd_cap, " is unknown.");
 		throw Genode::Exception();
-	}
+	}	
 
 	/* Create custom CPU thread */
 	Cpu_thread &new_cpu_thread = _create_thread(_child_info->pd_session->cap(),
@@ -197,7 +199,6 @@ Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capabili
 												affinity,
 												weight,
 												utcb);
-	Genode::log("reached");
 	return new_cpu_thread.cap();
 }
 
@@ -208,13 +209,11 @@ void Cpu_session::kill_thread(Genode::Thread_capability thread_cap)
 	Genode::Lock::Guard lock (_cpu_threads_lock);
 	Cpu_thread *cpu_thread = _cpu_threads.first();
 	if(cpu_thread) cpu_thread = cpu_thread->find_by_badge(thread_cap.local_name());
-
 	if(cpu_thread) {
 		Genode::error("Issuing Rm_session::destroy, which is bugged and hangs up.");
-
 		_kill_thread(*cpu_thread);
 	} else {
-		Genode::error("No Region map with ", thread_cap, " found!");
+		Genode::error("No thread with ", thread_cap, " found!");
 	}
 }
 
@@ -367,11 +366,7 @@ void Cpu_root::_upgrade_session(Cpu_session *session, const char *upgrade_args)
 
 void Cpu_root::_destroy_session(Cpu_session *session)
 {
-	// Genode::Lock::Guard lock(_childs_lock);
-	// Child_info *info = _childs.find_by_name(label_buf);
-	// info->cpu_session = nullptr;
-	// Genode::destroy(_md_alloc, session);
-	// if(info->child_destroyed()) _childs.remove(info);
+
 }
 
 

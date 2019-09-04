@@ -36,8 +36,10 @@ struct Rtcr::Ram_dataspace_info : Normal_info {
 
 	void print(Genode::Output &output) const {
 		using Genode::Hex;
-		Genode::print(output, cap,
-					  "   size=", Hex(size),
+		Genode::print(output,
+					  "   cap=", cap,
+					  ", badge=", cap.local_name(),
+					  ", size=", Hex(size),
 					  ", cached=", static_cast<unsigned>(cached),
 					  ", timestamp=", timestamp, "\n");
 	}

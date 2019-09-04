@@ -65,7 +65,8 @@ public:
 	 ******************/
 	
 	Cpu_session_info info;
-
+	bool hello = true;
+	
 protected:
 
 	Child_info *_child_info;
@@ -77,6 +78,7 @@ protected:
 	 */
 	Genode::Lock _cpu_threads_lock;
 	Genode::Lock _destroyed_cpu_threads_lock;
+	
 	Genode::List<Cpu_thread> _cpu_threads;
 	Genode::Fifo<Cpu_thread> _destroyed_cpu_threads;
 

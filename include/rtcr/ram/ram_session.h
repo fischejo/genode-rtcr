@@ -43,7 +43,7 @@ struct Rtcr::Ram_session_info : Session_info {
 	void print(Genode::Output &output) const {
 		Genode::print(output, " Ram session:\n ");
 		Session_info::print(output);
-		
+		Genode::print(output, "\n");
 		Ram_dataspace *ds = ram_dataspaces;
 		if(!ds) Genode::print(output, "  <empty>\n");
 		while(ds) {

@@ -61,6 +61,7 @@ Pd_session::Pd_session(Genode::Env &env,
 	_ep.manage(_stack_area);
 	_ep.manage(_linker_area);
 
+	Genode::log("new_region_map ds address_space=", _address_space.dataspace());	
 //	ram_session.mark_region_map_dataspace(_address_space.dataspace());
 //	ram_session.mark_region_map_dataspace(_stack_area.dataspace());
 //	ram_session.mark_region_map_dataspace(_linker_area.dataspace());	

@@ -68,7 +68,7 @@ protected:
 	void attach(Genode::Region_map_client &rm, Genode::List<Attachment> &as);	
 	Genode::size_t size(Genode::List<Attachment> &as);
 	
-	Genode::Dataspace_capability compress(Genode::Dataspace_capability src_cap,
+	Genode::Ram_dataspace_capability compress(Genode::Dataspace_capability src_cap,
 										  Genode::size_t src_size,
 										  Genode::size_t *dst_size);
 	
@@ -154,10 +154,6 @@ protected:
 							   Pb::Pd_session_info *pd_session,
 							   Native_capability_info *info);
 
-	
-	Genode::Ram_dataspace_capability compress(Genode::size_t *dst_size,
-											  Genode::Dataspace_capability src_cap,
-											  Genode::size_t src_size);
 public:
 
 	Serializer(Genode::Env &env, Genode::Allocator &alloc);
@@ -167,7 +163,7 @@ public:
 	void parse(Genode::Dataspace_capability ds_cap);
 
 
-	Genode::Dataspace_capability serialize(Genode::List<Child_info> *_child_list,
+	Genode::Ram_dataspace_capability serialize(Genode::List<Child_info> *_child_list,
 											   Genode::size_t *compressed_size,
 											   bool include_binary = false);
 };

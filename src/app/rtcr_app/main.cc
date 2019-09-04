@@ -54,10 +54,10 @@ struct Rtcr::Main
 	  Child sheep (env, heap, "sheep_counter", parent_services, module);
 	  sheep.start();
 
-	  Child horse (env, heap, "horse_counter", parent_services, module);
-	  horse.start();
+//	  Child horse (env, heap, "horse_counter", parent_services, module);
+//	  horse.start();
 
-	  timer.msleep(2000);
+	  timer.msleep(15000);
 
 	  
 	  Genode::log("is ready: ", module.ready());

@@ -95,6 +95,7 @@ public:
 				Genode::Allocator &md_alloc,
 				Genode::Entrypoint &ep,
 				const char *creation_args,
+				const char *label,
 				Child_info *child_info);
 
 	~Rom_session() {};
@@ -150,7 +151,8 @@ protected:
 	/**
 	 * Wrapper for creating a ram session
 	 */
-	virtual Rom_session *_create_rom_session(Child_info *info, const char *args);
+	virtual Rom_session *_create_rom_session(Child_info *info, const char *args,
+						const char *label);
 	
 	Rom_session *_create_session(const char *args);
 

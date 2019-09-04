@@ -28,13 +28,14 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 							   Genode::Allocator& md_alloc,
 							   Genode::Entrypoint& ep,
 							   const char *creation_args,
+							   const char *label,
 							   Child_info *child_info)
 	:
 	Checkpointable(env, "rom_session"),
 	_env          (env),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
-	_parent_rom   (env, child_info->name.string()),
+	_parent_rom   (env, label),
 	_child_info (child_info),
 	info (creation_args)
 {
@@ -75,9 +76,10 @@ void Rtcr::Rom_session::sigh(Genode::Signal_context_capability sigh)
 }
 
 
-Rom_session *Rom_root::_create_rom_session(Child_info *info, const char *args)
+Rom_session *Rom_root::_create_rom_session(Child_info *info, const char *args,
+	const char *label)
 {
-	return new (md_alloc()) Rom_session(_env, _md_alloc, _ep, args, info);
+	return new (md_alloc()) Rom_session(_env, _md_alloc, _ep, args, label, info);
 }
 
 
@@ -101,19 +103,20 @@ Rom_session *Rom_root::_create_session(const char *args)
 	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
 	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
 
+	Genode::Session_label prefix = Genode::label_from_args(args).prefix();
+	
 	_childs_lock.lock();
 	Child_info *info = _childs.first();
-	if(info) info = info->find_by_name(label_buf);
+	if(info) info = info->find_by_name(prefix.string());
 	if(!info) {
-		info = new(_md_alloc) Child_info(label_buf);
-		_childs.insert(info);		
+		info = new(_md_alloc) Child_info(prefix.string());
+		_childs.insert(info);
 	}
 	_childs_lock.unlock();
 	
 	/* Create custom Rom_session */
-	Rom_session *new_session =  _create_rom_session(info, readjusted_args);
+	Rom_session *new_session =  _create_rom_session(info, readjusted_args, label_buf);
 	info->rom_session = new_session;
-	Genode::log("rom leaving");
 	return new_session;
 }
 

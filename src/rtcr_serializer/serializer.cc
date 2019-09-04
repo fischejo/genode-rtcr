@@ -84,10 +84,11 @@ void Serializer::attach(Genode::Region_map_client &rm, Genode::List<Attachment> 
 	while(a) {
 		a->addr = rm.attach_at(a->cap, offset);
 		if(a->pb) a->pb->set_offset(offset);
-
+#ifdef DEBUG
 		Genode::log("Region Map attach",
 					" offset=",Genode::Hex(offset),
 					" size=", Genode::Hex(a->size));
+#endif		
 		offset += a->size;		
 		a = a->next();
 	}
@@ -112,7 +113,7 @@ void Serializer::free(Genode::List<Attachment> &as)
 }
 
 
-Genode::Dataspace_capability Serializer::serialize(
+Genode::Ram_dataspace_capability Serializer::serialize(
 	Genode::List<Child_info> *_child_list,
 	Genode::size_t *compressed_size,
 	bool include_binary)
@@ -146,7 +147,7 @@ Genode::Dataspace_capability Serializer::serialize(
 	child_list->SerializeToArray(pb_array + pb_offset, pb_ds_size);
 	_env.rm().detach(pb_array);
 
-	Genode::Dataspace_capability compressed_ds_cap;
+	Genode::Ram_dataspace_capability compressed_ds_cap;
 	try {
 		/* apply compression*/
 		compressed_ds_cap = compress(region_map.dataspace(), total_size, compressed_size);
@@ -158,17 +159,17 @@ Genode::Dataspace_capability Serializer::serialize(
 
 		throw Genode::Exception();		
 	}
-
+#ifdef VERBOSE
 	Genode::log(" rate=",100-(int) (((float)*compressed_size/total_size)*100),"%",
 				" compressed_size=", Genode::Hex(*compressed_size),
 				" uncompressed_size=", Genode::Hex(total_size),
 				" pb_size=",Genode::Hex(pb_size));
-
+#endif
 	return compressed_ds_cap;
 }
 
 
-Genode::Dataspace_capability Serializer::compress(Genode::Dataspace_capability src_cap,
+Genode::Ram_dataspace_capability Serializer::compress(Genode::Dataspace_capability src_cap,
 												  Genode::size_t src_size,
 												  Genode::size_t *dst_size)
 {

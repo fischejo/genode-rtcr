@@ -25,8 +25,6 @@ void Component::construct(Genode::Env &env)
 
 	Timer::Connection timer(env);
 
-//	Rm_connection rm(env);	
-
 	Dataspace_capability ds_cap = env.ram().alloc(20*4096);
 	Genode::uint8_t* ds_addr = env.rm().attach(ds_cap);	
 	uint16_t &n = *(uint16_t*) (ds_addr);

@@ -40,6 +40,7 @@ Region_map &Rm_session::_create(Genode::size_t size)
 	/* Insert custom Region map into list */
 	Genode::Lock::Guard lock(_region_maps_lock);
 	_region_maps.insert(new_region_map);
+	Genode::log("new_region_map ds cap=", new_region_map->dataspace());
 //	_ram_session.mark_region_map_dataspace(new_region_map->dataspace()); TODO FJO
 	return *new_region_map;
 }
