@@ -16,6 +16,8 @@
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/rm/region_map.h>
 #include <rtcr/rm/attached_region.h>
+#include <rtcr/rm/attached_region_info.h>
+#include <rtcr/rm/region_map_info.h>
 
 namespace Rtcr {
 	class Pd_session;

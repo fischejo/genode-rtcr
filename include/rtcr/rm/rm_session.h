@@ -18,62 +18,29 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/rm/region_map.h>
 #include <rtcr/ram/ram_session.h>
-#include <rtcr/info_structs.h>
+#include <rtcr/rm/rm_session_info.h>
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
-	struct Child_info;
+	struct Child_info; /* forward declaration */
 	class Rm_session;
 	class Rm_root;
-	class Rm_session_info;
 }
-
-struct Rtcr::Rm_session_info : Session_info {
-	Region_map *region_maps;
-
-	Rm_session_info(const char* creation_args) : Session_info(creation_args) {}
-	
-	void print(Genode::Output &output) const {
-		Genode::print(output, " RM session:\n  ");
-		Genode::print(output,
-					  "  bootstrapped=", bootstrapped,
-					  ", cargs='", creation_args, "'",
-					  ", uargs='", upgrade_args, "'\n");
-		
-		const Region_map *rm = region_maps;
-		if(!rm) Genode::print(output, "   <empty>\n");
-		while(rm) {
-			Genode::print(output, "   ", rm->info);
-			rm = rm->next();
-		}
-	}
-};
-
 
 /**
  * Custom RPC session object to intercept its creation, modification, and
  * destruction through its interface
  */
 class Rtcr::Rm_session : public Rtcr::Checkpointable,
-						 public Genode::Rpc_object<Genode::Rm_session>
+						 public Genode::Rpc_object<Genode::Rm_session>,
+						 public Rtcr::Rm_session_info
 {
-
-public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-	Rm_session_info info;
-   
 protected:
-	/*****************
-	 ** HOT STORAGE **
-	 *****************/
-	
 	const char* _upgrade_args;
 	Genode::Lock _region_maps_lock;
 	Genode::Lock _destroyed_region_maps_lock;  
-	Genode::List<Region_map> _region_maps;
-	Genode::Fifo<Region_map> _destroyed_region_maps;
+	Genode::List<Region_map_info> _region_maps;
+	Genode::Fifo<Region_map_info> _destroyed_region_maps;
 
 	/**
 	 * Allocator for Rpc objects created by this session and also for monitoring structures
@@ -91,7 +58,7 @@ protected:
 	Genode::Rm_connection  _parent_rm;
 
 	Region_map &_create(Genode::size_t size);
-	void _destroy(Region_map &region_map);
+	void _destroy(Region_map *region_map);
 
 	Child_info *_child_info;
 

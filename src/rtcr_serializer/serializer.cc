@@ -222,9 +222,9 @@ Genode::size_t Serializer::page_aligned_size(Genode::size_t size)
 Pb::Normal_info *Serializer::normal_info(Capability_mapping *_cm, Normal_info *_info)
 {
 	Pb::Normal_info *info = new(_alloc) Pb::Normal_info();
-	info->set_kcap(_cm->find_kcap_by_badge(_info->badge));
-	info->set_badge(_info->badge);
-	info->set_bootstrapped(_info->bootstrapped);
+	info->set_kcap(_cm->find_kcap_by_badge(_info->i_badge));
+	info->set_badge(_info->i_badge);
+	info->set_bootstrapped(_info->i_bootstrapped);
 	return info;
 }
 
@@ -233,8 +233,8 @@ Pb::Session_info *Serializer::session_info(Capability_mapping *_cm, Session_info
 {
 	Pb::Session_info *info = new(_alloc) Pb::Session_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_creation_args(_info->creation_args.string());
-	info->set_upgrade_args(_info->upgrade_args.string());
+	info->set_creation_args(_info->i_creation_args.string());
+	info->set_upgrade_args(_info->i_upgrade_args.string());
 	return info;
 }
 
@@ -244,30 +244,30 @@ void Serializer::set_pd_session(Capability_mapping *_cm,
 								Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	Pd_session_info *_info = &_tc->pd_session->info;
+	Pd_session_info *_info = static_cast<Pd_session_info*>(_tc->pd_session);
 	
 	Pb::Pd_session_info *info = new(_alloc) Pb::Pd_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
-	set_address_space(_cm, info, &_info->address_space_info);
-	set_linker_area(_cm, info, &_info->linker_area_info);
-	set_stack_area(_cm, info, &_info->stack_area_info);
+	set_address_space(_cm, info, _info->i_address_space);
+	set_linker_area(_cm, info, _info->i_linker_area);
+	set_stack_area(_cm, info, _info->i_stack_area);
 
-	Signal_source *signal_source = _info->signal_sources;
+	Signal_source_info *signal_source = _info->i_signal_sources;
 	while(signal_source) {
-		add_signal_source(_cm, info, &signal_source->info);
+		add_signal_source(_cm, info, signal_source);
 		signal_source = signal_source->next();
 	}
 
-	Signal_context *signal_context = _info->signal_contexts;
+	Signal_context_info *signal_context = _info->i_signal_contexts;
 	while(signal_context) {
-		add_signal_context(_cm, info, &signal_context->info);
+		add_signal_context(_cm, info, signal_context);
 		signal_context = signal_context->next();
 	}
 
-	Native_capability *native_cap = _info->native_caps;
+	Native_capability_info *native_cap = _info->i_native_caps;
 	while(native_cap) {
-		add_native_capability(_cm, info, &native_cap->info);
+		add_native_capability(_cm, info, native_cap);
 		native_cap = native_cap->next();
 	}
 	
@@ -281,13 +281,13 @@ void Serializer::set_ram_session(Capability_mapping *_cm,
 								 Genode::List<Attachment> &as)
 {
 	DEBUG_THIS_CALL;
-	Ram_session_info *_info = &_tc->ram_session->info;	
+	Ram_session_info *_info = static_cast<Ram_session_info*>(_tc->ram_session);
 	Pb::Ram_session_info *info = new(_alloc) Pb::Ram_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
-	Ram_dataspace *ram_dataspace = _info->ram_dataspaces;
+	Ram_dataspace_info *ram_dataspace = _info->i_ram_dataspaces;
 	while(ram_dataspace) {
-		add_ram_dataspace(_cm, info, &ram_dataspace->info, as);
+		add_ram_dataspace(_cm, info, ram_dataspace, as);
 		ram_dataspace = ram_dataspace->next();
 	}
 
@@ -300,13 +300,13 @@ void Serializer::set_cpu_session(Capability_mapping *_cm,
 								 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	Cpu_session_info *_info = &_tc->cpu_session->info;	
+	Cpu_session_info *_info = static_cast<Cpu_session_info*>(_tc->cpu_session);
 	Pb::Cpu_session_info *info = new(_alloc) Pb::Cpu_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
-	Cpu_thread *cpu_thread = _info->cpu_threads;
+	Cpu_thread_info *cpu_thread = _info->i_cpu_thread_info;
 	while(cpu_thread) {
-		add_cpu_thread(_cm, info, &cpu_thread->info);
+		add_cpu_thread(_cm, info, cpu_thread);
 		cpu_thread = cpu_thread->next();
 	}
 
@@ -320,13 +320,13 @@ void Serializer::set_timer_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->timer_session) return;
-	Timer_session_info *_info = &_tc->timer_session->info;
+	Timer_session_info *_info = static_cast<Timer_session_info*>(_tc->timer_session);
 	
 	Pb::Timer_session_info *info = new(_alloc) Pb::Timer_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
-	info->set_sigh_badge(_info->sigh_badge);
-	info->set_timeout(_info->timeout);
-	info->set_periodic(_info->periodic);
+	info->set_sigh_badge(_info->i_sigh_badge);
+	info->set_timeout(_info->i_timeout);
+	info->set_periodic(_info->i_periodic);
 
 	tc->set_allocated_timer_session_info(info);		
 }
@@ -338,7 +338,7 @@ void Serializer::set_log_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->log_session) return;
-	Log_session_info *_info = &_tc->log_session->info;
+	Log_session_info *_info = static_cast<Log_session_info*>(_tc->log_session);
 	
 	Pb::Log_session_info *info = new(_alloc) Pb::Log_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -353,14 +353,14 @@ void Serializer::set_rm_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->rm_session) return;
-	Rm_session_info *_info = &_tc->rm_session->info;
+	Rm_session_info *_info = static_cast<Rm_session_info*>(_tc->rm_session);
 
 	Pb::Rm_session_info *info = new(_alloc) Pb::Rm_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
-	Region_map *region_map = _info->region_maps;
+	Region_map_info *region_map = _info->i_region_maps;
 	while(region_map) {
-		add_region_map(_cm, info, &region_map->info);
+		add_region_map(_cm, info, region_map);
 		region_map = region_map->next();
 	}
 
@@ -374,12 +374,12 @@ void Serializer::set_rom_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->rom_session) return;
-	Rom_session_info *_info = &_tc->rom_session->info;
+	Rom_session_info *_info = static_cast<Rom_session_info *>(_tc->rom_session);
 	
 	Pb::Rom_session_info *info = new(_alloc) Pb::Rom_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));	
-	info->set_dataspace_badge(_info->dataspace_badge);
-	info->set_sigh_badge(_info->sigh_badge);
+	info->set_dataspace_badge(_info->i_dataspace_badge);
+	info->set_sigh_badge(_info->i_sigh_badge);
 
 	tc->set_allocated_rom_session_info(info);		
 }
@@ -392,13 +392,13 @@ void Serializer::add_region_map(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;	
 	Pb::Region_map_info *info = rm_session_info->add_region_map_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_size(_info->size);
-	info->set_ds_badge(_info->ds_badge);
-	info->set_sigh_badge(_info->sigh_badge);
+	info->set_size(_info->i_size);
+	info->set_ds_badge(_info->i_ds_badge);
+	info->set_sigh_badge(_info->i_sigh_badge);
 
-	Attached_region *attached_region = _info->attached_regions;
+	Attached_region_info *attached_region = _info->i_attached_regions;
 	while(attached_region) {
-		add_attached_region(_cm, info, &attached_region->info);
+		add_attached_region(_cm, info, attached_region);
 		attached_region = attached_region->next();
 	}	
 }
@@ -411,13 +411,13 @@ void Serializer::set_address_space(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;
 	Pb::Region_map_info *info = new(_alloc) Pb::Region_map_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_size(_info->size);
-	info->set_ds_badge(_info->ds_badge);
-	info->set_sigh_badge(_info->sigh_badge);
+	info->set_size(_info->i_size);
+	info->set_ds_badge(_info->i_ds_badge);
+	info->set_sigh_badge(_info->i_sigh_badge);
 
-	Attached_region *attached_region = _info->attached_regions;
+	Attached_region_info *attached_region = _info->i_attached_regions;
 	while(attached_region) {
-		add_attached_region(_cm, info, &attached_region->info);
+		add_attached_region(_cm, info, attached_region);
 		attached_region = attached_region->next();
 	}
 	pd_session_info->set_allocated_address_space(info);
@@ -431,17 +431,18 @@ void Serializer::set_stack_area(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;
 	Pb::Region_map_info *info = new(_alloc) Pb::Region_map_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_size(_info->size);
-	info->set_ds_badge(_info->ds_badge);
-	info->set_sigh_badge(_info->sigh_badge);
+	info->set_size(_info->i_size);
+	info->set_ds_badge(_info->i_ds_badge);
+	info->set_sigh_badge(_info->i_sigh_badge);
 
-	Attached_region *attached_region = _info->attached_regions;
+	Attached_region_info *attached_region = _info->i_attached_regions;
 	while(attached_region) {
-		add_attached_region(_cm, info, &attached_region->info);
+		add_attached_region(_cm, info, attached_region);
 		attached_region = attached_region->next();
 	}
 	pd_session_info->set_allocated_stack_area(info);
 }
+
 
 
 void Serializer::set_linker_area(Capability_mapping *_cm,
@@ -451,13 +452,13 @@ void Serializer::set_linker_area(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;
 	Pb::Region_map_info *info = new(_alloc) Pb::Region_map_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_size(_info->size);
-	info->set_ds_badge(_info->ds_badge);
-	info->set_sigh_badge(_info->sigh_badge);
+	info->set_size(_info->i_size);
+	info->set_ds_badge(_info->i_ds_badge);
+	info->set_sigh_badge(_info->i_sigh_badge);
 
-	Attached_region *attached_region = _info->attached_regions;
+	Attached_region_info *attached_region = _info->i_attached_regions;
 	while(attached_region) {
-		add_attached_region(_cm, info, &attached_region->info);
+		add_attached_region(_cm, info, attached_region);
 		attached_region = attached_region->next();
 	}
 	pd_session_info->set_allocated_linker_area(info);
@@ -472,11 +473,11 @@ void Serializer::add_attached_region(Capability_mapping *_cm,
 	Pb::Attached_region_info *info = region_map_info->add_attached_region_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 
-	info->set_attached_ds_badge(_info->attached_ds_badge);
-	info->set_size(_info->size);
-	info->set_offset(_info->offset);
-	info->set_rel_addr(_info->rel_addr);
-	info->set_executable(_info->executable);
+	info->set_attached_ds_badge(_info->i_badge);
+	info->set_size(_info->i_size);
+	info->set_offset(_info->i_offset);
+	info->set_rel_addr(_info->i_rel_addr);
+	info->set_executable(_info->i_executable);
 }
 
 
@@ -487,15 +488,15 @@ void Serializer::add_cpu_thread(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;
 	Pb::Cpu_thread_info *info = cpu_session_info->add_cpu_thread_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_pd_session_badge(_info->pd_session_badge);
-	info->set_name(_info->name.string());
-	info->set_weight(std::to_string(_info->weight.value).c_str());
-	info->set_utcb(_info->utcb);
-	info->set_started(_info->started);
-	info->set_paused(_info->paused);
-	info->set_single_step(_info->single_step);
-	info->set_affinity(_info->affinity.xpos()); // TODO add y
-	info->set_sigh_badge(_info->sigh_badge);
+	info->set_pd_session_badge(_info->i_pd_session_badge);
+	info->set_name(_info->i_name.string());
+	info->set_weight(std::to_string(_info->i_weight.value).c_str());
+	info->set_utcb(_info->i_utcb);
+	info->set_started(_info->i_started);
+	info->set_paused(_info->i_paused);
+	info->set_single_step(_info->i_single_step);
+	info->set_affinity(_info->i_affinity.xpos()); // TODO add y
+	info->set_sigh_badge(_info->i_sigh_badge);
 //	info->set_ts(_info->ts) // TODO
 }
 
@@ -508,15 +509,15 @@ void Serializer::add_ram_dataspace(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;	
 	Pb::Ram_dataspace_info *info = ram_session->add_ram_dataspace_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_size(_info->size);
-	info->set_cached(_info->cached);
-	info->set_timestamp(_info->timestamp);
+	info->set_size(_info->i_size);
+	info->set_cached(_info->i_cached);
+	info->set_timestamp(_info->i_timestamp);
 
 	Pb::Attachment *attachment = new(_alloc) Pb::Attachment();
 	attachment->set_offset(0);
 	info->set_allocated_attachment(attachment);
-	as.insert(new(_alloc) Attachment(_info->dst_cap,
-									 page_aligned_size(_info->size),
+	as.insert(new(_alloc) Attachment(_info->i_dst_cap,
+									 page_aligned_size(_info->i_size),
 									 attachment));
 }
 
@@ -538,8 +539,8 @@ void Serializer::add_signal_context(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;	
 	Pb::Signal_context_info *info = pd_session->add_signal_context_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_signal_source_badge(_info->signal_source_badge);
-	info->set_imprint(_info->imprint);
+	info->set_signal_source_badge(_info->i_signal_source_badge);
+	info->set_imprint(_info->i_imprint);
 }
 
 
@@ -550,7 +551,7 @@ void Serializer::add_native_capability(Capability_mapping *_cm,
 	DEBUG_THIS_CALL;	
 	Pb::Native_capability_info *info = pd_session->add_native_capability_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_ep_badge(_info->ep_badge);	
+	info->set_ep_badge(_info->i_ep_badge);	
 }
 
 

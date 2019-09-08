@@ -22,8 +22,7 @@
 #include <rtcr/pd/native_capability.h>
 #include <rtcr/pd/signal_context.h>
 #include <rtcr/pd/signal_source.h>
-#include <rtcr/ram/ram_session.h>
-#include <rtcr/info_structs.h>
+#include <rtcr/pd/pd_session_info.h>
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
@@ -31,72 +30,17 @@ namespace Rtcr {
 	class Child_info;
 	class Pd_session;
 	class Pd_root;
-	class Pd_session_info;
 }
-
-struct Rtcr::Pd_session_info : Session_info {
-	Signal_source* signal_sources;
-	Signal_context* signal_contexts;
-	Native_capability* native_caps;
-
-	Region_map_info &address_space_info;
-	Region_map_info &stack_area_info;
-	Region_map_info &linker_area_info;
-	
-	Pd_session_info(const char* creation_args,
-					Region_map_info &address_space_info,
-					Region_map_info &stack_area_info,
-					Region_map_info &linker_area_info)
-		:
-		Session_info(creation_args),
-		address_space_info(address_space_info),
-		stack_area_info(stack_area_info),
-		linker_area_info(linker_area_info)
-		{}
-	
-	void print(Genode::Output &output) const {
-		Genode::print(output, " PD session:\n  ");
-		Session_info::print(output);
-		Genode::print(output, "\n");
-		
-		/* Signal contexts */
-		Genode::print(output, "  Signal contexts:\n");
-		Signal_context *context_info = signal_contexts;
-		if(!context_info) Genode::print(output, "   <empty>\n");
-		while(context_info) {
-			Genode::print(output, "   ", *context_info, "\n");
-			context_info = context_info->next();
-		}
-
-		/* Signal sources */
-		Genode::print(output, "  Signal sources:\n");
-		Signal_source *source_info = signal_sources;
-		if(!source_info) Genode::print(output, "   <empty>\n");
-		while(source_info) {
-			Genode::print(output, "   ", *source_info, "\n");
-			source_info = source_info->next();
-		}
-
-		/* Address space */
-		Genode::print(output, "  Address space: \n");
-		Genode::print(output, "   ", address_space_info);
-		Genode::print(output, "  Stack area: \n");		
-		Genode::print(output, "   ", stack_area_info);		
-		Genode::print(output, "  Linker area: \n");
-		Genode::print(output, "   ", linker_area_info);				
-	}
-};
-
 
 /**
  * Custom RPC session object to intercept its creation, modification, and
  * destruction through its interface
  */
 class Rtcr::Pd_session : public Rtcr::Checkpointable,
-						 public Genode::Rpc_object<Genode::Pd_session>
+						 public Genode::Rpc_object<Genode::Pd_session>,
+						 public Rtcr::Pd_session_info
 {	
 protected:
-  
 	const char* _upgrade_args;
 
 	/**
@@ -104,26 +48,26 @@ protected:
 	 * Signal_source_capabilities
 	 */  
 	Genode::Lock _signal_sources_lock;
-	Genode::List<Signal_source> _signal_sources;
+	Genode::List<Signal_source_info> _signal_sources;
 	Genode::Lock _destroyed_signal_sources_lock;
-	Genode::Fifo<Signal_source> _destroyed_signal_sources;  
+	Genode::Fifo<Signal_source_info> _destroyed_signal_sources;  
 
 	/**
 	 * List for monitoring the creation and destruction of
 	 * Signal_context_capabilities
 	 */  
 	Genode::Lock _signal_contexts_lock;
-	Genode::List<Signal_context> _signal_contexts;
+	Genode::List<Signal_context_info> _signal_contexts;
 	Genode::Lock _destroyed_signal_contexts_lock;
-	Genode::Fifo<Signal_context> _destroyed_signal_contexts;  
+	Genode::Fifo<Signal_context_info> _destroyed_signal_contexts;  
 
 	/**
 	 * List for monitoring the creation and destruction of Native_capabilities
 	 */  
 	Genode::Lock _native_caps_lock;
-	Genode::List<Native_capability> _native_caps;
+	Genode::List<Native_capability_info> _native_caps;
 	Genode::Lock _destroyed_native_caps_lock;
-	Genode::Fifo<Native_capability> _destroyed_native_caps;
+	Genode::Fifo<Native_capability_info> _destroyed_native_caps;
 
 
 	Genode::Env &_env;
@@ -162,14 +106,6 @@ protected:
 	void _checkpoint_native_capabilities();  
 
 public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-
-	Pd_session_info info;
-	
-	
-public:
 	using Genode::Rpc_object<Genode::Pd_session>::cap;
 	
 	Pd_session(Genode::Env &env,
@@ -190,6 +126,7 @@ public:
 	const char* upgrade_args() { return _upgrade_args; }
 	
 	Genode::Pd_session_capability parent_cap() { return _parent_pd.cap(); }
+
 
 	Region_map &address_space_component() { return _address_space; }
 

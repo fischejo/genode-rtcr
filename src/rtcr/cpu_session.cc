@@ -58,13 +58,14 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 }
 
 
-void Cpu_session::_kill_thread(Cpu_thread &cpu_thread)
+void Cpu_session::_kill_thread(Cpu_thread_info &cpu_thread_info)
 {
+	Cpu_thread &cpu_thread = static_cast<Cpu_thread&>(cpu_thread_info);
 	auto parent_cap = cpu_thread.parent_cap();
 
 	/* Remove custom CPU thread form list */
 	Genode::Lock::Guard lock(_destroyed_cpu_threads_lock);
-	_destroyed_cpu_threads.enqueue(&cpu_thread);
+	_destroyed_cpu_threads.enqueue(&cpu_thread_info);
 
 	/* Dissolve custom CPU thread */
 	_ep.dissolve(cpu_thread);
@@ -81,12 +82,12 @@ Cpu_session::Cpu_session(Genode::Env &env,
 					     Child_info *child_info)
 	:
 	Checkpointable(env, "cpu_session"),
+	Cpu_session_info(creation_args, cap().local_name()),
 	_env             (env),
 	_md_alloc        (md_alloc),
 	_ep              (ep),
 	_parent_cpu      (env, child_info->name.string()),
 	_child_affinity (_read_child_affinity(child_info->name.string())),
-	info(creation_args),
 	_child_info (child_info)
 {
 	DEBUG_THIS_CALL;
@@ -96,9 +97,9 @@ Cpu_session::Cpu_session(Genode::Env &env,
 Cpu_session::~Cpu_session()
 {
 
-	while(Cpu_thread *cpu_thread = _cpu_threads.first()) {
-		_cpu_threads.remove(cpu_thread);
-		Genode::destroy(_md_alloc, cpu_thread);
+	while(Cpu_thread_info *cpu_thread_info = _cpu_threads.first()) {
+		_cpu_threads.remove(cpu_thread_info);
+		Genode::destroy(_md_alloc, cpu_thread_info);
 	}
 }
 
@@ -124,12 +125,11 @@ Genode::Affinity::Location Cpu_session::_read_child_affinity(const char* child_n
 void Cpu_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	info.badge = cap().local_name();
-	info.bootstrapped = _child_info->bootstrapped;
-	info.upgrade_args = _upgrade_args;
-	info.sigh_badge = _sigh.local_name();
+	i_bootstrapped = _child_info->bootstrapped;
+	i_upgrade_args = _upgrade_args;
+	i_sigh_badge = _sigh.local_name();
   
-	Cpu_thread *cpu_thread;
+	Cpu_thread_info *cpu_thread;
 	while(cpu_thread = _destroyed_cpu_threads.dequeue()) {
 		_cpu_threads.remove(cpu_thread);
 		Genode::destroy(_md_alloc, &cpu_thread);
@@ -137,25 +137,24 @@ void Cpu_session::checkpoint()
 
 	cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
-		cpu_thread->checkpoint();
+		static_cast<Cpu_thread*>(cpu_thread)->checkpoint();
 		cpu_thread = cpu_thread->next();
 	}
 
 	/* checkpoint current state of Cpu_thread list. */
-	info.cpu_threads = _cpu_threads.first();
+	i_cpu_thread_info = _cpu_threads.first();
 }
 
 void Cpu_session::pause()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 	
-	Cpu_thread *cpu_thread = _cpu_threads.first();
+	Cpu_thread_info *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		/* if the object is in the destroyed queue, it means that it is already
 		 * destroyed */
 		if(!cpu_thread->enqueued())
-			cpu_thread->silent_pause();
-		
+			static_cast<Cpu_thread*>(cpu_thread)->silent_pause();
 		cpu_thread = cpu_thread->next();
 	}
 	_cpu_threads_lock.unlock();	
@@ -165,13 +164,12 @@ void Cpu_session::resume()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
-	Cpu_thread *cpu_thread = _cpu_threads.first();
+	Cpu_thread_info *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		/* if the object is in the destroyed queue, it means that it is already
 		 * destroyed */
 		if(!cpu_thread->enqueued())
-			cpu_thread->silent_resume();
-
+			static_cast<Cpu_thread*>(cpu_thread)->silent_resume();
 		cpu_thread = cpu_thread->next();
 	}
 }
@@ -207,7 +205,7 @@ void Cpu_session::kill_thread(Genode::Thread_capability thread_cap)
 {
 	/*  Find CPU thread for the given capability */
 	Genode::Lock::Guard lock (_cpu_threads_lock);
-	Cpu_thread *cpu_thread = _cpu_threads.first();
+	Cpu_thread_info *cpu_thread = _cpu_threads.first();
 	if(cpu_thread) cpu_thread = cpu_thread->find_by_badge(thread_cap.local_name());
 	if(cpu_thread) {
 		Genode::error("Issuing Rm_session::destroy, which is bugged and hangs up.");

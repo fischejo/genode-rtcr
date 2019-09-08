@@ -32,10 +32,10 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 					   Genode::Affinity::Location affinity,
 					   bool &bootstrap_phase)
 	:
+	Cpu_thread_info(name, weight, utcb, cap().local_name()),
 	_md_alloc (md_alloc),
 	_parent_cpu_thread (cpu_thread_cap),
 	_pd_session_cap(pd_session_cap),
-	info(name, weight, utcb),
 	_bootstrapped(bootstrap_phase),
 	_affinity(affinity)
 {
@@ -46,41 +46,17 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 void Cpu_thread::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL	
-	info.badge = cap().local_name();
-
-	// TODO
-	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
-  
-	info.started = _started;
-	info.paused = _paused;
-	info.single_step = _single_step;
-	info.affinity = _affinity; // TODO FJO: clone it
-	info.sigh_badge = _sigh.local_name();
-	info.bootstrapped = _bootstrapped;
-	info.pd_session_badge = _pd_session_cap.local_name();
+	i_started = _started;
+	i_paused = _paused;
+	i_single_step = _single_step;
+	i_affinity = _affinity; // TODO FJO: clone it
+	i_sigh_badge = _sigh.local_name();
+	i_bootstrapped = _bootstrapped;
+	i_pd_session_badge = _pd_session_cap.local_name();
 
 	/* XXX does not guarantee to return the current thread registers */
-	info.ts = _parent_cpu_thread.state();
+	i_ts = _parent_cpu_thread.state();
 }
-
-
-Cpu_thread *Cpu_thread::find_by_badge(Genode::uint16_t badge)
-{
-	if(badge == cap().local_name())
-		return this;
-	Cpu_thread *obj = next();
-	return obj ? obj->find_by_badge(badge) : 0;
-}
-
-
-Cpu_thread *Cpu_thread::find_by_name(const char* name)
-{
-	if(!Genode::strcmp(name, info.name.string()))
-		return this;
-	Cpu_thread *obj = next();
-	return obj ? obj->find_by_name(name) : 0;
-}
-
 
 Genode::Dataspace_capability Cpu_thread::utcb()
 {

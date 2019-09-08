@@ -28,6 +28,7 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
 					   const char *label,
 					   bool &bootstrap_phase)
 	:
+	Region_map_info(region_map_cap.local_name()),
 	_md_alloc          (md_alloc),
 	_bootstrap_phase   (bootstrap_phase),
 	_label             (label),
@@ -41,7 +42,7 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
 
 Region_map::~Region_map()
 {
-	while(Attached_region *ar = _attached_regions.first()) {
+	while(Attached_region_info *ar = _attached_regions.first()) {
 		_attached_regions.remove(ar);
 		Genode::destroy(_md_alloc, ar);
 	}
@@ -50,20 +51,18 @@ Region_map::~Region_map()
 
 void Region_map::checkpoint()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-	info.badge = cap().local_name();
-	info.bootstrapped = _bootstrap_phase;
+//	info.badge = cap().local_name();
+//	info.bootstrapped = _bootstrap_phase;
 //  ck_upgrade_args = _upgrade_args.string();
 
-	// TODO
-	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
   
-	info.size = _size;
-	info.ds_badge = _ds_cap.local_name();
-	info.sigh_badge = _sigh.local_name();
+	i_size = _size;
+	i_ds_badge = _ds_cap.local_name();
+	i_sigh_badge = _sigh.local_name();
 
-	Attached_region *region = nullptr;
+	Attached_region_info *region = nullptr;
 	while(region = _destroyed_attached_regions.dequeue()) {
 		_attached_regions.remove(region);
 		Genode::destroy(_md_alloc, region);
@@ -71,21 +70,25 @@ void Region_map::checkpoint()
 
 	region = _attached_regions.first();
 	while(region) {
-		region->checkpoint();
+		static_cast<Attached_region*>(region)->checkpoint();
 		region = region->next();
 	}  
 
-	info.attached_regions = _attached_regions.first();
+	i_attached_regions = _attached_regions.first();
 }
 
 
-Region_map *Region_map::find_by_badge(Genode::uint16_t badge)
+
+Attached_region *Region_map::find_attached_region_by_addr(Genode::addr_t addr)
 {
-	if(badge == cap().local_name())
-		return this;
-	Region_map *obj = next();
-	return obj ? obj->find_by_badge(badge) : 0;
+	/* no lock needed, as we are looking for something, which will not be
+	 * deleted */
+	Attached_region_info *ar_info = _attached_regions.first();
+	ar_info = ar_info->find_by_addr(addr);
+	return static_cast<Attached_region*>(ar_info);
 }
+
+
 
 
 Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability ds_cap,
@@ -133,11 +136,11 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 
 	/* Store information about the attachment */
 	Attached_region *new_obj = new (_md_alloc) Attached_region(ds_cap,
-																		 actual_size,
-																		 offset,
-																		 addr,
-																		 executable,
-																		 _bootstrap_phase);	
+															   actual_size,
+															   offset,
+															   addr,
+															   executable,
+															   _bootstrap_phase);	
 
 #ifdef DEBUG
 	Genode::size_t num_pages = actual_size/4096;
@@ -163,7 +166,7 @@ void Region_map::detach(Region_map::Local_addr local_addr)
 
 	/* Find region */
 
-	Attached_region *region = _attached_regions.first();
+	Attached_region_info *region = _attached_regions.first();
 	if(region) region = region->find_by_addr((Genode::addr_t)local_addr);
 	if(region) {
 		/* Remove and destroy region from list and allocator */

@@ -23,6 +23,35 @@
 
 using namespace Rtcr;
 
+
+
+
+Rm_session::Rm_session(Genode::Env &env,
+					   Genode::Allocator &md_alloc,
+					   Genode::Entrypoint &ep,
+					   const char *creation_args,
+					   Child_info *child_info)
+	:
+	Checkpointable(env, "rm_session"),
+	Rm_session_info(creation_args, cap().local_name()),
+	_md_alloc         (md_alloc),
+	_ep               (ep),
+	_parent_rm        (env),
+	_child_info (child_info)
+{
+	DEBUG_THIS_CALL
+}
+
+
+Rm_session::~Rm_session()
+{
+	while(Region_map_info *rm = _region_maps.first()) {
+		_region_maps.remove(static_cast<Region_map*>(rm));
+		Genode::destroy(_md_alloc, rm);
+	}
+}
+
+
 Region_map &Rm_session::_create(Genode::size_t size)
 {
 	/* Create real Region map from parent */
@@ -46,57 +75,28 @@ Region_map &Rm_session::_create(Genode::size_t size)
 }
 
 
-void Rm_session::_destroy(Region_map &region_map)
+void Rm_session::_destroy(Region_map *region_map)
 {
 	/* Reverse order as in _create */
-	auto parent_cap = region_map.parent_cap();
+	auto parent_cap = region_map->parent_cap();
 
 	/* Dissolve custom RPC object */
-	_ep.dissolve(region_map);
+	_ep.dissolve(*region_map);
 
 	/* Destroy real Region map from parent */
 	_parent_rm.destroy(parent_cap);
 }
 
 
-Rm_session::Rm_session(Genode::Env &env,
-					   Genode::Allocator &md_alloc,
-					   Genode::Entrypoint &ep,
-					   const char *creation_args,
-					   Child_info *child_info)
-	:
-	Checkpointable(env, "rm_session"),
-	_md_alloc         (md_alloc),
-	_ep               (ep),
-	_parent_rm        (env),
-	_child_info (child_info),
-	info (creation_args)
-{
-	DEBUG_THIS_CALL
-}
-
-
-Rm_session::~Rm_session()
-{
-	while(Region_map *rm = _region_maps.first()) {
-		_region_maps.remove(rm);
-		Genode::destroy(_md_alloc, rm);
-	}
-}
-
 
 void Rm_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 
-	info.badge = cap().local_name();
-	info.bootstrapped = _child_info->bootstrapped;
-	info.upgrade_args = _upgrade_args;
+	i_bootstrapped = _child_info->bootstrapped;
+	i_upgrade_args = _upgrade_args;
 
-	// TODO
-	//  ck_kcap = _core_module->find_kcap_by_badge(ck_badge);
-
-	Region_map *region_map = nullptr;
+	Region_map_info *region_map = nullptr;
 	while(region_map = _destroyed_region_maps.dequeue()) {
 		_region_maps.remove(region_map);
 		Genode::destroy(_md_alloc, &region_map);
@@ -104,11 +104,11 @@ void Rm_session::checkpoint()
 
 	region_map = _region_maps.first();
 	while(region_map) {
-		region_map->checkpoint();
+		static_cast<Region_map*>(region_map)->checkpoint();
 		region_map = region_map->next();
 	}
 
-	info.region_maps = _region_maps.first();
+	i_region_maps = _region_maps.first();
 }
 
 
@@ -124,7 +124,7 @@ Genode::Capability<Genode::Region_map> Rm_session::create(Genode::size_t size)
 void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 {
 	/* Find RPC object for the given Capability */
-	Region_map *region_map = _region_maps.first();
+	Region_map_info *region_map = _region_maps.first();
 	if(region_map) region_map = region_map->find_by_badge(region_map_cap.local_name());
 	if(region_map) {
 		Genode::error("Issuing Rm_session::destroy, which is bugged and hangs up.");
@@ -132,7 +132,7 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 		Genode::Lock::Guard lock(_destroyed_region_maps_lock);
 		_destroyed_region_maps.enqueue(region_map);
 		
-		_destroy(*region_map);
+		_destroy(static_cast<Region_map*>(region_map));
 	} else {
 		Genode::error("No Region map with ", region_map_cap, " found!");
 	}

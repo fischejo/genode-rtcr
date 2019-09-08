@@ -16,27 +16,13 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
-#include <rtcr/info_structs.h>
+#include <rtcr/log/log_session_info.h>
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
 	class Log_session;
 	class Log_root;
-	class Log_session_info;
 }
-
-
-struct Rtcr::Log_session_info : Session_info {
-	Log_session_info(const char* creation_args) : Session_info(creation_args) {}
-	
-	void print(Genode::Output &output) const {
-		Genode::print(output, " Log session:\n  ");
-		Session_info::print(output);
-		Genode::print(output, "\n");
-		
-	}
-};
-
 
 
 /**
@@ -44,15 +30,9 @@ struct Rtcr::Log_session_info : Session_info {
  * destruction through its interface
  */
 class Rtcr::Log_session : public Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Log_session>
+						  public Genode::Rpc_object<Genode::Log_session>,
+						  public Rtcr::Log_session_info
 {
-public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-
-	Log_session_info info;
-
 protected:
 	/*****************
 	 ** HOT STORAGE **

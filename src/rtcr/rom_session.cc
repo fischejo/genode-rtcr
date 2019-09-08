@@ -32,12 +32,12 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 							   Child_info *child_info)
 	:
 	Checkpointable(env, "rom_session"),
+	Rom_session_info(creation_args, cap().local_name()),
 	_env          (env),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
 	_parent_rom   (env, label),
-	_child_info (child_info),
-	info (creation_args)
+	_child_info (child_info)
 {
 	DEBUG_THIS_CALL
 }
@@ -46,11 +46,10 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 void Rom_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	info.badge = cap().local_name();
-	info.bootstrapped = _child_info->bootstrapped;
-	info.upgrade_args = _upgrade_args;
-	info.dataspace_badge = _dataspace.local_name();
-	info.sigh_badge = _sigh.local_name();
+	i_bootstrapped = _child_info->bootstrapped;
+	i_upgrade_args = _upgrade_args;
+	i_dataspace_badge = _dataspace.local_name();
+	i_sigh_badge = _sigh.local_name();
 }
 
 

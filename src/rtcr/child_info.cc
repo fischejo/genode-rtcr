@@ -25,24 +25,24 @@ bool Child_info::child_destroyed()
 void Child_info::print(Genode::Output &output) const
 {
 	Genode::print(output, "Child: ",name,"\n");
-	Genode::print(output, pd_session->info);
-	Genode::print(output, cpu_session->info);
-	Genode::print(output, ram_session->info);
+	Genode::print(output, pd_session);
+	Genode::print(output, cpu_session);
+	Genode::print(output, ram_session);
 
 	/* (optional) RM session */
-	if(rm_session) Genode::print(output, rm_session->info);
+	if(rm_session) Genode::print(output, rm_session);
 	else Genode::print(output, " RM session: <empty>\n");
 
 	/* (optional) LOG session */
-	if(log_session) Genode::print(output, log_session->info);
+	if(log_session) Genode::print(output, log_session);
 	else Genode::print(output, " LOG session: <empty>\n");
 
 	/* (optional) Timer session */
-	if(timer_session) Genode::print(output, timer_session->info);
+	if(timer_session) Genode::print(output, timer_session);
 	else Genode::print(output, " Timer session: <empty>\n");
 
 	/* (optional) Rom session */	
-	if(rom_session) Genode::print(output, rom_session->info);
+	if(rom_session) Genode::print(output, rom_session);
 	else Genode::print(output, " ROM session: <empty>\n");
 
 	/* Capabilities */

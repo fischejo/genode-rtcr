@@ -68,36 +68,30 @@ void Capability_mapping::checkpoint()
 	
 	/* Find child's dataspace containing the capability map
 	 * It is found via cap_idx_alloc_addr */
-	Region_map &addr_space = _pd_session->address_space_component();
-
-	/* This lock is necessary as the rm_session is also moving items from
-	   new_attached_regions to ck_attached_regions during checkpointing */
-	Attached_region *ar = nullptr;
-
-	// TODO FJO: accesing attached_regions is not thread safe
-	ar  =addr_space.attached_regions().first();
-	if(ar) ar = ar->find_by_addr(cap_idx_alloc_addr);
+	Attached_region *ar = _pd_session->address_space_component()
+		.find_attached_region_by_addr(cap_idx_alloc_addr);
 
 	if(!ar) {
 		Genode::error("No dataspace found for cap_idx_alloc's datastructure at ",
 					  Hex(cap_idx_alloc_addr));
 		throw Genode::Exception();
 	}
+
 	
 	/* Create new badge_kcap list */
 	size_t const struct_size    = sizeof(Genode::Cap_index_allocator_tpl<Genode::Cap_index,4096>);
 	size_t const array_ele_size = sizeof(Genode::Cap_index);
 	size_t const array_size     = array_ele_size*4096;
 
-	addr_t const child_ds_start     = ar->info.rel_addr;
-	addr_t const child_ds_end       = child_ds_start + ar->info.size;
+	addr_t const child_ds_start     = ar->i_rel_addr;
+	addr_t const child_ds_end       = child_ds_start + ar->i_size;
 	addr_t const child_struct_start = cap_idx_alloc_addr;
 	addr_t const child_struct_end   = child_struct_start + struct_size;
 	addr_t const child_array_start  = child_struct_start + 8;
 	addr_t const child_array_end    = child_array_start + array_size;
 
-	addr_t const local_ds_start     = _env.rm().attach(ar->attached_ds_cap, ar->info.size, ar->info.offset);
-	addr_t const local_ds_end       = local_ds_start + ar->info.size;
+	addr_t const local_ds_start     = _env.rm().attach(ar->attached_ds_cap, ar->i_size, ar->i_offset);
+	addr_t const local_ds_end       = local_ds_start + ar->i_size;
 	addr_t const local_struct_start = local_ds_start + (cap_idx_alloc_addr - child_ds_start);
 	addr_t const local_struct_end   = local_struct_start + struct_size;
 	addr_t const local_array_start  = local_struct_start + 8;

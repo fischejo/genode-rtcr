@@ -30,10 +30,10 @@ Timer_session::Timer_session(Genode::Env &env,
 							 Child_info *child_info)
 	:
 	Checkpointable(env, "timer_session"),
+	Timer_session_info(creation_args, cap().local_name()),
 	_md_alloc     (md_alloc),
 	_ep           (ep),
 	_parent_timer (env),
-	info (creation_args),
 	_child_info (child_info)
 {
 	DEBUG_THIS_CALL
@@ -43,12 +43,11 @@ Timer_session::Timer_session(Genode::Env &env,
 void Timer_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	info.badge = cap().local_name();
-	info.bootstrapped = _child_info->bootstrapped;
-	info.upgrade_args = _upgrade_args;
-	info.sigh_badge = _sigh.local_name();
-	info.timeout = _timeout;
-	info.periodic = _periodic;
+	i_bootstrapped = _child_info->bootstrapped;
+	i_upgrade_args = _upgrade_args;
+	i_sigh_badge = _sigh.local_name();
+	i_timeout = _timeout;
+	i_periodic = _periodic;
 }
 
 

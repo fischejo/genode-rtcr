@@ -16,32 +16,13 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
-#include <rtcr/info_structs.h>
+#include <rtcr/timer/timer_session_info.h>
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
 	class Timer_session;
 	class Timer_root;
-	class Timer_session_info;
 }
-
-struct Rtcr::Timer_session_info : Session_info {
-	unsigned timeout;
-	bool periodic;
-	Genode::uint16_t sigh_badge;
-
-	Timer_session_info(const char* creation_args) : Session_info(creation_args) {}
-	
-	void print(Genode::Output &output) const {
-		Genode::print(output, " Timer session:\n  ");
-		Session_info::print(output);
-		Genode::print(output,
-					  ", sigh_badge ", sigh_badge,
-					  ", timeout=", timeout,
-					  ", periodic=", periodic, "\n");
-	}
-};
-
 
 
 /**
@@ -49,13 +30,9 @@ struct Rtcr::Timer_session_info : Session_info {
  * destruction through its interface
  */
 class Rtcr::Timer_session : public Rtcr::Checkpointable,
-							public Genode::Rpc_object<Timer::Session>
+							public Genode::Rpc_object<Timer::Session>,
+							public Rtcr::Timer_session_info
 {
-public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-	Timer_session_info info;
   
 protected:
 	/*****************

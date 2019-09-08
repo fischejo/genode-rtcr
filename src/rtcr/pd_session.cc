@@ -30,6 +30,7 @@ Pd_session::Pd_session(Genode::Env &env,
 					   Child_info *child_info)
 	:
 	Checkpointable(env, "pd_session"),
+	Pd_session_info(creation_args, cap().local_name()),
 	_env (env),
 	_md_alloc (md_alloc),
 	_ep (ep),
@@ -49,22 +50,19 @@ Pd_session::Pd_session(Genode::Env &env,
 				  _parent_pd.linker_area(),
 				  0,
 				  "linker_area",
-				  child_info->bootstrapped),
-	info (creation_args,
-		  _address_space.info,
-		  _stack_area.info,
-		  _linker_area.info)
+				  child_info->bootstrapped)
 {
-	DEBUG_THIS_CALL
+	DEBUG_THIS_CALL;
 
+	i_address_space = &_address_space;
+	i_stack_area = &_stack_area;
+	i_linker_area = &_linker_area;
+		
 	_ep.manage(_address_space);
 	_ep.manage(_stack_area);
 	_ep.manage(_linker_area);
 
 	Genode::log("new_region_map ds address_space=", _address_space.dataspace());	
-//	ram_session.mark_region_map_dataspace(_address_space.dataspace());
-//	ram_session.mark_region_map_dataspace(_stack_area.dataspace());
-//	ram_session.mark_region_map_dataspace(_linker_area.dataspace());	
 }
 
 
@@ -74,19 +72,19 @@ Pd_session::~Pd_session()
 	_ep.dissolve(_stack_area);
 	_ep.dissolve(_address_space);
 
-	while(Signal_context *sc = _signal_contexts.first()) {
+	while(Signal_context_info *sc = _signal_contexts.first()) {
 		_signal_contexts.remove(sc);
 		Genode::destroy(_md_alloc, sc);
 	}
 
 
-	while(Signal_source *ss = _signal_sources.first()) {
+	while(Signal_source_info *ss = _signal_sources.first()) {
 		_signal_sources.remove(ss);
 		Genode::destroy(_md_alloc, ss);
 	}
 
 	
-	while(Native_capability *nc = _native_caps.first()) {
+	while(Native_capability_info *nc = _native_caps.first()) {
 		_native_caps.remove(nc);
 		Genode::destroy(_md_alloc, nc);
 	} 
@@ -96,9 +94,9 @@ Pd_session::~Pd_session()
 
 void Pd_session::_checkpoint_signal_contexts()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL	
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-		Signal_context *sc = nullptr;
+	Signal_context_info *sc = nullptr;
 	while(sc = _destroyed_signal_contexts.dequeue()) {
 		_signal_contexts.remove(sc);
 		Genode::destroy(_md_alloc, &sc);
@@ -106,19 +104,19 @@ void Pd_session::_checkpoint_signal_contexts()
 
 	sc = _signal_contexts.first();
 	while(sc) {
-		sc->checkpoint();
+		static_cast<Signal_context*>(sc)->checkpoint();
 		sc = sc->next();
 	}
 
-	info.signal_contexts = _signal_contexts.first();
+	i_signal_contexts = _signal_contexts.first();
 }
 
 
 void Pd_session::_checkpoint_signal_sources()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL	
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-		Signal_source *ss = nullptr;
+	Signal_source_info *ss = nullptr;
 	while(ss = _destroyed_signal_sources.dequeue()) {
 		_signal_sources.remove(ss);
 		Genode::destroy(_md_alloc, &ss);
@@ -126,19 +124,19 @@ void Pd_session::_checkpoint_signal_sources()
 
 	ss = _signal_sources.first();
 	while(ss) {
-		ss->checkpoint();
+		static_cast<Signal_source*>(ss)->checkpoint();
 		ss = ss->next();
 	}
 
-	info.signal_sources = _signal_sources.first();
+	i_signal_sources = _signal_sources.first();
 }
 
 
 void Pd_session::_checkpoint_native_capabilities()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL	
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-		Native_capability *nc = nullptr;
+	Native_capability_info *nc = nullptr;
 	while(nc = _destroyed_native_caps.dequeue()) {
 		_native_caps.remove(nc);
 		Genode::destroy(_md_alloc, &nc);
@@ -146,21 +144,19 @@ void Pd_session::_checkpoint_native_capabilities()
 
 	nc = _native_caps.first();
 	while(nc) {
-		nc->checkpoint();
+		static_cast<Native_capability*>(nc)->checkpoint();
 		nc = nc->next();
 	}
 
-	info.native_caps = _native_caps.first();
+	i_native_caps = _native_caps.first();
 }
  
 
 void Pd_session::checkpoint()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-
-	info.badge = cap().local_name();
-	info.bootstrapped = _child_info->bootstrapped;
-	info.upgrade_args = _upgrade_args;
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
+	i_bootstrapped = _child_info->bootstrapped;
+	i_upgrade_args = _upgrade_args;
   
 	_address_space.checkpoint();
 	_stack_area.checkpoint();
@@ -202,20 +198,20 @@ void Pd_session::free_signal_source(Genode::Capability<Genode::Signal_source> ca
 {
 	/* Find list element */
 	Genode::Lock::Guard guard(_signal_sources_lock);
-	Signal_source *ss = _signal_sources.first();
+	Signal_source_info *ss = _signal_sources.first();
 	if(ss) ss = ss->find_by_badge(cap.local_name());
 	if(ss) {		
 		/* Free signal source */
 		_parent_pd.free_signal_source(cap);
-		_destroyed_signal_sources.enqueue(ss);		
+		_destroyed_signal_sources.enqueue(ss);
 	} else {
 		Genode::error("No list element found!");
 	}
 }
 
 
-Genode::Signal_context_capability Pd_session::alloc_context(
-	Signal_source_capability source, unsigned long imprint)
+Genode::Signal_context_capability Pd_session::alloc_context(Signal_source_capability source,
+															unsigned long imprint)
 {
 	auto result_cap = _parent_pd.alloc_context(source, imprint);
 
@@ -234,7 +230,7 @@ void Pd_session::free_context(Genode::Signal_context_capability cap)
 {
 	/* Find list element */
 	Genode::Lock::Guard guard(_signal_contexts_lock);
-	Signal_context *sc = _signal_contexts.first();
+	Signal_context_info *sc = _signal_contexts.first();
 	if(sc) sc = sc->find_by_badge(cap.local_name());
 	if(sc) {
 		/* Free signal context */
@@ -270,12 +266,12 @@ void Pd_session::free_rpc_cap(Genode::Native_capability cap)
 {
 	/* Find list element */
 	Genode::Lock::Guard guard(_native_caps_lock);
-	Native_capability *nc = _native_caps.first();
+	Native_capability_info *nc = _native_caps.first();
 	if(nc) nc = nc->find_by_native_badge(cap.local_name());
 	if(nc) {
 		/* Free native capability */
 		_parent_pd.free_rpc_cap(cap);
-		_destroyed_native_caps.enqueue(nc);		
+		_destroyed_native_caps.enqueue(nc);
 	} else {
 		Genode::error("No list element found!");
 	}
@@ -314,7 +310,7 @@ Pd_session *Pd_root::_create_pd_session(Child_info *info, const char *args)
 
 Pd_session *Pd_root::_create_session(const char *args)
 {
-	DEBUG_THIS_CALL;	
+	DEBUG_THIS_CALL;
 	/* Extracting label from args */
 	char label_buf[128];
 	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");

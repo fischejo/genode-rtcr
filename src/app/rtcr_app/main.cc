@@ -57,7 +57,7 @@ struct Rtcr::Main
 //	  Child horse (env, heap, "horse_counter", parent_services, module);
 //	  horse.start();
 
-	  timer.msleep(15000);
+	  timer.msleep(2000);
 
 	  
 	  Genode::log("is ready: ", module.ready());

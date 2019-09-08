@@ -22,36 +22,18 @@
 
 /* Rtcr includes */
 #include <rtcr/ram/ram_dataspace.h>
+#include <rtcr/ram/ram_dataspace_info.h>
+#include <rtcr/ram/ram_session_info.h>
 #include <rtcr/checkpointable.h>
-#include <rtcr/info_structs.h>
 #include <rtcr/child_info.h>
 
+
 namespace Rtcr {
-	class Child_info;
+	class Child_info; /* forward declaration */
+
 	class Ram_session;
 	class Ram_root;
-	class Ram_session_info;
 }
-
-
-struct Rtcr::Ram_session_info : Session_info {
-	Ram_dataspace *ram_dataspaces;
-	Genode::Ram_session_capability   ref_account_cap;
-
-	Ram_session_info(const char* creation_args) : Session_info(creation_args) {}
-	
-	void print(Genode::Output &output) const {
-		Genode::print(output, " Ram session:\n ");
-		Session_info::print(output);
-		Genode::print(output, "\n");
-		Ram_dataspace *ds = ram_dataspaces;
-		if(!ds) Genode::print(output, "  <empty>\n");
-		while(ds) {
-			Genode::print(output, "  ", ds->info);
-			ds = ds->next();
-		}
-	}
-};
 
 
 /**
@@ -63,19 +45,10 @@ struct Rtcr::Ram_session_info : Session_info {
  * dataspaces
  */
 class Rtcr::Ram_session : public Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Ram_session>
+						  public Genode::Rpc_object<Genode::Ram_session>,
+						  public Rtcr::Ram_session_info
 {
 public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-  
-	Ram_session_info info;
-	
-protected:
-	/*****************
-	 ** HOT STORAGE **
-	 *****************/
 	
 	const char* _upgrade_args;
 	Genode::Ram_session_capability _ref_account_cap;
@@ -83,10 +56,10 @@ protected:
 	 * List of allocated ram dataspaces
 	 */
 	Genode::Lock _ram_dataspaces_lock;
-	Genode::List<Ram_dataspace> _ram_dataspaces;
+	Genode::List<Ram_dataspace_info> _ram_dataspaces;
 
 	Genode::Lock _destroyed_ram_dataspaces_lock;  
-	Genode::Fifo<Ram_dataspace> _destroyed_ram_dataspaces; 
+	Genode::Fifo<Ram_dataspace_info> _destroyed_ram_dataspaces; 
 
 	/**
 	 * Environment of Rtcr; needed to upgrade RAM quota of the RM session
@@ -112,10 +85,10 @@ protected:
 	/**
 	 * Destroy rds and all its sub infos)
 	 */
-	virtual void _destroy_dataspace(Ram_dataspace &ds);
-	virtual void _attach_dataspace(Ram_dataspace &ds);	
-	virtual void _alloc_dataspace(Ram_dataspace &ds);
-	virtual void _copy_dataspace(Ram_dataspace &ds);
+	virtual void _destroy_dataspace(Ram_dataspace *ds);
+	virtual void _attach_dataspace(Ram_dataspace *ds);	
+	virtual void _alloc_dataspace(Ram_dataspace *ds);
+	virtual void _copy_dataspace(Ram_dataspace *ds);
 
 	Genode::Xml_node *_config;
 
@@ -141,7 +114,6 @@ public:
 	
 	const char* upgrade_args() { return _upgrade_args; }
 
-	void mark_region_map_dataspace(Genode::Dataspace_capability ds_cap);
 	
 	Genode::Ram_session_capability parent_cap() { return _parent_ram.cap(); }
 

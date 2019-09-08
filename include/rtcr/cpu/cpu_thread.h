@@ -16,96 +16,17 @@
 #include <pd_session/connection.h>
 
 /* Rtcr includes */
-#include <rtcr/info_structs.h>
+#include <rtcr/cpu/cpu_thread_info.h>
 
 namespace Rtcr {
 	class Cpu_thread;
-	class Cpu_thread_info;
 }
-
-struct Rtcr::Cpu_thread_info : Normal_info {
-	Genode::uint16_t pd_session_badge;
-	Genode::Cpu_session::Name name;
-	Genode::Cpu_session::Weight weight;
-	Genode::addr_t utcb;
-	bool started;
-	bool paused;
-	bool single_step;
-	Genode::Affinity::Location affinity;
-	Genode::uint16_t sigh_badge;
-	Genode::Thread_state ts;
-	
-	Cpu_thread_info(const char *name,
-					Genode::Cpu_session::Weight weight,
-					Genode::addr_t utcb)
-		: name(name), weight(weight), utcb(utcb) {}
-		
-
-	void print(Genode::Output &output) const {
-		using Genode::Hex;
-		Genode::print(output, "Thread:\n");
-		Genode::print(output,
-					  "   pd_session_badge=", pd_session_badge,
-					  ", name=", name,
-					  ", weight=", weight.value,
-					  ", utcb=", Hex(utcb));
-  
-		Genode::print(output,
-					  ", started=", started,
-					  ", paused=", paused,
-					  ", single_step=", single_step);
-  
-		Genode::print(output,
-					  ", affinity=(", affinity.xpos(),
-					  "x", affinity.ypos(),
-					  ", ", affinity.width(),
-					  "x", affinity.height(), ")");
-  
-		Genode::print(output, ", sigh_badge=", sigh_badge, "\n");
-
-		Genode::print(output, "   r0-r4: ",
-					  Hex(ts.r0, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r1, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r2, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r3, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r4, Hex::PREFIX, Hex::PAD), "\n");
-  
-		Genode::print(output, "   r5-r9: ",
-					  Hex(ts.r5, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r6, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r7, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r8, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r9, Hex::PREFIX, Hex::PAD), "\n");
-
-		Genode::print(output, "   r10-r12: ",
-					  Hex(ts.r10, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r11, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.r12, Hex::PREFIX, Hex::PAD), "\n");
-
-		Genode::print(output, "   sp, lr, ip, cpsr, cpu_e: ",
-					  Hex(ts.sp, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.lr, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.ip, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.cpsr, Hex::PREFIX, Hex::PAD), " ",
-					  Hex(ts.cpu_exception, Hex::PREFIX, Hex::PAD));
-		Genode::print(output, "\n");		
-	}
-};
-
-
 
 
 class Rtcr::Cpu_thread : public Genode::Rpc_object<Genode::Cpu_thread>,
-						 public Genode::List<Cpu_thread>::Element,
-						 public Genode::Fifo<Cpu_thread>::Element		   
-{
-public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
+						 public Cpu_thread_info
 
-	Cpu_thread_info info;
-  
+{
 protected:
 
 	// Modifiable state
@@ -128,11 +49,6 @@ private:
 	Genode::Cpu_thread_client  _parent_cpu_thread;
 
 public:
-	/**
-	 * List and Fifo provide a next() method. In general, you want to use the
-	 * list implementation.
-	 */	
-	using Genode::List<Cpu_thread>::Element::next;
 	
 	Cpu_thread(Genode::Allocator &md_alloc,
 			   Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
@@ -163,8 +79,6 @@ public:
   
 	Genode::Capability<Genode::Cpu_thread> parent_cap() { return _parent_cpu_thread; }
 
-	Cpu_thread *find_by_badge(Genode::uint16_t badge);
-	Cpu_thread *find_by_name(const char* name);
 
 	/******************************
 	 ** Cpu thread Rpc interface **

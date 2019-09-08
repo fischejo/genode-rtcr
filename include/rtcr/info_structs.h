@@ -41,32 +41,35 @@ public:
 
 struct Rtcr::Normal_info
 {
-	bool bootstrapped;
-	Genode::uint16_t badge;
+	bool i_bootstrapped;
+	Genode::uint16_t i_badge;
 
-	Normal_info() {}
+	Normal_info(Genode::uint16_t badge) : i_badge(badge) {}
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output,
-					  "bootstrapped=", bootstrapped,
-					  " badge=", badge);
-	}	
+					  "bootstrapped=", i_bootstrapped,
+					  " badge=", i_badge);
+	}
+	
 };
 
 
 struct Rtcr::Session_info : Rtcr::Normal_info
 {
-	Genode::String<160> creation_args;
-	Genode::String<160> upgrade_args;
+	Genode::String<160> i_creation_args;
+	Genode::String<160> i_upgrade_args;
 
-	Session_info(const char* creation_args)
-		: creation_args (creation_args) { }
+	Session_info(const char* creation_args, Genode::uint16_t badge)
+		:
+		Normal_info(badge),
+		i_creation_args (creation_args) { }
 
 	void print(Genode::Output &output) const {
 		Normal_info::print(output);		
 		Genode::print(output,
-					  ", cargs='", creation_args,
-					  "', uargs='", upgrade_args, "'");
+					  ", cargs='", i_creation_args,
+					  "', uargs='", i_upgrade_args, "'");
 
 	}
 };

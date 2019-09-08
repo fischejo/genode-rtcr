@@ -19,68 +19,42 @@
 
 /* Rtcr includes */
 #include <rtcr/cpu/cpu_thread.h>
+#include <rtcr/cpu/cpu_session_info.h>
+#include <rtcr/cpu/cpu_thread_info.h>
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/checkpointable.h>
-#include <rtcr/info_structs.h>
 #include <rtcr/child_info.h>
+
 
 namespace Rtcr {
 	class Child_info;
+
 	class Cpu_session;
 	class Cpu_root;
-	class Cpu_session_info;
 }
-
-struct Rtcr::Cpu_session_info : Session_info {
-	Cpu_thread *cpu_threads;
-	Genode::uint16_t sigh_badge;
-
-	Cpu_session_info(const char* creation_args) : Session_info(creation_args) {}
-	
-	void print(Genode::Output &output) const {
-		Genode::print(output, " CPU session:\n  ");
-		Session_info::print(output);
-		Genode::print(output, "\n");
-		
-		Cpu_thread *cpu_thread = cpu_threads;
-		if(!cpu_thread) Genode::print(output, "  <empty>\n");
-		while(cpu_thread) {
-		Genode::print(output, "  ", cpu_thread->info, "\n");
-			cpu_thread = cpu_thread->next();
-		}
-	}
-};
-
 
 /**
  * This custom Cpu session intercepts the creation and destruction of threads by
  * the client
  */
 class Rtcr::Cpu_session : public virtual Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Cpu_session>
+						  public Genode::Rpc_object<Genode::Cpu_session>,
+						  public Rtcr::Cpu_session_info
 {
-public:	
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-	
-	Cpu_session_info info;
-	bool hello = true;
-	
 protected:
-
 	Child_info *_child_info;
 	const char* _upgrade_args;
 	
 	Genode::Signal_context_capability _sigh;
+
 	/**
 	 * List of client's thread capabilities
 	 */
 	Genode::Lock _cpu_threads_lock;
 	Genode::Lock _destroyed_cpu_threads_lock;
 	
-	Genode::List<Cpu_thread> _cpu_threads;
-	Genode::Fifo<Cpu_thread> _destroyed_cpu_threads;
+	Genode::List<Cpu_thread_info> _cpu_threads;
+	Genode::Fifo<Cpu_thread_info> _destroyed_cpu_threads;
 
 	/**
 	 * Environment of creator component (usually rtcr)
@@ -107,7 +81,7 @@ protected:
 							   Genode::Cpu_session::Weight weight,
 							   Genode::addr_t utcb);
 	
-	void _kill_thread(Cpu_thread &cpu_thread);
+	void _kill_thread(Cpu_thread_info &cpu_thread);
 
 	/**
 	 * Each child thread is directly assigned to a core. This affinity

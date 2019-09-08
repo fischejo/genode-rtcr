@@ -5,8 +5,8 @@
  * \date   2019-08-29
  */
 
-#ifndef _RTCR_ROM_SESSION_COMPONENT_H_
-#define _RTCR_ROM_SESSION_COMPONENT_H_
+#ifndef _RTCR_ROM_SESSION_H_
+#define _RTCR_ROM_SESSION_H_
 
 /* Genode includes */
 #include <root/component.h>
@@ -18,42 +18,18 @@
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
-#include <rtcr/info_structs.h>
+#include <rtcr/rom/rom_session_info.h>
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
 	class Rom_session;
 	class Rom_root;
-	class Rom_session_info;
 }
 
-
-struct Rtcr::Rom_session_info : Session_info {
-	Genode::uint16_t dataspace_badge;
-	Genode::uint16_t sigh_badge;
-
-	Rom_session_info(const char* creation_args) : Session_info(creation_args) {}
-	
-	void print(Genode::Output &output) const {
-		Genode::print(output, " Rom session:\n  ");
-		Session_info::print(output);
-		Genode::print(output,
-					  " dataspace_badge=", dataspace_badge,
-					  ", sigh_badge=", sigh_badge, "'\n");
-	}
-};
-
-
 class Rtcr::Rom_session : public Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Rom_session>
+						  public Genode::Rpc_object<Genode::Rom_session>,
+						  public Rtcr::Rom_session_info
 {
-public:
-	/******************
-	 ** COLD STORAGE **
-	 ******************/
-  
-	Rom_session_info info;
-	
 protected:
 
 	/*****************
@@ -172,4 +148,4 @@ public:
 
 };
 
-#endif /* _RTCR_ROM_SESSION_COMPONENT_H_ */
+#endif /* _RTCR_ROM_SESSION_H_ */
