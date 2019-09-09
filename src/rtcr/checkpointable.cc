@@ -10,6 +10,7 @@ using namespace Rtcr;
 
 Checkpointable::Checkpointable(Genode::Env &env, const char* name, bool ready)
 	:
+	_timer(env),
 	_affinity(_read_affinity(name)),
 	Thread(env,
 		   name,
@@ -68,15 +69,14 @@ void Checkpointable::entry()
 		/* start next job */
 		Job _current_job = _next_job;
 		_next_job = NONE;
-		switch(_current_job) {
-		case CHECKPOINT:
+		if(CHECKPOINT == _current_job) {
 			_ready_event.unset();
+			unsigned long long start = _timer.elapsed_ms();
 			checkpoint();
+			_checkpoint_time =  _timer.elapsed_ms() - start;
 			_checkpoint_finished.set();
 			post_checkpoint();
 			_ready_event.set();
-			break;
-		case NONE:
 			break;
 		}
 	}

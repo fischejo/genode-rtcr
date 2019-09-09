@@ -15,6 +15,7 @@
 #include <cpu_thread/client.h>
 #include <util/xml_node.h>
 #include <os/config.h>
+#include <timer_session/connection.h>
 
 /* Rtcr includes */
 #include <util/event.h>
@@ -33,6 +34,12 @@ class Rtcr::Checkpointable : private Genode::Thread
 {
 private:
 
+	/**
+	 * Timer connection for measuring time of a checkpoint
+	 */
+	Timer::Connection _timer;
+	unsigned long long _checkpoint_time;
+	
 	Genode::Affinity::Location _affinity;	
 	/**
 	 * Indicator which pause this thread until a new job
@@ -138,6 +145,8 @@ public:
 	 * \return true, if thread is ready to checkpoint
 	 */
 	bool is_ready() { return _ready_event.is_set(); }
+
+	unsigned long long checkpoint_time() { return _checkpoint_time; }
 };
 
 
