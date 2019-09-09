@@ -70,14 +70,20 @@ void Checkpointable::entry()
 		Job _current_job = _next_job;
 		_next_job = NONE;
 		if(CHECKPOINT == _current_job) {
+			/* now busy */
 			_ready_event.unset();
+
+			/* do checkpoint */
 			unsigned long long start = _timer.elapsed_ms();
 			checkpoint();
 			_checkpoint_time =  _timer.elapsed_ms() - start;
 			_checkpoint_finished.set();
+
+			/* do post checkpoint */
 			post_checkpoint();
+
+			/* not busy */
 			_ready_event.set();
-			break;
 		}
 	}
 }
