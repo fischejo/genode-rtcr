@@ -6,7 +6,7 @@
  */
 
 #ifndef _RTCR_RAM_DATASPACE_H_
-#define _RTCR_RAM_DATASPACEram_H_
+#define _RTCR_RAM_DATASPACE_H_
 
 /* Genode includes */
 #include <util/list.h>
@@ -48,21 +48,21 @@ public:
 	void *storage;
 
 
-	Ram_dataspace(Genode::Ram_dataspace_capability ds_cap,
+	Ram_dataspace(Genode::Ram_dataspace_capability src_cap,
 				  Genode::size_t size,
 				  Genode::Cache_attribute cached,
 				  bool bootstrapped)
 		:
-		Ram_dataspace(ds_cap, size, cached, bootstrapped, nullptr)
+		Ram_dataspace(src_cap, size, cached, bootstrapped, nullptr)
 		{ }
 
-	Ram_dataspace(Genode::Ram_dataspace_capability ds_cap,
+	Ram_dataspace(Genode::Ram_dataspace_capability src_cap,
 				  Genode::size_t size,
 				  Genode::Cache_attribute cached,
 				  bool bootstrapped,
 				  void *storage)
 		:
-		Ram_dataspace_info(ds_cap, size, cached),
+		Ram_dataspace_info(src_cap, size, cached),
 		_bootstrapped (bootstrapped),		
 		storage (storage)
 		{ }

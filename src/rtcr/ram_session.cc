@@ -48,7 +48,7 @@ Ram_session::Ram_session(Genode::Env &env,
 
 Ram_session::~Ram_session()
 {
-// TODO FJO: lock?
+	// TODO FJO: lock?
 	while(Ram_dataspace_info *ds = _ram_dataspaces.first()) {
 		_ram_dataspaces.remove(ds);
 		Genode::destroy(_md_alloc, ds);
@@ -80,7 +80,7 @@ void Ram_session::_destroy_dataspace(Ram_dataspace *ds)
 	 _env.rm().detach(ds->src);
 
 	 /* free */
-	_parent_ram.free(ds->i_cap);
+	_parent_ram.free(ds->i_src_cap);
 	_env.ram().free(ds->i_dst_cap);
 	
 	/* Destroy Ram_dataspace */
@@ -104,7 +104,7 @@ void Ram_session::_alloc_dataspace(Ram_dataspace *ds)
 void Ram_session::_attach_dataspace(Ram_dataspace *ds)
 {
 	ds->dst = _env.rm().attach(ds->i_dst_cap);
-	ds->src = _env.rm().attach(ds->i_cap);		
+	ds->src = _env.rm().attach(ds->i_src_cap);		
 }
 
 
@@ -147,17 +147,17 @@ void Ram_session::checkpoint()
 Genode::Ram_dataspace_capability Ram_session::alloc(Genode::size_t size, Genode::Cache_attribute cached)
 {
 	DEBUG_THIS_CALL;
-	auto result_cap = _parent_ram.alloc(size, cached);
+	auto src_cap = _parent_ram.alloc(size, cached);
 
 	/* Create a Ram_dataspace to monitor the newly created Ram_dataspace */
-	Ram_dataspace *new_rds = new (_md_alloc) Ram_dataspace(result_cap,
-														   size,
-														   cached,
-														   _child_info->bootstrapped);
+	Ram_dataspace *ds = new (_md_alloc) Ram_dataspace(src_cap,
+													  size,
+													  cached,
+													  _child_info->bootstrapped);
 	Genode::Lock::Guard guard(_ram_dataspaces_lock);
-	_ram_dataspaces.insert(new_rds);
+	_ram_dataspaces.insert(ds);
 
-	return result_cap;
+	return src_cap;
 
 }
 

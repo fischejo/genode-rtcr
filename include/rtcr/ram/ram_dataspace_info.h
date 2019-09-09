@@ -31,28 +31,29 @@ public:
 	
 	Genode::Ram_dataspace_capability i_dst_cap;
 	Genode::size_t i_timestamp;
-	Genode::Ram_dataspace_capability const i_cap;
+	Genode::Ram_dataspace_capability const i_src_cap;
 	Genode::size_t                   const i_size;
 	Genode::Cache_attribute          const i_cached;
 
-	Ram_dataspace_info(Genode::Ram_dataspace_capability const cap,
+	Ram_dataspace_info(Genode::Ram_dataspace_capability const src_cap,
 					   Genode::size_t const size,
 					   Genode::Cache_attribute const cached)
-		: Normal_info(cap.local_name()),
-		  i_cap(cap), i_size(size), i_cached(cached) {}
+		: Normal_info(src_cap.local_name()),
+		  i_src_cap(src_cap), i_size(size), i_cached(cached) {}
 	
 	void print(Genode::Output &output) const {
 		using Genode::Hex;
 		Normal_info::print(output);
 		Genode::print(output,
-					  ", cap=", i_cap,
+					  ", src_cap=", i_src_cap,
+					  ", dst_cap=", i_dst_cap,					  
 					  ", size=", Hex(i_size),
 					  ", cached=", static_cast<unsigned>(i_cached),
 				  ", timestamp=", i_timestamp, "\n");
 	}
 
 	Ram_dataspace_info *find_by_badge(Genode::uint16_t badge) {
-		if(badge == i_cap.local_name())
+		if(badge == i_src_cap.local_name())
 			return this;
 		Ram_dataspace_info *info = next();
 		return info ? info->find_by_badge(badge) : 0;
