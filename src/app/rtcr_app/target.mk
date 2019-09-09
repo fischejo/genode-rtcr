@@ -1,6 +1,6 @@
 TARGET = rtcr_app
 SRC_CC += main.cc
-LIBS += base rtcr rtcr_cdma
+LIBS += base rtcr rtcr_cdma rtcr_para rtcr_inc
 
 
 

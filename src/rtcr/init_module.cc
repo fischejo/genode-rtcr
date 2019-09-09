@@ -130,7 +130,7 @@ void Init_module::pause()
 	_childs_lock.lock();
 	Child_info *child = _childs.first();
 	while(child) {
-		child->cpu_session->pause();		
+		static_cast<Cpu_session*>(child->cpu_session)->pause();		
 		child = child->next();
 	}
 	_childs_lock.unlock();
@@ -144,7 +144,7 @@ void Init_module::resume()
 	_childs_lock.lock();
 	Child_info *child = _childs.first();
 	while(child) {
-		child->cpu_session->resume();
+		static_cast<Cpu_session*>(child->cpu_session)->resume();
 		child = child->next();
 	}
 	_childs_lock.unlock();	
@@ -157,6 +157,7 @@ bool Init_module::ready()
 
 	_childs_lock.lock();
 	Child_info *child = _childs.first();
+/*
 	while(child) {
 		if(!child->cpu_session || !child->cpu_session->is_ready())
 			return false;
@@ -176,6 +177,7 @@ bool Init_module::ready()
 			return false;
 		child = child->next();
 	}
+*/
 	_childs_lock.unlock();
 	return true;
 }
@@ -196,55 +198,73 @@ void Init_module::checkpoint()
 void Init_module::checkpoint(Child_info *child)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-		
+
+	/* well...casting is not that efficent, but due to the design of
+	 * *_info object handling..this is necessary */
+	Cpu_session *cpu_session = static_cast<Cpu_session*>(child->cpu_session);
+	Pd_session *pd_session = static_cast<Pd_session*>(child->pd_session);
+	Ram_session *ram_session = static_cast<Ram_session*>(child->ram_session);
+	Rm_session *rm_session = static_cast<Rm_session*>(child->rm_session);
+	Rom_session *rom_session = static_cast<Rom_session*>(child->rom_session);
+	Timer_session *timer_session = static_cast<Timer_session*>(child->timer_session);
+	Log_session *log_session = static_cast<Log_session*>(child->log_session);
+	Capability_mapping *capability_mapping = child->capability_mapping;
+	
 	if(_parallel) {
 		/* start all checkpointing threads */
-		child->capability_mapping->start_checkpoint();
+		capability_mapping->start_checkpoint();
 
-		child->pd_session->start_checkpoint();
-		child->cpu_session->start_checkpoint();
-		child->ram_session->start_checkpoint();
+		pd_session->start_checkpoint();
+		cpu_session->start_checkpoint();
+		ram_session->start_checkpoint();
 		
-		if(child->rm_session) child->rm_session->start_checkpoint();
-		if(child->rom_session) child->rom_session->start_checkpoint();
-		if(child->log_session) child->log_session->start_checkpoint();
-		if(child->timer_session) child->timer_session->start_checkpoint();
+		if(rm_session) rm_session->start_checkpoint();
+		if(rom_session) rom_session->start_checkpoint();
+		if(log_session) log_session->start_checkpoint();
+		if(timer_session) timer_session->start_checkpoint();
 
 		/* wait until all threads finished */
-		child->pd_session->join_checkpoint();
-		child->cpu_session->join_checkpoint();
-		child->ram_session->join_checkpoint();
-
-		if(child->rm_session) child->rm_session->join_checkpoint();
-		if(child->rom_session) child->rom_session->join_checkpoint();
-		if(child->log_session) child->log_session->join_checkpoint();		
-		if(child->timer_session) child->timer_session->join_checkpoint();		   
+		pd_session->join_checkpoint();
+		cpu_session->join_checkpoint();
+		ram_session->join_checkpoint();
+		if(rm_session) rm_session->join_checkpoint();
+		if(rom_session) rom_session->join_checkpoint();
+		if(log_session) log_session->join_checkpoint();		
+		if(timer_session) timer_session->join_checkpoint();		   
+		capability_mapping->join_checkpoint();
 		
-		child->capability_mapping->join_checkpoint();
 	} else {
-		child->pd_session->start_checkpoint();
-		child->pd_session->join_checkpoint();
-		
-		child->cpu_session->start_checkpoint();
-		child->cpu_session->join_checkpoint();
-		
-		child->ram_session->start_checkpoint();
-		child->ram_session->join_checkpoint();
-		
-		if(child->rm_session) child->rm_session->start_checkpoint();
-		if(child->rm_session) child->rm_session->join_checkpoint();
-		
-		if(child->rom_session) child->rom_session->start_checkpoint();
-		if(child->rom_session) child->rom_session->join_checkpoint();
-		
-		if(child->log_session) child->log_session->start_checkpoint();
-		if(child->log_session) child->log_session->join_checkpoint();		
+		/* start & wait for pd_session */
+		pd_session->start_checkpoint();
+		pd_session->join_checkpoint();
 
-		if(child->timer_session) child->timer_session->start_checkpoint();
-		if(child->timer_session) child->timer_session->join_checkpoint();	  
+		/* start & wait for cpu_session */		
+		cpu_session->start_checkpoint();
+		cpu_session->join_checkpoint();
 
-		child->capability_mapping->start_checkpoint();		
-		child->capability_mapping->join_checkpoint();
+		/* start & wait for ram_session */		
+		ram_session->start_checkpoint();
+		ram_session->join_checkpoint();
+
+		/* start & wait for rm_session */		
+		if(rm_session) rm_session->start_checkpoint();
+		if(rm_session) rm_session->join_checkpoint();
+
+		/* start & wait for rom_session */		
+		if(rom_session) rom_session->start_checkpoint();
+		if(rom_session) rom_session->join_checkpoint();
+
+		/* start & wait for log_session */		
+		if(log_session) log_session->start_checkpoint();
+		if(log_session) log_session->join_checkpoint();		
+
+		/* start & wait for timer_session */		
+		if(timer_session) timer_session->start_checkpoint();
+		if(timer_session) timer_session->join_checkpoint();	  
+
+		/* start & wait for capability_mapping */		
+		capability_mapping->start_checkpoint();		
+		capability_mapping->join_checkpoint();
 	}
 }
 

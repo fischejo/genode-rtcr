@@ -191,8 +191,9 @@ Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capabili
 	}	
 
 	/* Create custom CPU thread */
-	Cpu_thread &new_cpu_thread = _create_thread(_child_info->pd_session->cap(),
-												_child_info->pd_session->parent_cap(),
+	Pd_session *pd_session = static_cast<Pd_session *>(_child_info->pd_session);
+	Cpu_thread &new_cpu_thread = _create_thread(pd_session->cap(),
+												pd_session->parent_cap(),
 												name,
 												affinity,
 												weight,

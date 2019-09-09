@@ -6,6 +6,7 @@
  */
 
 #include <rtcr/rom/rom_session.h>
+#include <base/session_label.h>
 
 #ifdef PROFILE
 #include <util/profiler.h>

@@ -133,7 +133,7 @@ Cpu_session &Child::create_cpu_session()
 	/* Issuing session method of Cpu_root */
 	Genode::Session_capability cpu_cap = _cpu_service->session(args_buf,Genode::Affinity());
 	
-	Cpu_session *cpu_session = _module.child_info(_name)->cpu_session;
+	Cpu_session *cpu_session = static_cast<Cpu_session*>(_module.child_info(_name)->cpu_session);
 	if(!cpu_session) {
 		Genode::error("Creating custom CPU session failed: "
 					  "Could not find PD session in PD root");
@@ -153,7 +153,7 @@ Pd_session &Child::create_pd_session()
 	
 	/* Issuing session method of pd_root */
 	Genode::Session_capability pd_cap = _pd_service->session(args_buf, Genode::Affinity());
-	Pd_session *pd_session = _module.child_info(_name)->pd_session;
+	Pd_session *pd_session = static_cast<Pd_session *>(_module.child_info(_name)->pd_session);
 	
 	if(!pd_session) {
 		Genode::error("Creating custom PD session failed: Could",
@@ -178,7 +178,7 @@ Ram_session &Child::create_ram_session()
 	Genode::Session_capability ram_cap = _ram_service->session(args_buf,Genode::Affinity());
 
 	/* Find created RPC object in Ram_root's list */
-	Ram_session *ram_session = _module.child_info(_name)->ram_session;
+	Ram_session *ram_session = static_cast<Ram_session *>(_module.child_info(_name)->ram_session);
 	Genode::log("b");	
 	if(!ram_session) {
 		Genode::error("Creating custom RAM session failed",

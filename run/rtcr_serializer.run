@@ -62,6 +62,8 @@ install_config {
             <config>
                  <child name="sheep_counter" quota="1048576" xpos="0" />
                  <checkpoint parallel="false"/>
+				 <worker xpos="1"/>
+				 <granularity>4</granularity>
                  <checkpointable name="cpu_session" xpos="1" />
                  <checkpointable name="pd_session" xpos="0" />    
                  <checkpointable name="ram_session" xpos="0" />    

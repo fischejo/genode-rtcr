@@ -244,7 +244,7 @@ void Serializer::set_pd_session(Capability_mapping *_cm,
 								Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	Pd_session_info *_info = static_cast<Pd_session_info*>(_tc->pd_session);
+	Pd_session_info *_info = _tc->pd_session;
 	
 	Pb::Pd_session_info *info = new(_alloc) Pb::Pd_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -281,7 +281,7 @@ void Serializer::set_ram_session(Capability_mapping *_cm,
 								 Genode::List<Attachment> &as)
 {
 	DEBUG_THIS_CALL;
-	Ram_session_info *_info = static_cast<Ram_session_info*>(_tc->ram_session);
+	Ram_session_info *_info = _tc->ram_session;
 	Pb::Ram_session_info *info = new(_alloc) Pb::Ram_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
@@ -300,7 +300,7 @@ void Serializer::set_cpu_session(Capability_mapping *_cm,
 								 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
-	Cpu_session_info *_info = static_cast<Cpu_session_info*>(_tc->cpu_session);
+	Cpu_session_info *_info = _tc->cpu_session;
 	Pb::Cpu_session_info *info = new(_alloc) Pb::Cpu_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
@@ -320,7 +320,7 @@ void Serializer::set_timer_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->timer_session) return;
-	Timer_session_info *_info = static_cast<Timer_session_info*>(_tc->timer_session);
+	Timer_session_info *_info = _tc->timer_session;
 	
 	Pb::Timer_session_info *info = new(_alloc) Pb::Timer_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -338,7 +338,7 @@ void Serializer::set_log_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->log_session) return;
-	Log_session_info *_info = static_cast<Log_session_info*>(_tc->log_session);
+	Log_session_info *_info = _tc->log_session;
 	
 	Pb::Log_session_info *info = new(_alloc) Pb::Log_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -353,7 +353,7 @@ void Serializer::set_rm_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->rm_session) return;
-	Rm_session_info *_info = static_cast<Rm_session_info*>(_tc->rm_session);
+	Rm_session_info *_info = _tc->rm_session;
 
 	Pb::Rm_session_info *info = new(_alloc) Pb::Rm_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
@@ -374,7 +374,7 @@ void Serializer::set_rom_session(Capability_mapping *_cm,
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->rom_session) return;
-	Rom_session_info *_info = static_cast<Rom_session_info *>(_tc->rom_session);
+	Rom_session_info *_info = _tc->rom_session;
 	
 	Pb::Rom_session_info *info = new(_alloc) Pb::Rom_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));	
@@ -497,7 +497,7 @@ void Serializer::add_cpu_thread(Capability_mapping *_cm,
 	info->set_single_step(_info->i_single_step);
 	info->set_affinity(_info->i_affinity.xpos()); // TODO add y
 	info->set_sigh_badge(_info->i_sigh_badge);
-//	info->set_ts(_info->ts) // TODO
+	info->set_ts(_info->i_ts.exception);
 }
 
 
