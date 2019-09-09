@@ -32,19 +32,19 @@ public:
 	/**
 	 * Size of occupied region
 	 */
-	const Genode::size_t i_size;
+	Genode::size_t i_size;
 	/**
 	 * Offset in occupied region
 	 */
-	const Genode::off_t  i_offset;
+	Genode::off_t  i_offset;
 	/**
 	 * Address of occupied region
 	 */
-	const Genode::addr_t i_rel_addr;
+	Genode::addr_t i_rel_addr;
 	/**
 	 * Indicates whether occupied region is executable
 	 */
-	const bool i_executable;
+	bool i_executable;
 
 	Attached_region_info(Genode::size_t size,
 						 Genode::off_t offset,
@@ -58,6 +58,7 @@ public:
 		i_rel_addr   (local_addr),
 		i_executable (executable) {}
 
+	Attached_region_info() {};
 	
 	void print(Genode::Output &output) const {
 		using Genode::Hex;		

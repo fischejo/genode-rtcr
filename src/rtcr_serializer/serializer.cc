@@ -142,9 +142,10 @@ Genode::Ram_dataspace_capability Serializer::serialize(
 	attach(region_map, attachments);
 
 	/* fill protobuf dataspace */
-	void *pb_array = _env.rm().attach(pb_ds_cap);
-	*((Genode::uint32_t*) pb_array) = child_list->ByteSize();
-	child_list->SerializeToArray(pb_array + pb_offset, pb_ds_size);
+	Genode::uint32_t *pb_array = _env.rm().attach(pb_ds_cap);
+	pb_size = child_list->ByteSize();
+	*pb_array = pb_size;
+	child_list->SerializeToArray(pb_array + 1, pb_ds_size);
 	_env.rm().detach(pb_array);
 
 	Genode::Ram_dataspace_capability compressed_ds_cap;
@@ -224,7 +225,6 @@ Pb::Normal_info *Serializer::normal_info(Capability_mapping *_cm, Normal_info *_
 	Pb::Normal_info *info = new(_alloc) Pb::Normal_info();
 	info->set_kcap(_cm->find_kcap_by_badge(_info->i_badge));
 	info->set_badge(_info->i_badge);
-	info->set_bootstrapped(_info->i_bootstrapped);
 	return info;
 }
 
@@ -486,6 +486,10 @@ void Serializer::add_cpu_thread(Capability_mapping *_cm,
 								Cpu_thread_info *_info)
 {
 	DEBUG_THIS_CALL;
+
+	Genode::warning("Cpu_thread::tc is not serialized!");
+	Genode::warning("Cpu_thread::affinity is only partially serialized!");
+	
 	Pb::Cpu_thread_info *info = cpu_session_info->add_cpu_thread_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 	info->set_pd_session_badge(_info->i_pd_session_badge);
@@ -555,7 +559,7 @@ void Serializer::add_native_capability(Capability_mapping *_cm,
 }
 
 
-void Serializer::parse(Genode::Dataspace_capability compressed_ds_cap)
+Genode::List<Child_info> *Serializer::parse(Genode::Dataspace_capability compressed_ds_cap)
 {
 	DEBUG_THIS_CALL; PROFILE_THIS_CALL;
 
@@ -587,13 +591,310 @@ void Serializer::parse(Genode::Dataspace_capability compressed_ds_cap)
 	}
 	
 	/* read protobuf */
-	Genode::uint32_t pb_size = *((Genode::uint32_t*) uncompressed_ds_addr);	
+	Genode::uint32_t pb_size = *uncompressed_ds_addr; 
 	Genode::log("pb_size=",Genode::Hex(pb_size));
 
 	/* parse protobuf in dataspace */
-	Pb::Child_info *child_info = new(_alloc) Pb::Child_info();
+	Pb::Child_list *child_list = new(_alloc) Pb::Child_list();
 	Genode::size_t pb_offset = sizeof(Genode::uint32_t);
-	child_info->ParseFromArray(uncompressed_ds_addr + pb_offset, pb_size);
-	
+	child_list->ParseFromArray(uncompressed_ds_addr + 1, pb_size);
+
+	/* convert protobuf to *_info objects */
+	Genode::List<Child_info> *_child_list = new(_alloc) Genode::List<Child_info>();
+	for(int i = 0; i < child_list->child_info_size(); i++) {
+		_child_list->insert(parse_child_info(child_list->child_info(i),
+								uncompressed_ds_addr));
+	}
+
+	return _child_list;
 }
+
+
+Child_info *Serializer::parse_child_info(const Pb::Child_info &child, void* raw_addr)
+{
+	DEBUG_THIS_CALL;
+	Child_info *_child = new(_alloc) Child_info(child.name().c_str());
+	_child->pd_session = parse_pd_session(child.pd_session_info());
+	_child->cpu_session = parse_cpu_session(child.cpu_session_info());
+	_child->ram_session = parse_ram_session(child.ram_session_info(), raw_addr);
+
+	if(child.has_rm_session_info())
+		_child->rm_session = parse_rm_session(child.rm_session_info());
+
+	if(child.has_log_session_info())
+		_child->log_session = parse_log_session(child.log_session_info());
+
+	if(child.has_timer_session_info())
+		_child->timer_session = parse_timer_session(child.timer_session_info());
+
+	if(child.has_rom_session_info())
+		_child->rom_session = parse_rom_session(child.rom_session_info());
+	
+	return _child;
+}
+
+
+
+void Serializer::parse_normal_info(const Pb::Normal_info &info, Normal_info *_info)
+{
+	_info->i_badge = info.badge();
+	_info->i_kcap = info.kcap();
+}
+
+
+void Serializer::parse_session_info(const Pb::Session_info &info, Session_info *_info)
+{
+	parse_normal_info(info.normal_info(), _info);
+	_info->i_creation_args = info.creation_args().c_str();
+	_info->i_upgrade_args = info.upgrade_args().c_str();
+}
+
+
+Pd_session_info *Serializer::parse_pd_session(const Pb::Pd_session_info &info)
+{
+	DEBUG_THIS_CALL;
+
+	Pd_session_info *_info = new(_alloc) Pd_session_info();
+	/* session infos */
+	parse_session_info(info.session_info(), _info);
+	
+	/* address pace */
+	_info->i_address_space = parse_region_map(info.address_space());
+
+	/* stack area */
+	_info->i_stack_area = parse_region_map(info.stack_area());	
+
+	/* linker area */
+	_info->i_linker_area = parse_region_map(info.linker_area());		
+
+	/* signal sources */
+	Genode::List<Signal_source_info> ss;
+	for(int i = 0; i < info.signal_source_info_size(); i++) {
+		ss.insert(parse_signal_source(info.signal_source_info(i)));
+	}
+	/* well, this gets a little bit hacky. The list ss/sc/nc are on the stack
+	 * and will be freed when leaving this function. But the linking between all
+	 * list elements is stored in each element. */
+	_info->i_signal_sources = ss.first();
+
+	/* signal contexts */	
+	Genode::List<Signal_context_info> sc;
+	for(int i = 0; i < info.signal_context_info_size(); i++) {
+		sc.insert(parse_signal_context(info.signal_context_info(i)));
+	}
+	_info->i_signal_contexts = sc.first();
+
+	/* native capabilities */
+	Genode::List<Native_capability_info> nc;
+	for(int i = 0; i < info.signal_context_info_size(); i++) {
+		nc.insert(parse_native_capability(info.native_capability_info(i)));
+	}
+	_info->i_native_caps = nc.first();	
+
+	return _info;
+}
+
+
+Cpu_session_info *Serializer::parse_cpu_session(const Pb::Cpu_session_info &info)
+{
+	DEBUG_THIS_CALL;
+	Cpu_session_info *_info = new(_alloc) Cpu_session_info();
+	parse_session_info(info.session_info(), _info);
+
+	/* cpu threads */
+	Genode::List<Cpu_thread_info> ct;
+	for(int i = 0; i < info.cpu_thread_info_size(); i++) {
+		ct.insert(parse_cpu_thread(info.cpu_thread_info(i)));
+	}
+	_info->i_cpu_thread_info = ct.first();
+	return _info;
+}
+
+
+Ram_session_info *Serializer::parse_ram_session(const Pb::Ram_session_info &info,
+												void* raw_addr)
+{
+	DEBUG_THIS_CALL;
+	Ram_session_info *_info = new(_alloc) Ram_session_info();
+	parse_session_info(info.session_info(), _info);
+
+	/* ram dataspaces */
+	Genode::List<Ram_dataspace_info> ds;
+	for(int i = 0; i < info.ram_dataspace_info_size(); i++) {
+		ds.insert(parse_ram_dataspace(info.ram_dataspace_info(i), raw_addr));
+	}
+	_info->i_ram_dataspaces = ds.first();
+	
+	return _info;
+}
+
+
+Rm_session_info *Serializer::parse_rm_session(const Pb::Rm_session_info &info)
+{
+	DEBUG_THIS_CALL;
+	Rm_session_info *_info = new(_alloc) Rm_session_info();
+	parse_session_info(info.session_info(), _info);
+
+	/* Region maps */
+	Genode::List<Region_map_info> rm;
+	for(int i = 0; i < info.region_map_info_size(); i++) {
+		rm.insert(parse_region_map(info.region_map_info(i)));
+	}
+	_info->i_region_maps = rm.first();
+	return _info;
+}
+
+
+Log_session_info *Serializer::parse_log_session(const Pb::Log_session_info &info)
+{
+	DEBUG_THIS_CALL;
+	Log_session_info *_info = new(_alloc) Log_session_info();
+	parse_session_info(info.session_info(), _info);
+
+	return _info;
+}
+
+
+Timer_session_info *Serializer::parse_timer_session(const Pb::Timer_session_info &info)
+{
+	DEBUG_THIS_CALL;
+	Timer_session_info *_info = new(_alloc) Timer_session_info();
+	parse_session_info(info.session_info(), _info);
+	_info->i_sigh_badge = info.sigh_badge();
+	_info->i_timeout = info.timeout();
+	_info->i_periodic = info.periodic();	
+	return _info;
+}
+
+
+Rom_session_info *Serializer::parse_rom_session(const Pb::Rom_session_info &info)
+{
+	DEBUG_THIS_CALL;
+	Rom_session_info *_info = new(_alloc) Rom_session_info();
+	parse_session_info(info.session_info(), _info);
+	_info->i_dataspace_badge = info.dataspace_badge();
+	_info->i_sigh_badge = info.sigh_badge();
+	return _info;
+}
+
+
+Signal_source_info *Serializer::parse_signal_source(const Pb::Signal_source_info &info)
+{
+	DEBUG_THIS_CALL;
+	Signal_source_info *_info = new(_alloc) Signal_source_info();
+	parse_normal_info(info.normal_info(), _info);
+	return _info;
+}
+
+
+Signal_context_info *Serializer::parse_signal_context(const Pb::Signal_context_info &info)
+{
+	DEBUG_THIS_CALL;
+	Signal_context_info *_info = new(_alloc) Signal_context_info();
+	parse_normal_info(info.normal_info(), _info);
+
+	_info->i_signal_source_badge = info.signal_source_badge();
+	_info->i_imprint = info.imprint(); 
+	return _info;
+}
+
+
+Native_capability_info *Serializer::parse_native_capability(const Pb::Native_capability_info &info)
+{
+	DEBUG_THIS_CALL;
+
+	Native_capability_info *_info = new(_alloc) Native_capability_info();
+	parse_normal_info(info.normal_info(), _info);
+
+	_info->i_ep_badge = info.ep_badge();
+	return _info;
+}
+
+
+Cpu_thread_info *Serializer::parse_cpu_thread(const Pb::Cpu_thread_info &info)
+{
+	DEBUG_THIS_CALL;
+
+	Genode::warning("Cpu_thread::weight is not parsed!");
+	Genode::warning("Cpu_thread::tc is not parsed!");
+	Genode::warning("Cpu_thread::affinity is only partially parsed!");	
+	
+	Cpu_thread_info *_info = new(_alloc) Cpu_thread_info();
+	parse_normal_info(info.normal_info(), _info);
+
+	_info->i_pd_session_badge = info.pd_session_badge();
+	_info->i_name = info.name().c_str();
+	_info->i_weight = Genode::Cpu_session::Weight(); // info.weight() not used...
+	_info->i_utcb = info.utcb();
+	_info->i_started = info.started();
+	_info->i_paused = info.paused();
+	_info->i_single_step = info.single_step();
+	_info->i_affinity = Genode::Affinity::Location(info.affinity(),0);
+	_info->i_sigh_badge = info.sigh_badge();
+
+	// TODO..was not implemented yet
+//	_info->i_tc = info.tc();		
+	return _info;
+}
+
+
+Ram_dataspace_info *Serializer::parse_ram_dataspace(const Pb::Ram_dataspace_info &info,
+	void *raw_addr)
+{
+	DEBUG_THIS_CALL;
+	
+	Ram_dataspace_info *_info = new(_alloc) Ram_dataspace_info();
+	parse_normal_info(info.normal_info(), _info);
+
+	_info->i_size = info.size();
+	_info->i_cached = (Genode::Cache_attribute) info.cached();
+	_info->i_timestamp = info.timestamp();
+
+	/* parse attachemnt */
+	Genode::Ram_dataspace_capability src_cap = _env.ram().alloc(info.size());
+	void *dst = _env.rm().attach(src_cap);
+	void *src = raw_addr + info.attachment().offset();
+	Genode::memcpy(dst, src, info.size());
+
+	_info->i_src_cap = src_cap;	
+	return _info;
+}
+
+
+Region_map_info *Serializer::parse_region_map(const Pb::Region_map_info &info)
+{
+	DEBUG_THIS_CALL;
+	
+	Region_map_info *_info = new(_alloc) Region_map_info();
+	parse_normal_info(info.normal_info(), _info);
+
+	_info->i_size = info.size();
+	_info->i_ds_badge = info.ds_badge();
+	_info->i_sigh_badge = info.sigh_badge();
+
+	Genode::List<Attached_region_info> ar;
+	for(int i = 0; i < info.attached_region_info_size(); i++) {
+		ar.insert(parse_attached_region(info.attached_region_info(i)));
+	}
+	_info->i_attached_regions = ar.first();
+
+	return _info;
+}
+
+
+Attached_region_info *Serializer::parse_attached_region(const Pb::Attached_region_info &info)
+{
+	DEBUG_THIS_CALL;
+	
+	Attached_region_info *_info = new(_alloc) Attached_region_info();
+	parse_normal_info(info.normal_info(), _info);
+
+	_info->i_badge = info.attached_ds_badge();
+	_info->i_size = info.size();
+	_info->i_offset = info.offset();		
+	_info->i_rel_addr = info.rel_addr();
+	_info->i_executable = info.executable();		
+	return _info;
+}
+
 

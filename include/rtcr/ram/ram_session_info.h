@@ -25,6 +25,8 @@ public:
 
 	Ram_session_info(const char* creation_args, Genode::uint16_t badge)
 		: Session_info(creation_args, badge) {}
+
+	Ram_session_info() {}
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output, " Ram session:\n ");

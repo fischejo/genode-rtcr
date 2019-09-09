@@ -73,8 +73,8 @@ struct Rtcr::Main
 	  Genode::Dataspace_capability ds_cap = serializer.serialize(
 		  module.child_info(), &serialized_size);
 	  
-	  // Genode::log("moin");
-	  // serializer.parse(ds_cap);
+	  Genode::log("moin");
+	  serializer.parse(ds_cap);
 	  Genode::sleep_forever();
 	}
 };

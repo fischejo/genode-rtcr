@@ -26,12 +26,16 @@ public:
 	Signal_context_info* i_signal_contexts;
 	Native_capability_info* i_native_caps;
 
+	
 	Region_map_info *i_address_space;
 	Region_map_info *i_stack_area;
 	Region_map_info *i_linker_area;
+
 	
- Pd_session_info(const char* creation_args, Genode::uint16_t badge)
+	Pd_session_info(const char* creation_args, Genode::uint16_t badge)
 	 : Session_info(creation_args, badge) {}
+
+	Pd_session_info() {}
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output, " PD session:\n  ");

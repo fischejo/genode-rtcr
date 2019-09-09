@@ -20,8 +20,10 @@ struct Rtcr::Timer_session_info : Session_info {
 	bool i_periodic;
 	Genode::uint16_t i_sigh_badge;
 
- Timer_session_info(const char* creation_args, Genode::uint16_t badge)
-	 : Session_info(creation_args, badge) {}
+	Timer_session_info(const char* creation_args, Genode::uint16_t badge)
+		: Session_info(creation_args, badge) {}
+
+	Timer_session_info() {}
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output, " Timer session:\n  ");

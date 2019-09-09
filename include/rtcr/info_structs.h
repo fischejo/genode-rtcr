@@ -43,8 +43,11 @@ struct Rtcr::Normal_info
 {
 	bool i_bootstrapped;
 	Genode::uint16_t i_badge;
+	Genode::uint16_t i_kcap;	 /* only filled by serializer */
 
 	Normal_info(Genode::uint16_t badge) : i_badge(badge) {}
+
+	Normal_info() {}
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output,
@@ -65,6 +68,8 @@ struct Rtcr::Session_info : Rtcr::Normal_info
 		Normal_info(badge),
 		i_creation_args (creation_args) { }
 
+	Session_info() {};
+	
 	void print(Genode::Output &output) const {
 		Normal_info::print(output);		
 		Genode::print(output,

@@ -26,6 +26,8 @@ public:
 	using Genode::List<Signal_source_info>::Element::next;
 
 	Signal_source_info(Genode::uint16_t badge) : Normal_info(badge) {};
+
+	Signal_source_info() {};
 	
 	Signal_source_info *find_by_badge(Genode::uint16_t badge) {
 		if(badge == i_badge)

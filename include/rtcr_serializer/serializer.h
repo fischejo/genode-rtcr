@@ -54,7 +54,10 @@ protected:
 		Attachment(Genode::Dataspace_capability _cap, Genode::size_t _size)
 			: pb(nullptr), size(_size), cap(_cap) {};		
 	};
-	
+
+	/**
+	 * General stuff 
+	 */
 	Genode::Env &_env;
 	Genode::Rm_connection _rm_connection;
 	Genode::Allocator &_alloc;	
@@ -62,6 +65,9 @@ protected:
 	const Genode::size_t _PAGE_SIZE = 4096;
 	inline Genode::size_t page_aligned_size(Genode::size_t size);
 
+	/**
+	 * compressing and serializing
+	 */
 
 	void free(Genode::List<Attachment> &as);	
 	void detach(Genode::Region_map_client &rm, Genode::List<Attachment> &as);
@@ -154,13 +160,40 @@ protected:
 							   Pb::Pd_session_info *pd_session,
 							   Native_capability_info *info);
 
+
+	/**
+	 * uncompressing and deserializing
+	 */
+	Child_info *parse_child_info(const Pb::Child_info &child, void *raw_addr);
+
+	void parse_session_info(const Pb::Session_info &info, Session_info *_info);
+	void parse_normal_info(const Pb::Normal_info &info, Normal_info *_info);		
+	
+	Pd_session_info *parse_pd_session(const Pb::Pd_session_info &info);
+	Cpu_session_info *parse_cpu_session(const Pb::Cpu_session_info &info);
+	Ram_session_info *parse_ram_session(const Pb::Ram_session_info &info, void *raw_addr);
+	Rm_session_info *parse_rm_session(const Pb::Rm_session_info &info);
+	Log_session_info *parse_log_session(const Pb::Log_session_info &info);
+	Timer_session_info *parse_timer_session(const Pb::Timer_session_info &info);
+	Rom_session_info *parse_rom_session(const Pb::Rom_session_info &info);
+
+	
+	Signal_source_info *parse_signal_source(const Pb::Signal_source_info &info);
+	Signal_context_info *parse_signal_context(const Pb::Signal_context_info &info);
+	Native_capability_info *parse_native_capability(const Pb::Native_capability_info &info);
+	Cpu_thread_info *parse_cpu_thread(const Pb::Cpu_thread_info &info);
+	Ram_dataspace_info *parse_ram_dataspace(const Pb::Ram_dataspace_info &info,
+											void *raw_addr);
+	Region_map_info *parse_region_map(const Pb::Region_map_info &info);
+	Attached_region_info *parse_attached_region(const Pb::Attached_region_info &info);
+
 public:
 
 	Serializer(Genode::Env &env, Genode::Allocator &alloc);
 	~Serializer() {}
 
 
-	void parse(Genode::Dataspace_capability ds_cap);
+	Genode::List<Child_info> *parse(Genode::Dataspace_capability ds_cap);
 
 
 	Genode::Ram_dataspace_capability serialize(Genode::List<Child_info> *_child_list,

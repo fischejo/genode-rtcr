@@ -29,6 +29,8 @@ public:
 	Genode::uint16_t i_ep_badge;
 
 	Native_capability_info(Genode::uint16_t badge) : Normal_info(badge) {};
+
+	Native_capability_info() {};
 	
 	void print(Genode::Output &output) const {
 		using Genode::Hex;

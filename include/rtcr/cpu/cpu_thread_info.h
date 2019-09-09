@@ -54,6 +54,7 @@ public:
 		return obj ? obj->find_by_name(name) : 0;
 	}
 
+	Cpu_thread_info() {};
 	
 	Cpu_thread_info(const char *name,
 					Genode::Cpu_session::Weight weight,

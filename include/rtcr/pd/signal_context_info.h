@@ -33,6 +33,7 @@ public:
 
 	Signal_context_info(Genode::uint16_t badge) : Normal_info(badge) {};
 
+	Signal_context_info() {};
 	
 	void print(Genode::Output &output) const {
 		using Genode::Hex;

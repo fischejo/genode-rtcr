@@ -27,6 +27,8 @@ class Rtcr::Cpu_session_info : public Rtcr::Session_info
 
  Cpu_session_info(const char* creation_args, Genode::uint16_t badge)
 	 : Session_info(creation_args, badge) {}
+
+	Cpu_session_info() {}
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output, " CPU session:\n  ");

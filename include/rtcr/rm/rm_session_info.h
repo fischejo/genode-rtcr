@@ -18,11 +18,13 @@ namespace Rtcr {
 }
 
 class Rtcr::Rm_session_info : public Session_info {
- public:	
+public:	
 	Region_map_info *i_region_maps;
 
- Rm_session_info(const char* creation_args, Genode::uint16_t badge)
-	 : Session_info(creation_args, badge) {}
+	Rm_session_info(const char* creation_args, Genode::uint16_t badge)
+		: Session_info(creation_args, badge) {}
+
+	Rm_session_info() {};
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output, " RM session:\n  ");

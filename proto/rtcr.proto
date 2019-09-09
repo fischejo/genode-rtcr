@@ -31,7 +31,6 @@ message Child_info{
 message Normal_info{
 	uint32   kcap = 1;
 	uint32	 badge = 2;
-	bool     bootstrapped = 3;
 }
 
 message Session_info{

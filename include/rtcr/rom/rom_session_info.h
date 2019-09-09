@@ -24,9 +24,11 @@ struct Rtcr::Rom_session_info : Session_info {
 
 	Genode::uint16_t i_dataspace_badge;
 	Genode::uint16_t i_sigh_badge;
+	
+	Rom_session_info(const char* creation_args, Genode::uint16_t badge)
+		: Session_info(creation_args, badge) {}
 
- Rom_session_info(const char* creation_args, Genode::uint16_t badge)
-	 : Session_info(creation_args, badge) {}
+	Rom_session_info() {};
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output, " Rom session:\n  ");

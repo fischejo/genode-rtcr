@@ -31,15 +31,17 @@ public:
 	
 	Genode::Ram_dataspace_capability i_dst_cap;
 	Genode::size_t i_timestamp;
-	Genode::Ram_dataspace_capability const i_src_cap;
-	Genode::size_t                   const i_size;
-	Genode::Cache_attribute          const i_cached;
+	Genode::Ram_dataspace_capability i_src_cap;
+	Genode::size_t                   i_size;
+	Genode::Cache_attribute          i_cached;
 
 	Ram_dataspace_info(Genode::Ram_dataspace_capability const src_cap,
 					   Genode::size_t const size,
 					   Genode::Cache_attribute const cached)
 		: Normal_info(src_cap.local_name()),
 		  i_src_cap(src_cap), i_size(size), i_cached(cached) {}
+
+	Ram_dataspace_info() {};
 	
 	void print(Genode::Output &output) const {
 		using Genode::Hex;

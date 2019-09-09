@@ -33,6 +33,8 @@ public:
 	Attached_region_info *i_attached_regions;
 
 	Region_map_info(Genode::uint16_t badge) : Normal_info(badge) {};
+
+	Region_map_info() {};
 											  
 	void print(Genode::Output &output) const {
 		Genode::print(output, "  Region Map:\n");
