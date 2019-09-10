@@ -42,7 +42,7 @@ using namespace Rtcr;
 class Rtcr::Serializer
 {
 protected:
-
+	
 	struct Attachment : Genode::List<Attachment>::Element {
 		Pb::Attachment *pb;
 		Genode::size_t size;
@@ -52,9 +52,28 @@ protected:
 		Attachment(Genode::Dataspace_capability _cap, Genode::size_t _size, Pb::Attachment *_pb)
 			: pb(_pb), size(_size), cap(_cap) {};
 		Attachment(Genode::Dataspace_capability _cap, Genode::size_t _size)
-			: pb(nullptr), size(_size), cap(_cap) {};		
+			: pb(nullptr), size(_size), cap(_cap) {};
+
+		Attachment() {};
 	};
 
+	struct Rom_attachment : Attachment {
+		Genode::Rom_connection rom;
+		const Genode::Dataspace_capability rom_cap;
+		Genode::Dataspace_client rom_client;
+
+		Rom_attachment(Genode::Env &env, const char *rom_name, Pb::Attachment *_pb)
+			:
+			rom(env, rom_name),
+			rom_cap(rom.dataspace()),
+			rom_client(rom_cap)
+			{
+				pb = _pb;
+				size = rom_client.size();
+				cap = rom_cap;
+			};
+	};
+	
 	/**
 	 * General stuff 
 	 */

@@ -33,7 +33,7 @@ public:
 		const Region_map_info *rm = i_region_maps;
 		if(!rm) Genode::print(output, "   <empty>\n");
 		while(rm) {
-			Genode::print(output, "   ", rm);
+			Genode::print(output, "   ", *rm);
 			rm = rm->next();
 		}
 	}

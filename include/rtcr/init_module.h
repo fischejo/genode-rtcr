@@ -1,5 +1,5 @@
 /*
- * \brief  Base Module creates all intecepting sessions
+ * \brief  Core functionality for pausing/checkpoint/resuming 
  * \author Johannes Fischer
  * \date   2019-08-29
  */
@@ -106,7 +106,6 @@ public:
 	void pause();
 	void resume();
 	void checkpoint();
-	bool ready();
 
 	Genode::Service *resolve_session_request(const char *service_name,
 											 const char *args);

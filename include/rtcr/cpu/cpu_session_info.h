@@ -38,7 +38,7 @@ class Rtcr::Cpu_session_info : public Rtcr::Session_info
 		Cpu_thread_info *cpu_thread = i_cpu_thread_info;
 		if(!cpu_thread) Genode::print(output, "  <empty>\n");
 		while(cpu_thread) {
-			Genode::print(output, "  ", cpu_thread, "\n");
+			Genode::print(output, "  ", *cpu_thread, "\n");
 			cpu_thread = cpu_thread->next();
 		}
 	}

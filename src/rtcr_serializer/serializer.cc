@@ -53,16 +53,15 @@ void Serializer::set_binary_info(Pb::Child_info *child_info,
 								 Child_info *_child_info,
 								 Genode::List<Attachment> &as)
 {
-	/* this will fail during attachment, as the Rom_connection is on the stack
-	 * and deleted */
-	Genode::Rom_connection rom(_env, _child_info->name.string());
-	Genode::Dataspace_capability rom_cap = rom.dataspace();
-	
-	Genode::Dataspace_client rom_client(rom_cap);
-	Genode::size_t rom_size = rom_client.size();
+#ifdef VERBOSE
+	Genode::warning("Packing child binary only works, ",
+					"if child and binary name are the same");
+#endif
 	Pb::Attachment *attachment = new(_alloc) Pb::Attachment();
 	child_info->set_allocated_binary(attachment);
-	as.insert( new(_alloc) Attachment(rom_cap, rom_size, attachment));
+	as.insert( new(_alloc) Rom_attachment(_env,
+										  _child_info->name.string(),
+										  attachment));
 }
 
 
@@ -486,10 +485,10 @@ void Serializer::add_cpu_thread(Capability_mapping *_cm,
 								Cpu_thread_info *_info)
 {
 	DEBUG_THIS_CALL;
-
+#ifdef VERBOSE
 	Genode::warning("Cpu_thread::tc is not serialized!");
 	Genode::warning("Cpu_thread::affinity is only partially serialized!");
-	
+#endif
 	Pb::Cpu_thread_info *info = cpu_session_info->add_cpu_thread_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 	info->set_pd_session_badge(_info->i_pd_session_badge);
@@ -814,11 +813,11 @@ Native_capability_info *Serializer::parse_native_capability(const Pb::Native_cap
 Cpu_thread_info *Serializer::parse_cpu_thread(const Pb::Cpu_thread_info &info)
 {
 	DEBUG_THIS_CALL;
-
+#ifdef VERBOSE
 	Genode::warning("Cpu_thread::weight is not parsed!");
 	Genode::warning("Cpu_thread::tc is not parsed!");
 	Genode::warning("Cpu_thread::affinity is only partially parsed!");	
-	
+#endif	
 	Cpu_thread_info *_info = new(_alloc) Cpu_thread_info();
 	parse_normal_info(info.normal_info(), _info);
 

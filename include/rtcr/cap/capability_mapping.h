@@ -40,10 +40,6 @@ protected:
 	Genode::Env        &_env;
 	Genode::Allocator  &_alloc;
 
-	/* list of checkpointed capabilities */
-//	Genode::List<Kcap_badge> _kcap_mapping;
-	
-
 	Genode::addr_t _cap_idx_alloc_addr;
 
 	/* PD session from which the capabilties are extracted */

@@ -82,6 +82,7 @@ private:
 	Pd_session &_pd_session;
 	Cpu_session &_cpu_session;
 
+	Genode::String<30> _binary_name;
 	Genode::Rom_connection _binary_rom;
 	Genode::Dataspace_capability _binary_rom_ds;
 
@@ -103,6 +104,7 @@ private:
 	Pd_session &create_pd_session();
 	Ram_session &create_ram_session();  
 
+	inline Genode::String<30> _read_binary(const char *name);	
 public:
 
 	/**

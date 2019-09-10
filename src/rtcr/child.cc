@@ -46,7 +46,8 @@ Child::Child(Genode::Env &env,
 	_ram_session(create_ram_session()),
 	_pd_session(create_pd_session()),	
 	_cpu_session(create_cpu_session()),
-	_binary_rom(env, name),
+	_binary_name(_read_binary(name)),
+	_binary_rom(env, _binary_name.string()),
 	_binary_rom_ds(_binary_rom.dataspace()),
 	_entrypoint(&_cap_session,
 				ENTRYPOINT_STACK_SIZE,
@@ -72,6 +73,25 @@ Child::Child(Genode::Env &env,
 		   *_cpu_service)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
+}
+
+
+Genode::String<30> Child::_read_binary(const char *child_name)
+{
+	Genode::String<30> binary_name = child_name;
+	try {
+		Genode::Xml_node config_node = Genode::config()->xml_node();
+		Genode::Xml_node ck_node = config_node.sub_node("child");
+		Genode::String<30> node_name;
+		while(Genode::strcmp(child_name, ck_node.attribute_value("name", node_name).string()))
+			ck_node = ck_node.next("child");
+
+		binary_name = ck_node.attribute_value("binary", binary_name);
+	}
+	catch (...) {}
+	Genode::log("binary_name: ", binary_name);
+	/* fallback to child name as binary name */
+	return binary_name;
 }
 
 

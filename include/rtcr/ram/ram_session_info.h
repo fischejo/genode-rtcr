@@ -35,7 +35,7 @@ public:
 		Ram_dataspace_info *ds = i_ram_dataspaces;
 		if(!ds) Genode::print(output, "  <empty>\n");
 		while(ds) {
-			Genode::print(output, "  ", ds);
+			Genode::print(output, "  ", *ds);
 			ds = ds->next();
 		}
 	}

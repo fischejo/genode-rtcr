@@ -151,38 +151,6 @@ void Init_module::resume()
 }
 
 
-bool Init_module::ready()
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-
-	_childs_lock.lock();
-	Child_info *child = _childs.first();
-/*
-	while(child) {
-		if(!child->cpu_session || !child->cpu_session->is_ready())
-			return false;
-		if(!child->pd_session || !child->pd_session->is_ready())
-			return false;
-		if(!child->ram_session || !child->ram_session->is_ready())
-			return false;
-		if(child->rom_session && !child->rom_session->is_ready())
-			return false;
-		if(child->rm_session && !child->rm_session->is_ready())
-			return false;
-		if(child->timer_session && !child->timer_session->is_ready())
-			return false;
-		if(child->log_session && !child->log_session->is_ready())
-			return false;
-		if(child->capability_mapping  && !child->capability_mapping->is_ready())
-			return false;
-		child = child->next();
-	}
-*/
-	_childs_lock.unlock();
-	return true;
-}
-
-
 void Init_module::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;	

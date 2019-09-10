@@ -1,7 +1,5 @@
 #
-# brief: Simple checkpoint/restore example with multi-threaded modules
-# Notes: * Child runs on Core 1
-#        * C/R runs on Core 0
+# brief: Simple checkpoint/restore example
 # author: Fischer Johannes
 # date: 2019-06-14
 #
@@ -10,7 +8,7 @@
 # Build
 #
 
-build { core init drivers/timer app/rtcr_app app/sheep_counter app/horse_counter }
+build { core init drivers/timer app/rtcr_app app/sheep_counter }
 
 create_boot_directory
 
@@ -60,11 +58,10 @@ install_config {
             </provides>
     		<resource name="RAM" quantum="256M"/>
             <config>
-                 <child name="sheep_counter" quota="1048576" xpos="0" />
+	             <module name="base"/>
+                 <child name="sheep_counter" quota="520192" xpos="0" />
                  <checkpoint parallel="false"/>
-				 <worker xpos="1"/>
-				 <granularity>4</granularity>
-                 <checkpointable name="cpu_session" xpos="1" />
+                 <checkpointable name="cpu_session" xpos="0" />
                  <checkpointable name="pd_session" xpos="0" />    
                  <checkpointable name="ram_session" xpos="0" />    
                  <checkpointable name="rm_session" xpos="0" />    
@@ -87,7 +84,6 @@ init
 timer
 rtcr_app
 sheep_counter
-horse_counter
 ld.lib.so
 libc.lib.so
 pthread.lib.so

@@ -7,6 +7,14 @@ another module will be implemented. The user has to choose one module in the
 beginning.
 
 ```C++
+\* Rtcr includes */
+#include <rtcr/child.h>
+#include <rtcr/module_factory.h>
+#include <rtcr/init_module.h>
+#include <rtcr_serializer/serializer.h>
+```
+
+```C++
 Base_module module(env, heap);
 ```
 
@@ -14,6 +22,7 @@ It is possible to configure a module name in the XML config and use the factory
 to initialize the module.
 
 ```C++
+Init_module &module = *Module_factory::get()->create(env, heap);
 ```
 
 
@@ -33,7 +42,6 @@ Multiple child are supported.
 All childs are paused, checkpointed and resumed in parallel.
 
 ```C++
-Child_info *info = module.child_info("sheep_counter");
 module.pause();
 module.checkpoint();
 module.resume();
@@ -42,7 +50,8 @@ module.resume();
 The last checkpointed state can be examined:
 
 ```C++
-Genode::log(module.child_info("sheep_counter));
+Child_info *sheep_info = module.child_info("sheep_counter);
+Genode::log(*sheep_info);
 ```
 
 # Serialization
@@ -55,6 +64,13 @@ variable `size`.
 Serializer s(env, heap);
 
 Genode::size_t size;
-Genode::Ram_dataspace_capability ds_cap = s.serialize(module.child_info(), &size);
+Genode::List<Child_info> *child_infos = module.child_info();
+Genode::Ram_dataspace_capability ds_cap = s.serialize(child_infos, &size);
 ```
 
+Parsing a serialized state from a dataspace is also simple:
+
+```C++
+child_infos = serializer.parse(ds_cap);
+Genode::log(*child_infos->first());
+```

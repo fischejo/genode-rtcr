@@ -52,7 +52,8 @@ struct Rtcr::Normal_info
 	void print(Genode::Output &output) const {
 		Genode::print(output,
 					  "bootstrapped=", i_bootstrapped,
-					  " badge=", i_badge);
+					  " badge=", i_badge,
+					  " kcap=", i_kcap);
 	}
 	
 };

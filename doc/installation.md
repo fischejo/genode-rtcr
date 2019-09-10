@@ -56,5 +56,6 @@ EOF
 
 ## Compile
 ```bash
-make -C build_pbxa9/ run/rtcr
+make -C build_pbxa9/ run/rtcr_singlecore
 ```
+

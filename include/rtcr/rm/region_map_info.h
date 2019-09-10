@@ -47,7 +47,7 @@ public:
 		Attached_region_info *rm = i_attached_regions;
 		if(!rm) Genode::print(output, "   <empty>\n");
 		while(rm) {
-			Genode::print(output, "   ", rm);
+			Genode::print(output, "   ", *rm);
 			rm = rm->next();
 		}
 	}

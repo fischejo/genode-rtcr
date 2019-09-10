@@ -8,6 +8,8 @@ XML config. Following parameters exists:
 * `name` Name of the child
 * `quota` A portion of memory which is transfered to the child. Default is `512 KB`
 * `xpos` and `ypos` assign the child to a specific CPU core. Default is `0`
+* `binary` Multiple childs can share the same binary. **NOTE: This is
+  experimental and does not work yet**. The binary is chosen by the child name.
 
 ```xml
 <start name="rtcr_app">
@@ -20,7 +22,8 @@ XML config. Following parameters exists:
 
 ## Rtcr
 The checkpoint mechanism consists of several threads each checkpointing a
-session. It is possible to assign a thread to a CPU by the `checkpointable` node. Existing threads:
+session. It is possible to assign a thread to a CPU by the `checkpointable`
+node. Existing threads:
 
 * `cpu_session`
 * `pd_session`

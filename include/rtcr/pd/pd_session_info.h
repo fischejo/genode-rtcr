@@ -71,11 +71,11 @@ public:
 
 		/* Address space */
 		Genode::print(output, "  Address space: \n");
-		Genode::print(output, "   ", i_address_space);
+		Genode::print(output, "   ", *i_address_space);
 		Genode::print(output, "  Stack area: \n");		
-		Genode::print(output, "   ", i_stack_area);		
+		Genode::print(output, "   ", *i_stack_area);		
 		Genode::print(output, "  Linker area: \n");
-		Genode::print(output, "   ", i_linker_area);				
+		Genode::print(output, "   ", *i_linker_area);				
 	}
 };
 

@@ -28,9 +28,9 @@ void Component::construct(Genode::Env &env)
 	Dataspace_capability ds_cap = env.ram().alloc(20*4096);
 	Genode::uint8_t* ds_addr = env.rm().attach(ds_cap);	
 	uint16_t &n = *(uint16_t*) (ds_addr);
-	n = 0;
+	n = 1;
 	while(1) {
-		log("1 sheep. zzZ");
+		log(n," sheep. zzZ");
 		n++;
 
 		/*

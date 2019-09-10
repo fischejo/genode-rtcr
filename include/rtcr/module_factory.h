@@ -1,11 +1,11 @@
 /*
- * \brief  Session Handler Factory
+ * \brief  Module Factory
  * \author Johannes Fischer
  * \date   2019-03-21
  */
 
-#ifndef _RTCR_MODULE_SET_FACTORY_H_
-#define _RTCR_MODULE_SET_FACTORY_H_
+#ifndef _RTCR_MODULE_FACTORY_H_
+#define _RTCR_MODULE_FACTORY_H_
 
 /* Genode includes */
 #include <util/list.h>
@@ -88,4 +88,4 @@ public:
 };
 
 
-#endif /* _RTCR_MODULE_SET_FACTORY_H_ */
+#endif /* _RTCR_MODULE_FACTORY_H_ */

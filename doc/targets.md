@@ -20,18 +20,11 @@ This repository provides several libraries:
 
 # Run Scripte
 
-* [run/rtcr](run/rtcr.run) provides an Run Script including `rtcr_test` and
+* [run/rtcr_singlecoer](run/rtcr_singlecore.run) provides an Run Script including `rtcr_app` and
   `sheep_counter`. 
   
-* [run/rtcr_multicore](run/rtcr_multicore.run) Same as `run/rtcr` but is configured for
+* [run/rtcr_dualcore](run/rtcr_dualcore.run) Same as `run/rtcr` but is configured for
   dual core CPUs. The child is running on `CPU 0`, while the checkpointing is
-  executed on `CPU 1`.
-
-* [run/rtcr_serializer](run/rtcr_serializer.run) Same as `run/rtcr` but
-  serializes the child after checkpointing.
-
-
-
-
+  executed on `CPU 1`. 
 
   
