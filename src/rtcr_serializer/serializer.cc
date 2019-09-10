@@ -302,6 +302,7 @@ void Serializer::set_cpu_session(Capability_mapping *_cm,
 	Cpu_session_info *_info = _tc->cpu_session;
 	Pb::Cpu_session_info *info = new(_alloc) Pb::Cpu_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
+	info->set_sigh_badge(_info->i_sigh_badge);
 
 	Cpu_thread_info *cpu_thread = _info->i_cpu_thread_info;
 	while(cpu_thread) {
@@ -699,7 +700,8 @@ Cpu_session_info *Serializer::parse_cpu_session(const Pb::Cpu_session_info &info
 	DEBUG_THIS_CALL;
 	Cpu_session_info *_info = new(_alloc) Cpu_session_info();
 	parse_session_info(info.session_info(), _info);
-
+	_info->i_sigh_badge = info.sigh_badge();
+	
 	/* cpu threads */
 	Genode::List<Cpu_thread_info> ct;
 	for(int i = 0; i < info.cpu_thread_info_size(); i++) {

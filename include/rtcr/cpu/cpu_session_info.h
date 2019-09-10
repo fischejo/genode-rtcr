@@ -33,6 +33,7 @@ class Rtcr::Cpu_session_info : public Rtcr::Session_info
 	void print(Genode::Output &output) const {
 		Genode::print(output, " CPU session:\n  ");
 		Session_info::print(output);
+		Genode::print(output,", sigh_badge=", i_sigh_badge);
 		Genode::print(output, "\n");
 		
 		Cpu_thread_info *cpu_thread = i_cpu_thread_info;

@@ -31,7 +31,11 @@ public:
   	Genode::uint16_t i_signal_source_badge;
 	unsigned long i_imprint;
 
-	Signal_context_info(Genode::uint16_t badge) : Normal_info(badge) {};
+	Signal_context_info(Genode::uint16_t badge, Genode::uint16_t signal_source_badge)
+		:
+		Normal_info(badge),
+		i_signal_source_badge(signal_source_badge)
+		{}
 
 	Signal_context_info() {};
 	
