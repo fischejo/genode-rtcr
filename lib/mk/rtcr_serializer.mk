@@ -7,10 +7,6 @@ SRC_PROTO += $(REP_DIR)/proto/rtcr.proto
 SRC_CC = serializer.cc
 vpath % $(REP_DIR)/src/rtcr_serializer
 
-# enable/disable debugging and verbosity
-CC_OPT += -DVERBOSE
-CC_OPT += -DDEBUG
-
 
 # minimal rtcr
 LIBS += base rtcr

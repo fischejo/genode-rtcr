@@ -28,7 +28,6 @@ git checkout origin/focnados-1608_red-mem
 ### Genode Repositories
 ```bash
 git clone git@gitlab.lrz.de:rtcr_workspace/rtcr.git genode/repos/rtcr
-git clone git@gitlab.lrz.de:rtcr_workspace/profiler.git genode/repos/profiler
 git clone git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repos/world
 ```
 
@@ -50,7 +49,6 @@ genode/tool/create_builddir focnados_pbxa9 BUILD_DIR=./build_pbxa9
 cat <<'EOF' >> ./build_pbxa9/etc/build.conf
 REPOSITORIES += $(GENODE_DIR)/repos/libports
 REPOSITORIES += $(GENODE_DIR)/repos/world
-REPOSITORIES += $(GENODE_DIR)/repos/profiler
 REPOSITORIES += $(GENODE_DIR)/repos/rtcr
 EOF
 ```

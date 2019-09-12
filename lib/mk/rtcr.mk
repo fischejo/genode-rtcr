@@ -11,9 +11,5 @@ SRC_CC += capability_mapping.cc
 
 vpath % $(REP_DIR)/src/rtcr
 
-
-CC_OPT += -DVERBOSE
-CC_OPT += -DDEBUG
-
 INC_DIR += $(BASE_DIR)/../base-foc/src/include
 LIBS += config base
