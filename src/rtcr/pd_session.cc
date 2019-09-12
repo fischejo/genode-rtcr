@@ -122,12 +122,8 @@ void Pd_session::_checkpoint_signal_sources()
 		Genode::destroy(_md_alloc, &ss);
 	}
 
-	ss = _signal_sources.first();
-	while(ss) {
-		static_cast<Signal_source*>(ss)->checkpoint();
-		ss = ss->next();
-	}
-
+	/* Signal_source only stores const values. No need for checkpoint() */ 
+	
 	i_signal_sources = _signal_sources.first();
 }
 
@@ -142,11 +138,7 @@ void Pd_session::_checkpoint_native_capabilities()
 		Genode::destroy(_md_alloc, &nc);
 	}
 
-	nc = _native_caps.first();
-	while(nc) {
-		static_cast<Native_capability*>(nc)->checkpoint();
-		nc = nc->next();
-	}
+	/* Native_capability only stores const values. No need for checkpoint() */ 	
 
 	i_native_caps = _native_caps.first();
 }
@@ -155,7 +147,6 @@ void Pd_session::_checkpoint_native_capabilities()
 void Pd_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-	i_bootstrapped = _child_info->bootstrapped;
 	i_upgrade_args = _upgrade_args;
   
 	_address_space.checkpoint();
@@ -187,6 +178,7 @@ Genode::Capability<Genode::Signal_source> Pd_session::alloc_signal_source()
 	/* Create and insert list element to monitor this signal source */
 	Signal_source *new_ss = new (_md_alloc) Signal_source(result_cap,
 														  _child_info->bootstrapped);
+
 	Genode::Lock::Guard guard(_signal_sources_lock);
 	_signal_sources.insert(new_ss);
 
@@ -220,6 +212,7 @@ Genode::Signal_context_capability Pd_session::alloc_context(Signal_source_capabi
 															source,
 															imprint,
 															_child_info->bootstrapped);
+
 	Genode::Lock::Guard guard(_signal_contexts_lock);
 	_signal_contexts.insert(new_sc);
 	return result_cap;
@@ -253,9 +246,9 @@ Genode::Native_capability Pd_session::alloc_rpc_cap(Genode::Native_capability ep
 	auto result_cap = _parent_pd.alloc_rpc_cap(ep);
 
 	/* Create and insert list element to monitor this native_capability */
-	Native_capability *new_nc = new (_md_alloc) Native_capability(result_cap,
-																  ep,
-																  _child_info->bootstrapped);
+	Native_capability *new_nc = new (_md_alloc) Native_capability(result_cap, ep,
+		_child_info->bootstrapped);
+
 	Genode::Lock::Guard guard(_native_caps_lock);
 	_native_caps.insert(new_nc);
 	return result_cap;

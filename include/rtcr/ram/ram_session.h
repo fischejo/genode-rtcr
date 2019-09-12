@@ -48,7 +48,7 @@ class Rtcr::Ram_session : public Rtcr::Checkpointable,
 						  public Genode::Rpc_object<Genode::Ram_session>,
 						  public Rtcr::Ram_session_info
 {
-public:
+protected:
 	
 	const char* _upgrade_args;
 	Genode::Ram_session_capability _ref_account_cap;

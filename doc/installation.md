@@ -21,14 +21,15 @@ wget -qO- https://nextcloud.os.in.tum.de/s/9idiw8BLbuwp35z/download | tar xj -C 
 
 ### Genode
 ```bash
-git clone -b focnados-1604_red-mem https://gitlab.lrz.de/rtcr_workhttps://gitlab.lrz.de/rtcr_workspace/genode.git
+git clone origin/focnados-1608_red-mem
+git checkout origin/focnados-1608_red-mem
 ```
 
 ### Genode Repositories
 ```bash
-git clone https://gitlab.lrz.de/rtcr_workspace/rtcr.git genode/repos/rtcr
-git clone https://gitlab.lrz.de/rtcr_workspace/profiler.git genode/repos/profiler
-git clone https://gitlab.lrz.de/rtcr_workspace/genode-world.git genode/repos/world
+git clone git@gitlab.lrz.de:rtcr_workspace/rtcr.git genode/repos/rtcr
+git clone git@gitlab.lrz.de:rtcr_workspace/profiler.git genode/repos/profiler
+git clone git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repos/world
 ```
 
 ## Prepare Ports

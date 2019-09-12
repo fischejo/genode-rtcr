@@ -25,6 +25,7 @@ class Rtcr::Cpu_session_info : public Rtcr::Session_info
 	Cpu_thread_info *i_cpu_thread_info;
 	Genode::uint16_t i_sigh_badge;
 
+
  Cpu_session_info(const char* creation_args, Genode::uint16_t badge)
 	 : Session_info(creation_args, badge) {}
 

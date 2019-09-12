@@ -92,8 +92,6 @@ void Rm_session::_destroy(Region_map *region_map)
 void Rm_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-
-	i_bootstrapped = _child_info->bootstrapped;
 	i_upgrade_args = _upgrade_args;
 
 	Region_map_info *region_map = nullptr;

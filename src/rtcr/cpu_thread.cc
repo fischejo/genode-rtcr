@@ -30,14 +30,14 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 					   Genode::Cpu_session::Weight weight,
 					   Genode::addr_t utcb,
 					   Genode::Affinity::Location affinity,
-					   bool &bootstrap_phase)
+					   bool bootstrapped)
 	:
 	Cpu_thread_info(name, weight, utcb, cap().local_name()),
 	_md_alloc (md_alloc),
 	_parent_cpu_thread (cpu_thread_cap),
 	_pd_session_cap(pd_session_cap),
-	_bootstrapped(bootstrap_phase),
-	_affinity(affinity)
+	_affinity(affinity),
+	bootstrapped(bootstrapped)
 {
 	DEBUG_THIS_CALL
 }
@@ -51,7 +51,6 @@ void Cpu_thread::checkpoint()
 	i_single_step = _single_step;
 	i_affinity = _affinity; // TODO FJO: clone it
 	i_sigh_badge = _sigh.local_name();
-	i_bootstrapped = _bootstrapped;
 	i_pd_session_badge = _pd_session_cap.local_name();
 
 	/* XXX does not guarantee to return the current thread registers */

@@ -39,7 +39,7 @@ namespace Rtcr {
 class Rtcr::Pd_session : public Rtcr::Checkpointable,
 						 public Genode::Rpc_object<Genode::Pd_session>,
 						 public Rtcr::Pd_session_info
-{	
+{
 protected:
 	const char* _upgrade_args;
 

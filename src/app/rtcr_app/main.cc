@@ -74,6 +74,9 @@ struct Rtcr::Main
 		Genode::log("Child_info before serializing:");
 		Genode::log(*sheep_info);
 
+		Genode::log(*sheep_info);
+
+		
 		/* Serialize the last checkpoint state */
 		Genode::size_t size;
 		Genode::List<Child_info> *child_infos = module.child_info();
@@ -85,6 +88,10 @@ struct Rtcr::Main
 		Genode::log("Child_info after serializing:");
 		Genode::log(*child_infos->first());
 
+		Genode::log("print ooool:");
+		Genode::log(*sheep_info);
+
+		
 		/* finally sleep forever */
 		Genode::sleep_forever();
 	}

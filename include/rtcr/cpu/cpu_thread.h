@@ -27,6 +27,9 @@ class Rtcr::Cpu_thread : public Genode::Rpc_object<Genode::Cpu_thread>,
 						 public Cpu_thread_info
 
 {
+public:
+	bool bootstrapped;
+	
 protected:
 
 	// Modifiable state
@@ -35,7 +38,6 @@ protected:
 	bool _single_step;
 	Genode::Affinity::Location        _affinity; // Is also used for creation
 	Genode::Signal_context_capability _sigh;
-	bool &_bootstrapped;  
 	Genode::Pd_session_capability _pd_session_cap;
 
 private:
@@ -57,7 +59,7 @@ public:
 			   Genode::Cpu_session::Weight weight,
 			   Genode::addr_t utcb,
 			   Genode::Affinity::Location affinity,
-			   bool &bootstrap_phase);
+			   bool bootstrapped);
 
 	~Cpu_thread() {}
 

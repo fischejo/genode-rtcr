@@ -33,7 +33,7 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 	/* Create real CPU thread from parent */
 	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap,
 													name,
-													affinity, // TODO FJO: _child_affinity ?
+													affinity,
 													weight,
 													utcb);
 
@@ -125,7 +125,6 @@ Genode::Affinity::Location Cpu_session::_read_child_affinity(const char* child_n
 void Cpu_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	i_bootstrapped = _child_info->bootstrapped;
 	i_upgrade_args = _upgrade_args;
 	i_sigh_badge = _sigh.local_name();
   

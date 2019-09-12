@@ -23,22 +23,16 @@ namespace Rtcr {
 class Rtcr::Signal_source : public Signal_source_info
 {
 public:	
-	bool bootstrapped;
-	// Creation result
 	Genode::Capability<Genode::Signal_source> const cap;
+	bool bootstrapped;
 	
-	Signal_source(Genode::Capability<Genode::Signal_source> cap, bool bootstrapped)
+	Signal_source(Genode::Capability<Genode::Signal_source> cap,
+			bool bootstrapped)
 		:
 		Signal_source_info(cap.local_name()),
-		bootstrapped(bootstrapped),
-		cap(cap)
+		cap(cap),
+		bootstrapped(bootstrapped)
 		{ }
-
-  
-	void checkpoint() {
-		i_bootstrapped = bootstrapped;
-	}
-
 };
 
 #endif /* _RTCR_SIGNAL_SOURCE_H_ */

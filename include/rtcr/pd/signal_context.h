@@ -30,19 +30,18 @@ public:
 	bool bootstrapped;
 	
 	Signal_context(Genode::Signal_context_capability sc_cap,
-						Genode::Capability<Genode::Signal_source> ss_cap,
-						unsigned long imprint,
-						bool bootstrapped)
+				   Genode::Capability<Genode::Signal_source> ss_cap,
+				   unsigned long imprint,
+				   bool bootstrapped)
 		:
 		Signal_context_info(sc_cap.local_name(), ss_cap.local_name()),
-		bootstrapped(bootstrapped),
 		cap     (sc_cap),
 		ss_cap  (ss_cap),
-		imprint (imprint)
+		imprint (imprint),
+		bootstrapped(bootstrapped)
 		{ }
 
 	void checkpoint() {
-		i_bootstrapped = bootstrapped;
 		i_imprint = imprint;
 	}
 };

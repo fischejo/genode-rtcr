@@ -43,7 +43,6 @@ Timer_session::Timer_session(Genode::Env &env,
 void Timer_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	i_bootstrapped = _child_info->bootstrapped;
 	i_upgrade_args = _upgrade_args;
 	i_sigh_badge = _sigh.local_name();
 	i_timeout = _timeout;

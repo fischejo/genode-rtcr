@@ -53,11 +53,6 @@ void Region_map::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-//	info.badge = cap().local_name();
-//	info.bootstrapped = _bootstrap_phase;
-//  ck_upgrade_args = _upgrade_args.string();
-
-  
 	i_size = _size;
 	i_ds_badge = _ds_cap.local_name();
 	i_sigh_badge = _sigh.local_name();
@@ -68,12 +63,7 @@ void Region_map::checkpoint()
 		Genode::destroy(_md_alloc, region);
 	}
 
-	region = _attached_regions.first();
-	while(region) {
-		static_cast<Attached_region*>(region)->checkpoint();
-		region = region->next();
-	}  
-
+	/* Attached_region has only static values; no need for checkpoint() */
 	i_attached_regions = _attached_regions.first();
 }
 

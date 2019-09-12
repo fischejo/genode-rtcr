@@ -34,9 +34,6 @@ class Rtcr::Log_session : public Rtcr::Checkpointable,
 						  public Rtcr::Log_session_info
 {
 protected:
-	/*****************
-	 ** HOT STORAGE **
-	 *****************/
 
 	const char* _upgrade_args;
 

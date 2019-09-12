@@ -28,7 +28,10 @@ public:
 	
 	Genode::uint16_t i_ep_badge;
 
-	Native_capability_info(Genode::uint16_t badge) : Normal_info(badge) {};
+	Native_capability_info(Genode::uint16_t badge,Genode::uint16_t ep_badge)
+		:
+		Normal_info(badge),
+		i_ep_badge(ep_badge) {};
 
 	Native_capability_info() {};
 	

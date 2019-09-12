@@ -45,6 +45,7 @@ protected:
 	Child_info *_child_info;
 	const char* _upgrade_args;
 	
+	
 	Genode::Signal_context_capability _sigh;
 
 	/**

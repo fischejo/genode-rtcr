@@ -34,10 +34,9 @@ public:
 	void *src = nullptr;
 	void *dst = nullptr;
 		
-	bool _bootstrapped;
+	bool bootstrapped;
 
 	void checkpoint() {
-		i_bootstrapped = _bootstrapped;
 //		i_timestamp = timestamp();
 	}
 
@@ -63,7 +62,7 @@ public:
 				  void *storage)
 		:
 		Ram_dataspace_info(src_cap, size, cached),
-		_bootstrapped (bootstrapped),		
+		bootstrapped (bootstrapped),		
 		storage (storage)
 		{ }
 

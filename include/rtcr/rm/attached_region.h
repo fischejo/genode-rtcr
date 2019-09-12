@@ -25,12 +25,7 @@ class Rtcr::Attached_region : public Rtcr::Attached_region_info
 {
 public:	
 	const Genode::Dataspace_capability attached_ds_cap;
-
 	bool bootstrapped;
-
-	void checkpoint() {
-		i_bootstrapped = bootstrapped;
-	}
   
 	Attached_region(Genode::Dataspace_capability attached_ds_cap,
 					Genode::size_t size,
@@ -44,8 +39,8 @@ public:
 							 local_addr,
 							 executable,
 							 attached_ds_cap.local_name()),
-		bootstrapped (bootstrapped),		
-		attached_ds_cap(attached_ds_cap)
+		attached_ds_cap(attached_ds_cap),
+		bootstrapped(bootstrapped)
 		{}
 };
 

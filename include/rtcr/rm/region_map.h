@@ -29,6 +29,10 @@ namespace Rtcr {
 class Rtcr::Region_map : public Genode::Rpc_object<Genode::Region_map>,
 						 public Rtcr::Region_map_info
 {
+public:
+	bool bootstrapped;
+
+protected:
 	const char* _upgrade_args;
 
 	/**
@@ -71,7 +75,7 @@ class Rtcr::Region_map : public Genode::Rpc_object<Genode::Region_map>,
 	 * Reference to Child's bootstrap phase
 	 */
 	bool &_bootstrap_phase;
-
+	
 	/**
 	 * Name of the Region map for debugging
 	 */

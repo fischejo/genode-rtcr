@@ -111,8 +111,6 @@ void Ram_session::_attach_dataspace(Ram_dataspace *ds)
 void Ram_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-
-	i_bootstrapped = _child_info->bootstrapped;
 	i_upgrade_args = _upgrade_args;
 
 	/* step 1: remove all destroyed dataspaces */
