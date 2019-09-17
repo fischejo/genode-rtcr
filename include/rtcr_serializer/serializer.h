@@ -24,7 +24,8 @@
 #include <rtcr/child_info.h>
 
 /* Protobuf includes */
-#include "rtcr.pb.h"
+#include <rtcr_serializer/rtcr.pb.h>
+
 #include <cstdio>
 #include <cstring>
 #include <vector>

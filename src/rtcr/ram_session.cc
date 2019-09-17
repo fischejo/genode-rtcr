@@ -145,13 +145,24 @@ void Ram_session::checkpoint()
 Genode::Ram_dataspace_capability Ram_session::alloc(Genode::size_t size, Genode::Cache_attribute cached)
 {
 	DEBUG_THIS_CALL;
-	auto src_cap = _parent_ram.alloc(size, cached);
+	auto src_cap = Genode::retry<Genode::Ram_session::Out_of_metadata>(
+			[&] ()
+			{
+			  return _parent_ram.alloc(size, cached);
+			},
+			[&] ()
+			{
+			  char args[Genode::Parent::Session_args::MAX_SIZE];
+			  Genode::snprintf(args, sizeof(args), "ram_quota=%u", 256*1024);
+			  _env.parent().upgrade(_parent_ram, args);
+			});
+
 
 	/* Create a Ram_dataspace to monitor the newly created Ram_dataspace */
 	Ram_dataspace *ds = new (_md_alloc) Ram_dataspace(src_cap,
-													  size,
-													  cached,
-													  _child_info->bootstrapped);
+							  size,
+							  cached,
+							  _child_info->bootstrapped);
 	Genode::Lock::Guard guard(_ram_dataspaces_lock);
 	_ram_dataspaces.insert(ds);
 

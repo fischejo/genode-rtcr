@@ -1,16 +1,17 @@
 # serializer
 # ==========
 
-include $(call select_from_repositories,lib/import/import-libprotobuf.mk)
 SRC_PROTO += $(REP_DIR)/proto/rtcr.proto
+include $(call select_from_repositories,lib/import/import-libprotobuf.mk)
+INC_DIR += $(LIB_CACHE_DIR)
+vpath rtcr.pb.cc $(LIB_CACHE_DIR)/rtcr_serializer
 
-SRC_CC = serializer.cc
+
+SRC_CC += serializer.cc 
 vpath % $(REP_DIR)/src/rtcr_serializer
-
 
 # minimal rtcr
 LIBS += base rtcr
-
 
 LIBS += zlib
 

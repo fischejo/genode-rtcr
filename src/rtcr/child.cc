@@ -110,7 +110,6 @@ Genode::Service *Child::resolve_session_request(const char *service_name,
 	/* Service known from parent? */
 	if(!service) service = _parent_services.find(service_name);
 
-	Genode::log("service name=",service_name, "found by parent ", service);
 	/* Service not known, cannot intercept it */
 	if(!service) {
 		service = new (_alloc) Genode::Parent_service(service_name);
