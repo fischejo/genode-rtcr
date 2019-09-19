@@ -809,9 +809,7 @@ Native_capability_info *Serializer::parse_native_capability(const Pb::Native_cap
 Cpu_thread_info *Serializer::parse_cpu_thread(const Pb::Cpu_thread_info &info)
 {
 	DEBUG_THIS_CALL;
-#ifdef VERBOSE
-	Genode::warning("Cpu_thread::tc is not parsed!");
-#endif	
+
 	Cpu_thread_info *_info = new(_alloc) Cpu_thread_info();
 	parse_normal_info(info.normal_info(), _info);
 
