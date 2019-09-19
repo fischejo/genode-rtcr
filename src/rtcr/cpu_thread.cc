@@ -30,18 +30,26 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
                        Genode::Cpu_session::Weight weight,
                        Genode::addr_t utcb,
                        Genode::Affinity::Location affinity,
-                       bool bootstrapped)
+                       bool bootstrapped,
+                       Genode::Entrypoint &ep)
 	:
 	Cpu_thread_info(name, weight, utcb, cap().local_name()),
+	_ep (ep),
 	_md_alloc (md_alloc),
 	_parent_cpu_thread (cpu_thread_cap),
 	_pd_session_cap(pd_session_cap),
 	_affinity(affinity),
 	bootstrapped(bootstrapped)
 {
-	DEBUG_THIS_CALL
-		}
+	DEBUG_THIS_CALL;
+	_ep.rpc_ep().manage(this);
+}
 
+
+Cpu_thread::~Cpu_thread()
+{
+	_ep.rpc_ep().dissolve(this);	
+}
 
 void Cpu_thread::checkpoint()
 {

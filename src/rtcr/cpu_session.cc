@@ -46,10 +46,8 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 	                                                        weight,
 	                                                        utcb,
 	                                                        affinity,
-	                                                        _child_info->bootstrapped);
-
-	/* Manage custom CPU thread */
-	_ep.rpc_ep().manage(new_cpu_thread);
+	                                                        _child_info->bootstrapped,
+	                                                        _ep);
 
 	/* Insert custom CPU thread into list */
 	Genode::Lock::Guard _lock_guard(_cpu_threads_lock);
@@ -67,9 +65,6 @@ void Cpu_session::_kill_thread(Cpu_thread_info &cpu_thread_info)
 	/* Remove custom CPU thread form list */
 	Genode::Lock::Guard lock(_destroyed_cpu_threads_lock);
 	_destroyed_cpu_threads.enqueue(&cpu_thread_info);
-
-	/* Dissolve custom CPU thread */
-	_ep.dissolve(cpu_thread);
 
 	/* Destroy real CPU thread from parent */
 	_parent_cpu.kill_thread(parent_cap);
@@ -100,7 +95,8 @@ Cpu_session::Cpu_session(Genode::Env &env,
 
 Cpu_session::~Cpu_session()
 {
-
+	_ep.rpc_ep().dissolve(this);
+	
 	while(Cpu_thread_info *cpu_thread_info = _cpu_threads.first()) {
 		_cpu_threads.remove(cpu_thread_info);
 		Genode::destroy(_md_alloc, cpu_thread_info);

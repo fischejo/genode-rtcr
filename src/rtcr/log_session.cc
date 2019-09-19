@@ -41,7 +41,9 @@ Log_session::Log_session(Genode::Env &env,
 }
 
 
-Log_session::~Log_session() {}
+Log_session::~Log_session() {
+	_ep.rpc_ep().dissolve(this);
+}
 
 
 Genode::size_t Log_session::write(String const &string)

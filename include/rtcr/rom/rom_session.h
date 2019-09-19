@@ -70,7 +70,7 @@ public:
 	            const char *label,
 	            Child_info *child_info);
 
-	~Rom_session() {};
+	~Rom_session();
 
 	void checkpoint() override;
 

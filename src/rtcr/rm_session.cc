@@ -46,6 +46,8 @@ Rm_session::Rm_session(Genode::Env &env,
 
 Rm_session::~Rm_session()
 {
+	_ep.rpc_ep().dissolve(this);
+	
 	while(Region_map_info *rm = _region_maps.first()) {
 		_region_maps.remove(static_cast<Region_map*>(rm));
 		Genode::destroy(_md_alloc, rm);
@@ -63,9 +65,8 @@ Region_map &Rm_session::_create(Genode::size_t size)
 	                                                        parent_cap,
 	                                                        size,
 	                                                        "custom",
-	                                                        _child_info->bootstrapped);
-	/* Manage custom Region map */
-	_ep.rpc_ep().manage(new_region_map);
+	                                                        _child_info->bootstrapped,
+	                                                        _ep);
 
 	/* Insert custom Region map into list */
 	Genode::Lock::Guard lock(_region_maps_lock);
@@ -80,9 +81,6 @@ void Rm_session::_destroy(Region_map *region_map)
 {
 	/* Reverse order as in _create */
 	auto parent_cap = region_map->parent_cap();
-
-	/* Dissolve custom RPC object */
-	_ep.dissolve(*region_map);
 
 	/* Destroy real Region map from parent */
 	_parent_rm.destroy(parent_cap);

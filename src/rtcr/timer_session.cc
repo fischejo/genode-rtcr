@@ -41,6 +41,11 @@ Timer_session::Timer_session(Genode::Env &env,
 }
 
 
+Timer_session::~Timer_session() {
+	_ep.rpc_ep().dissolve(this);
+}
+
+
 void Timer_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL

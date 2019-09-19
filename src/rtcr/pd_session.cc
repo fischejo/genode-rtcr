@@ -40,17 +40,20 @@ Pd_session::Pd_session(Genode::Env &env,
 	                _parent_pd.address_space(),
 	                0,
 	                "address_space",
-	                child_info->bootstrapped),
+	                child_info->bootstrapped,
+	                ep),
 	_stack_area (_md_alloc,
 	             _parent_pd.stack_area(),
 	             0,
 	             "stack_area",
-	             child_info->bootstrapped),
+	             child_info->bootstrapped,
+	             ep),
 	_linker_area (_md_alloc,
 	              _parent_pd.linker_area(),
 	              0,
 	              "linker_area",
-	              child_info->bootstrapped)
+	              child_info->bootstrapped,
+	              ep)
 {
 	DEBUG_THIS_CALL;
 
@@ -60,19 +63,13 @@ Pd_session::Pd_session(Genode::Env &env,
 	i_stack_area = &_stack_area;
 	i_linker_area = &_linker_area;
 
-	_ep.rpc_ep().manage(&_address_space);
-	_ep.rpc_ep().manage(&_stack_area);
-	_ep.rpc_ep().manage(&_linker_area);
-
 	Genode::log("pd_session::creation_args=", creation_args);
 }
 
 
 Pd_session::~Pd_session()
 {
-	_ep.dissolve(_linker_area);
-	_ep.dissolve(_stack_area);
-	_ep.dissolve(_address_space);
+	_ep.rpc_ep().dissolve(this);
 
 	while(Signal_context_info *sc = _signal_contexts.first()) {
 		_signal_contexts.remove(sc);

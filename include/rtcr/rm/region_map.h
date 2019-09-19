@@ -13,6 +13,7 @@
 #include <dataspace/client.h>
 #include <base/allocator.h>
 #include <base/rpc_server.h>
+#include <base/entrypoint.h>
 
 /* Rtcr includes */
 #include <rtcr/rm/attached_region.h>
@@ -33,6 +34,9 @@ public:
 	bool bootstrapped;
 
 protected:
+	
+	Genode::Entrypoint &_ep;
+	
 	const char* _upgrade_args;
 
 	/**
@@ -88,7 +92,8 @@ public:
 	           region_map_cap,
 	           Genode::size_t size,
 	           const char *label,
-	           bool &bootstrap_phase);
+	           bool &bootstrap_phase,
+	           Genode::Entrypoint &ep);
 
 	~Region_map();
 

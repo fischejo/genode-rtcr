@@ -46,6 +46,8 @@ private:
 	 * Allocator for Region map's attachments
 	 */
 	Genode::Allocator &_md_alloc;
+
+	Genode::Entrypoint &_ep;	
 	/**
 	 * Wrapped region map from parent, usually core
 	 */
@@ -60,9 +62,10 @@ public:
 	           Genode::Cpu_session::Weight weight,
 	           Genode::addr_t utcb,
 	           Genode::Affinity::Location affinity,
-	           bool bootstrapped);
+	           bool bootstrapped,
+	           Genode::Entrypoint &ep);
 
-	~Cpu_thread() {}
+	~Cpu_thread();
 
 	void checkpoint();
 	

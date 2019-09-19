@@ -68,7 +68,7 @@ public:
 	              const char *creation_args,
 	              Child_info *child_info);
 
-	~Timer_session() {};
+	~Timer_session();
 
 	Timer::Session_capability parent_cap() { return _parent_timer.cap(); }
 

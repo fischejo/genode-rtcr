@@ -26,9 +26,11 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
                        Genode::Capability<Genode::Region_map> region_map_cap,
                        Genode::size_t size,
                        const char *label,
-                       bool &bootstrap_phase)
+                       bool &bootstrap_phase,
+                       Genode::Entrypoint &ep)
 	:
 	Region_map_info(region_map_cap.local_name()),
+	_ep (ep),
 	_md_alloc          (md_alloc),
 	_bootstrap_phase   (bootstrap_phase),
 	_label             (label),
@@ -37,11 +39,13 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
 	_ds_cap(_parent_region_map.dataspace())
 {
 	DEBUG_THIS_CALL;
+	_ep.rpc_ep().manage(this);
 }
 
 
 Region_map::~Region_map()
 {
+	_ep.rpc_ep().dissolve(this);	
 	while(Attached_region_info *ar = _attached_regions.first()) {
 		_attached_regions.remove(ar);
 		Genode::destroy(_md_alloc, ar);

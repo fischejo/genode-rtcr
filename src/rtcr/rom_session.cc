@@ -45,6 +45,11 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 }
 
 
+Rom_session::~Rom_session() {
+	_ep.rpc_ep().dissolve(this);
+}
+
+
 void Rom_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
