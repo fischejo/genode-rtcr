@@ -16,6 +16,7 @@
 #include <base/rpc_server.h>
 #include <cpu_session/connection.h>
 #include <cpu_thread/client.h>
+#include <base/attached_rom_dataspace.h>
 
 /* Rtcr includes */
 #include <rtcr/cpu/cpu_thread.h>
@@ -70,6 +71,11 @@ protected:
 	 */
 	Genode::Entrypoint &_ep;
 
+        /**
+	 * Rom dataspace holding the XML config 
+	 */
+        Genode::Attached_rom_dataspace _config;
+  
 	/**
 	 * Connection to parent's Cpu session, usually from core; this class wraps this session
 	 */

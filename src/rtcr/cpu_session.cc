@@ -86,6 +86,7 @@ Cpu_session::Cpu_session(Genode::Env &env,
 	Cpu_session_info(creation_args, cap().local_name()),
 	_env             (env),
 	_md_alloc        (md_alloc),
+	_config (env, "config"),
 	_ep              (ep),
 	_parent_cpu      (env, child_info->name.string()),
 	_child_affinity (_read_child_affinity(child_info->name.string())),
@@ -109,18 +110,18 @@ Cpu_session::~Cpu_session()
 
 Genode::Affinity::Location Cpu_session::_read_child_affinity(const char* child_name)
 {
-	// try {
-	// 	Genode::Xml_node config_node = Genode::config()->xml_node();
-	// 	Genode::Xml_node ck_node = config_node.sub_node("child");
-	// 	Genode::String<30> node_name;
-	// 	while(Genode::strcmp(child_name, ck_node.attribute_value("name", node_name).string()))
-	// 		ck_node = ck_node.next("child");
+	try {
+	  Genode::Xml_node config_node = _config.xml();
+		Genode::Xml_node ck_node = config_node.sub_node("child");
+		Genode::String<30> node_name;
+		while(Genode::strcmp(child_name, ck_node.attribute_value("name", node_name).string()))
+			ck_node = ck_node.next("child");
 
-	// 	long const xpos = ck_node.attribute_value<long>("xpos", 0);
-	// 	long const ypos = ck_node.attribute_value<long>("ypos", 0);
-	// 	return Genode::Affinity::Location(xpos, ypos, 1 ,1);
-	// }
-	// catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
+		long const xpos = ck_node.attribute_value<long>("xpos", 0);
+		long const ypos = ck_node.attribute_value<long>("ypos", 0);
+		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
+	}
+	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
   return Genode::Affinity::Location(0, 0, 1, 1);  
 }
 

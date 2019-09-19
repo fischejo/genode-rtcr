@@ -17,6 +17,7 @@
 #include <cpu_session/cpu_session.h>
 #include <util/list.h>
 #include <os/session_requester.h>
+#include <base/attached_rom_dataspace.h>
 
 /* Rtcr includes */
 #include <rtcr/base_module.h>
@@ -40,37 +41,38 @@ private:
 	 * Child's unique name and filename of child's rom module
 	 */
 	const char*  _name;
-
-	/**
-	 * Local environment
-	 */
-	Genode::Env        &_env;
-
-	/**
-	 * Local allocator
-	 */
+	Genode::Env &_env;
 	Genode::Allocator &_alloc;
 
-	Base_module &_module;
-
-	/**
-	 * Registry for parent's services (parent of RTCR component). It is shared
-	 * between all children.
+        Genode::Pd_connection _pd_session;
+  
+        /**
+	 * Registry for parent's services
 	 */
 	Genode::Registry<Genode::Registered<Genode::Parent_service>> &_parent_services;
+
+    Base_module &_module;
         /**
+	 * Rom dataspace holding the XML config 
+	 */
+        Genode::Attached_rom_dataspace _config;
+
+        inline Genode::Cap_quota read_caps_quota();
+  
+        Genode::Cap_quota _caps_quota;
+
+          /**
 	 * Entrypoint for child's creation
 	 */
 	Genode::Entrypoint  _child_ep;
-  Genode::Pd_connection _pd_session;
-  Genode::Pd_session_capability _pd_session_cap;  
-	/**
+
+        /**
 	 * Child object
 	 */
 	Genode::Child _child;
 
-  //        Genode::Pd_session *_pd_session;
-        Genode::Cpu_session *_cpu_session;  
+
+
 
 
 public:
@@ -88,6 +90,7 @@ public:
 	      const char *name,
 	      Genode::Registry<Genode::Registered<Genode::Parent_service>>  &parent_services,
 	      Base_module &module);
+
 	
 
 	/****************************
@@ -102,11 +105,6 @@ public:
   
   Genode::Pd_session &ref_pd() override;
   Genode::Pd_session_capability ref_pd_cap() const override;
-
-  void resource_request(Genode::Parent::Resource_args const &args);
-  
-  //	void filter_session_args(const char *service, char *args, Genode::size_t args_len);
-	
 };
 
 #endif /* _RTCR_CHILD_H_ */

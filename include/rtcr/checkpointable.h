@@ -15,6 +15,7 @@
 #include <cpu_thread/client.h>
 #include <util/xml_node.h>
 #include <timer_session/connection.h>
+#include <base/attached_rom_dataspace.h>
 
 /* Rtcr includes */
 #include <util/event.h>
@@ -38,7 +39,13 @@ private:
 	 */
 	Timer::Connection _timer;
 	unsigned long long _checkpoint_time;
-	
+
+
+        /**
+         * Rom dataspace holding configuration 
+         */
+        Genode::Attached_rom_dataspace _config;
+  
 	Genode::Affinity::Location _affinity;	
 	/**
 	 * Indicator which pause this thread until a new job
