@@ -36,8 +36,7 @@ void Serializer::add_child_info(Pb::Child_list *child_list,
 	Pb::Child_info *child_info = child_list->add_child_info();
 	Capability_mapping *cm = _child_info->capability_mapping;
 
-	set_pd_session(cm, child_info, _child_info);
-	set_ram_session(cm, child_info, _child_info, as);
+	set_pd_session(cm, child_info, _child_info, as);
 	set_cpu_session(cm, child_info, _child_info);
 	set_timer_session(cm, child_info, _child_info);
 	set_log_session(cm, child_info, _child_info);
@@ -240,7 +239,8 @@ Pb::Session_info *Serializer::session_info(Capability_mapping *_cm, Session_info
 
 void Serializer::set_pd_session(Capability_mapping *_cm,
                                 Pb::Child_info *tc,
-                                Child_info *_tc)
+                                Child_info *_tc,
+                                Genode::List<Attachment> &as)
 {
 	DEBUG_THIS_CALL;
 	Pd_session_info *_info = _tc->pd_session;
@@ -270,27 +270,13 @@ void Serializer::set_pd_session(Capability_mapping *_cm,
 		native_cap = native_cap->next();
 	}
 
-	tc->set_allocated_pd_session_info(info);
-}
-
-
-void Serializer::set_ram_session(Capability_mapping *_cm,
-                                 Pb::Child_info *tc,
-                                 Child_info *_tc,
-                                 Genode::List<Attachment> &as)
-{
-	DEBUG_THIS_CALL;
-	Ram_session_info *_info = _tc->ram_session;
-	Pb::Ram_session_info *info = new(_alloc) Pb::Ram_session_info();
-	info->set_allocated_session_info(session_info(_cm, _info));
-
 	Ram_dataspace_info *ram_dataspace = _info->i_ram_dataspaces;
 	while(ram_dataspace) {
 		add_ram_dataspace(_cm, info, ram_dataspace, as);
 		ram_dataspace = ram_dataspace->next();
 	}
 
-	tc->set_allocated_ram_session_info(info);
+	tc->set_allocated_pd_session_info(info);
 }
 
 
@@ -526,12 +512,12 @@ void Serializer::add_cpu_thread(Capability_mapping *_cm,
 
 
 void Serializer::add_ram_dataspace(Capability_mapping *_cm,
-                                   Pb::Ram_session_info *ram_session,
+                                   Pb::Pd_session_info *pd_session,
                                    Ram_dataspace_info *_info,
                                    Genode::List<Attachment> &as)
 {
 	DEBUG_THIS_CALL;
-	Pb::Ram_dataspace_info *info = ram_session->add_ram_dataspace_info();
+	Pb::Ram_dataspace_info *info = pd_session->add_ram_dataspace_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 	info->set_size(_info->i_size);
 	info->set_cached(_info->i_cached);
@@ -634,9 +620,8 @@ Child_info *Serializer::parse_child_info(const Pb::Child_info &child, void* raw_
 {
 	DEBUG_THIS_CALL;
 	Child_info *_child = new(_alloc) Child_info(child.name().c_str());
-	_child->pd_session = parse_pd_session(child.pd_session_info());
+	_child->pd_session = parse_pd_session(child.pd_session_info(), raw_addr);
 	_child->cpu_session = parse_cpu_session(child.cpu_session_info());
-	_child->ram_session = parse_ram_session(child.ram_session_info(), raw_addr);
 
 	if(child.has_rm_session_info())
 		_child->rm_session = parse_rm_session(child.rm_session_info());
@@ -654,7 +639,6 @@ Child_info *Serializer::parse_child_info(const Pb::Child_info &child, void* raw_
 }
 
 
-
 void Serializer::parse_normal_info(const Pb::Normal_info &info, Normal_info *_info)
 {
 	_info->i_badge = info.badge();
@@ -670,7 +654,7 @@ void Serializer::parse_session_info(const Pb::Session_info &info, Session_info *
 }
 
 
-Pd_session_info *Serializer::parse_pd_session(const Pb::Pd_session_info &info)
+Pd_session_info *Serializer::parse_pd_session(const Pb::Pd_session_info &info, void* raw_addr)
 {
 	DEBUG_THIS_CALL;
 
@@ -711,6 +695,14 @@ Pd_session_info *Serializer::parse_pd_session(const Pb::Pd_session_info &info)
 	}
 	_info->i_native_caps = nc.first();
 
+	/* ram dataspaces */
+	Genode::List<Ram_dataspace_info> ds;
+	for(int i = info.ram_dataspace_info_size()-1; i>=0; i--) {
+		ds.insert(parse_ram_dataspace(info.ram_dataspace_info(i), raw_addr));
+	}
+	_info->i_ram_dataspaces = ds.first();
+
+	
 	return _info;
 }
 
@@ -728,24 +720,6 @@ Cpu_session_info *Serializer::parse_cpu_session(const Pb::Cpu_session_info &info
 		ct.insert(parse_cpu_thread(info.cpu_thread_info(i)));
 	}
 	_info->i_cpu_thread_info = ct.first();
-	return _info;
-}
-
-
-Ram_session_info *Serializer::parse_ram_session(const Pb::Ram_session_info &info,
-                                                void* raw_addr)
-{
-	DEBUG_THIS_CALL;
-	Ram_session_info *_info = new(_alloc) Ram_session_info();
-	parse_session_info(info.session_info(), _info);
-
-	/* ram dataspaces */
-	Genode::List<Ram_dataspace_info> ds;
-	for(int i = info.ram_dataspace_info_size()-1; i>=0; i--) {
-		ds.insert(parse_ram_dataspace(info.ram_dataspace_info(i), raw_addr));
-	}
-	_info->i_ram_dataspaces = ds.first();
-
 	return _info;
 }
 

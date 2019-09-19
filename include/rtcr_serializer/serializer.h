@@ -15,7 +15,6 @@
 #include <rtcr/info_structs.h>
 #include <rtcr/cpu/cpu_session.h>
 #include <rtcr/pd/pd_session.h>
-#include <rtcr/ram/ram_session.h>
 #include <rtcr/rm/rm_session.h>
 #include <rtcr/log/log_session.h>
 #include <rtcr/timer/timer_session.h>
@@ -112,12 +111,8 @@ protected:
 
 	void set_pd_session(Capability_mapping *cm,
 	                    Pb::Child_info *tc,
-	                    Child_info *_tc);
-
-	void set_ram_session(Capability_mapping *cm,
-	                     Pb::Child_info *tc,
-	                     Child_info *_tc,
-	                     Genode::List<Attachment> &as);
+	                    Child_info *_tc,
+	                    Genode::List<Attachment> &as);
 
 	void set_cpu_session(Capability_mapping *cm,
 	                     Pb::Child_info *tc,
@@ -148,7 +143,7 @@ protected:
 	                         Attached_region_info *info);
 
 	void add_ram_dataspace(Capability_mapping *cm,
-	                       Pb::Ram_session_info *ram_session,
+	                       Pb::Pd_session_info *ram_session,
 	                       Ram_dataspace_info *info,
 	                       Genode::List<Attachment> &as);
 
@@ -189,9 +184,8 @@ protected:
 	void parse_session_info(const Pb::Session_info &info, Session_info *_info);
 	void parse_normal_info(const Pb::Normal_info &info, Normal_info *_info);		
 
-	Pd_session_info *parse_pd_session(const Pb::Pd_session_info &info);
+	Pd_session_info *parse_pd_session(const Pb::Pd_session_info &info, void *raw_ptr);
 	Cpu_session_info *parse_cpu_session(const Pb::Cpu_session_info &info);
-	Ram_session_info *parse_ram_session(const Pb::Ram_session_info &info, void *raw_addr);
 	Rm_session_info *parse_rm_session(const Pb::Rm_session_info &info);
 	Log_session_info *parse_log_session(const Pb::Log_session_info &info);
 	Timer_session_info *parse_timer_session(const Pb::Timer_session_info &info);

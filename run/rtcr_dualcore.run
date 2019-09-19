@@ -96,4 +96,4 @@ zlib.lib.so
 
 append qemu_args " -nographic -smp 2,cores=2 "
 
-run_genode_until "hello test completed.*\n" 60
+run_genode_until "test completed.*\n" 60

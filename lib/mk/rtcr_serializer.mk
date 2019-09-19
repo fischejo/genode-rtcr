@@ -25,3 +25,4 @@ LIBS += libprotobuf protobuf_host_tools stdcxx libc
 # 1. It is not possible to include multiple *.proto files
 # 2. Your proto file name should not include the character `_`
 
+CC_OPT += -w
