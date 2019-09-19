@@ -47,11 +47,36 @@ namespace Rtcr {
  * Custom RPC session object to intercept its creation, modification, and
  * destruction through its interface
  */
-class Rtcr::Pd_session : public Rtcr::Checkpointable,
-                         public Genode::Rpc_object<Genode::Pd_session>,
+class Rtcr::Pd_session : public Genode::Rpc_object<Genode::Pd_session>,
                          public Rtcr::Pd_session_info
 {
+public:
+
+	struct Pd_checkpointable : Rtcr::Checkpointable {
+		Pd_session *_pd;
+
+		Pd_checkpointable(Genode::Env &env, Pd_session *pd)
+			:
+			Checkpointable(env, "Pd_checkpointable"),
+			_pd(pd) {};
+
+		void checkpoint() override;
+	} pd_checkpointable;
+
+
+	struct Ram_checkpointable : Rtcr::Checkpointable {
+		Pd_session *_pd;
+
+		Ram_checkpointable(Genode::Env &env, Pd_session *pd)
+			:
+			Checkpointable(env, "Ram_checkpointable"),
+			_pd(pd) {};
+
+		void checkpoint() override;
+	} ram_checkpointable;
+
 protected:
+	
 	const char* _upgrade_args;
 
 	/**
@@ -146,9 +171,7 @@ public:
 	           Child_info *child_info);
 
 	~Pd_session();
-
-	void checkpoint() override;
-
+	
 	void upgrade(const char *upgrade_args) {
 		_upgrade_args = upgrade_args;
 	}

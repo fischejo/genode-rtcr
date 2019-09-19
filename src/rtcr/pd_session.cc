@@ -29,8 +29,9 @@ Pd_session::Pd_session(Genode::Env &env,
                        const char *creation_args,
                        Child_info *child_info)
 	:
-	Checkpointable(env, "pd_session"),
 	Pd_session_info(creation_args, cap().local_name()),
+	pd_checkpointable(env, this),
+	ram_checkpointable(env, this),
 	_env (env),
 	_md_alloc (md_alloc),
 	_ep (ep),
@@ -183,19 +184,23 @@ void Pd_session::_checkpoint_ram_dataspaces()
 }
 
 
-void Pd_session::checkpoint()
+void Pd_session::Pd_checkpointable::checkpoint()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-	i_upgrade_args = _upgrade_args;
+	_pd->i_upgrade_args = _pd->_upgrade_args;
+	
+	_pd->_checkpoint_native_capabilities();
+	_pd->_checkpoint_signal_sources();
+	_pd->_checkpoint_signal_contexts();
 
-	_address_space.checkpoint();
-	_stack_area.checkpoint();
-	_linker_area.checkpoint();
+	_pd->_address_space.checkpoint();
+	_pd->_stack_area.checkpoint();
+	_pd->_linker_area.checkpoint();
+}
 
-	_checkpoint_native_capabilities();
-	_checkpoint_signal_sources();
-	_checkpoint_signal_contexts();
-	_checkpoint_ram_dataspaces();
+
+void Pd_session::Ram_checkpointable::checkpoint()
+{
+	_pd->_checkpoint_ram_dataspaces();	
 }
 
 

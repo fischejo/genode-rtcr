@@ -114,8 +114,10 @@ void Init_module::checkpoint(Child_info *child)
 
 	/* well...casting is not that efficent, but due to the design of
 	 * *_info object handling..this is necessary */
+	Pd_session::Pd_checkpointable &pd = static_cast<Pd_session*>(child->pd_session)->pd_checkpointable;
+	Pd_session::Ram_checkpointable &ram = static_cast<Pd_session*>(child->pd_session)->ram_checkpointable;
+
 	Cpu_session *cpu_session = static_cast<Cpu_session*>(child->cpu_session);
-	Pd_session *pd_session = static_cast<Pd_session*>(child->pd_session);
 	Rm_session *rm_session = static_cast<Rm_session*>(child->rm_session);
 	Rom_session *rom_session = static_cast<Rom_session*>(child->rom_session);
 	Timer_session *timer_session = static_cast<Timer_session*>(child->timer_session);
@@ -126,7 +128,8 @@ void Init_module::checkpoint(Child_info *child)
 		/* start all checkpointing threads */
 		capability_mapping->start_checkpoint();
 
-		pd_session->start_checkpoint();
+		pd.start_checkpoint();
+		ram.start_checkpoint();
 		cpu_session->start_checkpoint();
 
 		if(rm_session) rm_session->start_checkpoint();
@@ -135,20 +138,23 @@ void Init_module::checkpoint(Child_info *child)
 		if(timer_session) timer_session->start_checkpoint();
 
 		/* wait until all threads finished */
-		pd_session->join_checkpoint();
+		capability_mapping->join_checkpoint();
+		pd.join_checkpoint();
+		ram.join_checkpoint();
 		cpu_session->join_checkpoint();
 
 		if(rm_session) rm_session->join_checkpoint();
 		if(rom_session) rom_session->join_checkpoint();
 		if(log_session) log_session->join_checkpoint();
 		if(timer_session) timer_session->join_checkpoint();
-		capability_mapping->join_checkpoint();
-
 	} else {
 		/* start & wait for pd_session */
-		pd_session->start_checkpoint();
-		pd_session->join_checkpoint();
+		pd.start_checkpoint();
+		pd.join_checkpoint();
 
+		ram.start_checkpoint();
+		ram.join_checkpoint();
+		
 		/* start & wait for cpu_session */
 		cpu_session->start_checkpoint();
 		cpu_session->join_checkpoint();
