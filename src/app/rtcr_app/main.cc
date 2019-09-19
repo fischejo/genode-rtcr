@@ -51,14 +51,16 @@ struct Rtcr::Main
 	                               Genode::Rom_session,
 	                               Genode::Log_session,
 	                               Timer::Session> parent_services { };
+	Genode::Attached_rom_dataspace config {env, "config" };
 
 	Main(Genode::Env &env_) : env(env_)
 	{
-
+		Module_name module_name = config.xml().sub_node("module")
+			.attribute_value("name", Module_name());
+		Init_module &module = *Module_factory::get(module_name)->create(env, heap);
+		
 		/* timer instance for sleeping */
 		Timer::Connection timer(env);
-
-		Base_module module(env, heap);
 
 		/* create serializer */
 		Serializer serializer(env, heap);

@@ -37,6 +37,8 @@ Base_module::Base_module(Genode::Env &env, Genode::Allocator &alloc)
 	_rm_factory(env, alloc, _ep, _childs_lock, _childs)    
 {
 	DEBUG_THIS_CALL;
+
+
 }
 
 

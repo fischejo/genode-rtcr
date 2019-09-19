@@ -79,8 +79,6 @@ public:
 	/* \brief Methods which implement the list operations */
 	static void print();
 	static Module_factory* get(const Module_name name);
-
-	static Module_factory* get();
 	
 	static Module_factory* first();
 	Module_factory* next();

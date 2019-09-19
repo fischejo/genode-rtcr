@@ -67,6 +67,10 @@ public:
 	Child_info *child_info(const char* name);
 	Genode::List<Child_info> *child_info() { return &_childs; }
 
+	virtual Genode::Service *resolve_session_request(const char *service_name,
+	                                                 const char *args) = 0;
+
+	
 	void pause();
 	void resume();
 	void checkpoint();

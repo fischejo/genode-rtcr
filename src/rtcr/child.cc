@@ -33,7 +33,7 @@ Child::Child(Genode::Env &env,
              Genode::Allocator &alloc,
              const char* name,
              Genode::Registry<Genode::Registered<Genode::Parent_service>> &parent_services,
-             Base_module &module)
+             Init_module &module)
 	:
 	_name (name),
 	_env (env),
