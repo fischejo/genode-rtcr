@@ -63,8 +63,6 @@ Pd_session::Pd_session(Genode::Env &env,
 	i_address_space = &_address_space;
 	i_stack_area = &_stack_area;
 	i_linker_area = &_linker_area;
-
-	Genode::log("pd_session::creation_args=", creation_args);
 }
 
 

@@ -30,7 +30,7 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
                                         Genode::addr_t utcb)
 {
 	DEBUG_THIS_CALL;
-	Genode::log("_create_thread::parend_pd_cap=", parent_pd_cap);
+
 	/* Create real CPU thread from parent */
 	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap,
 	                                                name,
