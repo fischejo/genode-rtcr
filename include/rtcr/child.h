@@ -57,9 +57,11 @@ private:
 	 */
 	Genode::Attached_rom_dataspace _config;
 
-	inline Genode::Cap_quota read_caps_quota();
+	inline Genode::Cap_quota read_cap_quota();
+	inline Genode::Ram_quota read_ram_quota();	
   
 	Genode::Cap_quota _caps_quota;
+	Genode::Ram_quota _ram_quota;	
 
 	/**
 	 * Entrypoint for child's creation

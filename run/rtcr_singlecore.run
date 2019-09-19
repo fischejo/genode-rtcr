@@ -57,7 +57,7 @@ install_config {
     		<resource name="RAM" quantum="256M"/>
             <config>
 	             <module name="base"/>
-                 <child name="sheep_counter" quota="520192" xpos="0" caps="1000"/>
+                 <child name="sheep_counter" quota="140000" xpos="0" caps="1000"/>
                  <checkpoint parallel="false"/>
                  <checkpointable name="cpu_session" xpos="0" />
                  <checkpointable name="pd_session" xpos="0" />    

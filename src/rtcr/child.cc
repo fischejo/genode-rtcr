@@ -42,16 +42,16 @@ Child::Child(Genode::Env &env,
 	_parent_services(parent_services),
 	_module(module),
 	_config(_env, "config"),
-	_caps_quota(read_caps_quota()),
+	_caps_quota(read_cap_quota()),
+	_ram_quota(read_ram_quota()),	
 	_child_ep (_env, 16*1024, "child ep"),
 	_child(_env.rm(), _child_ep.rpc_ep(), *this)
 {
 	DEBUG_THIS_CALL;
-
 }
 
 
-Genode::Cap_quota Child::read_caps_quota()
+Genode::Cap_quota Child::read_cap_quota()
 {
 	Genode::Xml_node config_node = _config.xml();
 	Genode::Xml_node child_node = config_node.sub_node("child");
@@ -86,18 +86,49 @@ Genode::Cap_quota Child::read_caps_quota()
 }
 
 
+Genode::Ram_quota Child::read_ram_quota()
+{
+	Genode::Xml_node config_node = _config.xml();
+	Genode::Xml_node child_node = config_node.sub_node("child");
+	Genode::String<30> child_name;
+	bool found = false;
+	Genode::Ram_quota ram_quota;
+
+	/* find child node in XML config */
+	while(!found) {
+		child_name = child_node.attribute_value("name", child_name);
+		if(!Genode::strcmp(_name, child_name.string())) {
+			found = true;
+		} else if(child_node.last()) {
+			break;
+		} else {
+			child_node = child_node.next("child");
+		}
+	}
+
+	if(found) {
+		if(!child_node.has_attribute("caps")) {
+			Genode::error("Child ",_name, " has no ram quota defined");
+			throw Genode::Exception();
+		}
+		ram_quota.value = child_node.attribute_value<long>("quota", 0);
+	} else {
+		Genode::error("Child config not found.");
+		throw Genode::Exception();
+	}
+
+	return ram_quota;
+}
+
+
 void Child::init(Genode::Pd_session &session, Genode::Capability<Genode::Pd_session> /*cap*/)
 {
 	DEBUG_THIS_CALL;
-
-	Genode::Ram_quota quota;
-	quota.value=140000;
-
 	session.ref_account(_env.pd_session_cap());
 
 	Pd_session &_session = static_cast<Pd_session &>(session);
 	_env.pd().transfer_quota(_session.parent_cap(), _caps_quota);
-	_env.pd().transfer_quota(_session.parent_cap(), quota);
+	_env.pd().transfer_quota(_session.parent_cap(), _ram_quota);
 
 #ifdef VERBOSE
 	Genode::log("Pd_session[",_name,"]",
