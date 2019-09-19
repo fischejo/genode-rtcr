@@ -22,17 +22,17 @@ namespace Rtcr {
  */
 class Rtcr::Signal_source : public Signal_source_info
 {
-public:	
+public:
 	Genode::Capability<Genode::Signal_source> const cap;
 	bool bootstrapped;
-	
+
 	Signal_source(Genode::Capability<Genode::Signal_source> cap,
-			bool bootstrapped)
+	              bool bootstrapped)
 		:
 		Signal_source_info(cap.local_name()),
 		cap(cap),
 		bootstrapped(bootstrapped)
-		{ }
+	{ }
 };
 
 #endif /* _RTCR_SIGNAL_SOURCE_H_ */

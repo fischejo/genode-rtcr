@@ -41,10 +41,10 @@ private:
 	unsigned long long _checkpoint_time;
 
 
-        /**
-         * Rom dataspace holding configuration 
-         */
-        Genode::Attached_rom_dataspace _config;
+	/**
+	 * Rom dataspace holding configuration 
+	 */
+	Genode::Attached_rom_dataspace _config;
   
 	Genode::Affinity::Location _affinity;	
 	/**

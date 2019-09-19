@@ -23,25 +23,25 @@ namespace Rtcr {
  */
 class Rtcr::Attached_region : public Rtcr::Attached_region_info
 {
-public:	
+public:
 	const Genode::Dataspace_capability attached_ds_cap;
 	bool bootstrapped;
-  
+ 
 	Attached_region(Genode::Dataspace_capability attached_ds_cap,
-					Genode::size_t size,
-					Genode::off_t offset,
-					Genode::addr_t local_addr,
-					bool executable,
-					bool bootstrapped)
+	                Genode::size_t size,
+	                Genode::off_t offset,
+	                Genode::addr_t local_addr,
+	                bool executable,
+	                bool bootstrapped)
 		:
 		Attached_region_info(size,
-							 offset,
-							 local_addr,
-							 executable,
-							 attached_ds_cap.local_name()),
+		                     offset,
+		                     local_addr,
+		                     executable,
+		                     attached_ds_cap.local_name()),
 		attached_ds_cap(attached_ds_cap),
 		bootstrapped(bootstrapped)
-		{}
+	{}
 };
 
 

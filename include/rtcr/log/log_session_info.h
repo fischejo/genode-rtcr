@@ -22,12 +22,11 @@ struct Rtcr::Log_session_info : Session_info {
 		: Session_info(creation_args, badge) {}
 
 	Log_session_info() {};
-	
+
 	void print(Genode::Output &output) const {
 		Genode::print(output, " Log session:\n  ");
 		Session_info::print(output);
 		Genode::print(output, "\n");
-		
 	}
 };
 

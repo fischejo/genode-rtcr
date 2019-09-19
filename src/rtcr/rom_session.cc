@@ -26,11 +26,11 @@ using namespace Rtcr;
 
 
 Rtcr::Rom_session::Rom_session(Genode::Env& env,
-							   Genode::Allocator& md_alloc,
-							   Genode::Entrypoint& ep,
-							   const char *creation_args,
-							   const char *label,
-							   Child_info *child_info)
+                               Genode::Allocator& md_alloc,
+                               Genode::Entrypoint& ep,
+                               const char *creation_args,
+                               const char *label,
+                               Child_info *child_info)
 	:
 	Checkpointable(env, "rom_session"),
 	Rom_session_info(creation_args, cap().local_name()),
@@ -40,15 +40,15 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 	_parent_rom   (env, label),
 	_child_info (child_info)
 {
-  DEBUG_THIS_CALL;
-  _ep.rpc_ep().manage(this);
+	DEBUG_THIS_CALL;
+	_ep.rpc_ep().manage(this);
 }
 
 
 void Rom_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	i_upgrade_args = _upgrade_args;
+		i_upgrade_args = _upgrade_args;
 	i_dataspace_badge = _dataspace.local_name();
 	i_sigh_badge = _sigh.local_name();
 }
@@ -78,28 +78,28 @@ void Rtcr::Rom_session::sigh(Genode::Signal_context_capability sigh)
 
 
 Rom_factory::Rom_factory(Genode::Env &env,
-		       Genode::Allocator &md_alloc,
-		       Genode::Entrypoint &ep,
-		       Genode::Lock &childs_lock,
-		       Genode::List<Child_info> &childs)
-  :
-  _env              (env),
-  _md_alloc         (md_alloc),
-  _ep               (ep),
-  _childs_lock(childs_lock),
-  _childs(childs),
-  _service(*this)
+                         Genode::Allocator &md_alloc,
+                         Genode::Entrypoint &ep,
+                         Genode::Lock &childs_lock,
+                         Genode::List<Child_info> &childs)
+	:
+	_env              (env),
+	_md_alloc         (md_alloc),
+	_ep               (ep),
+	_childs_lock(childs_lock),
+	_childs(childs),
+	_service(*this)
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 }
 
 Rom_session *Rom_factory::_create(Child_info *info, const char *args)
 {
-  char label_buf[128];
-  Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
-  label_arg.string(label_buf, sizeof(label_buf), "");
+	char label_buf[128];
+	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
+	label_arg.string(label_buf, sizeof(label_buf), "");
 
-  return new (_md_alloc) Rom_session(_env, _md_alloc, _ep, args, label_buf, info);
+	return new (_md_alloc) Rom_session(_env, _md_alloc, _ep, args, label_buf, info);
 }
 
 Rom_session &Rom_factory::create(Genode::Session_state::Args const &args, Genode::Affinity)
@@ -109,16 +109,16 @@ Rom_session &Rom_factory::create(Genode::Session_state::Args const &args, Genode
 	char label_buf[160];
 	Genode::Arg label_arg = Genode::Arg_string::find_arg(args.string(), "label");
 	label_arg.string(label_buf, sizeof(label_buf), "");
-	
+
 	_childs_lock.lock();
 	Child_info *info = _childs.first();
 	if(info) info = info->find_by_name(label_buf);
 	if(!info) {
-	  info = new(_md_alloc) Child_info(label_buf);
-		_childs.insert(info);		
+		info = new(_md_alloc) Child_info(label_buf);
+		_childs.insert(info);
 	}
 	_childs_lock.unlock();
-	
+
 	/* Create custom Pd_session */
 	Rom_session *new_session = _create(info, args.string());
 
@@ -142,7 +142,7 @@ void Rom_factory::upgrade(Rom_session&, Genode::Session_state::Args const &)
 	// Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
 
 	// _env.parent().upgrade(Genode::Parent::Env::pd(), upgrade_args);
-	// session->upgrade(upgrade_args);  
+	// session->upgrade(upgrade_args);
 }
 
 

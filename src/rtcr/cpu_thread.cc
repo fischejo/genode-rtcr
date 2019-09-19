@@ -24,13 +24,13 @@
 using namespace Rtcr;
 
 Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
-					   Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
-					   Genode::Pd_session_capability pd_session_cap,
-					   const char *name,
-					   Genode::Cpu_session::Weight weight,
-					   Genode::addr_t utcb,
-					   Genode::Affinity::Location affinity,
-					   bool bootstrapped)
+                       Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
+                       Genode::Pd_session_capability pd_session_cap,
+                       const char *name,
+                       Genode::Cpu_session::Weight weight,
+                       Genode::addr_t utcb,
+                       Genode::Affinity::Location affinity,
+                       bool bootstrapped)
 	:
 	Cpu_thread_info(name, weight, utcb, cap().local_name()),
 	_md_alloc (md_alloc),
@@ -40,13 +40,13 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 	bootstrapped(bootstrapped)
 {
 	DEBUG_THIS_CALL
-}
+		}
 
 
 void Cpu_thread::checkpoint()
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL	
-	i_started = _started;
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		i_started = _started;
 	i_paused = _paused;
 	i_single_step = _single_step;
 	i_affinity = _affinity; // TODO FJO: clone it
@@ -67,7 +67,6 @@ void Cpu_thread::start(Genode::addr_t ip, Genode::addr_t sp)
 {
 	_parent_cpu_thread.start(ip, sp);
 	_started = true;
-
 }
 
 
@@ -87,14 +86,14 @@ void Cpu_thread::resume()
 void Cpu_thread::silent_pause()
 {
 	DEBUG_THIS_CALL
-	_parent_cpu_thread.pause();
+		_parent_cpu_thread.pause();
 }
 
 
 void Cpu_thread::silent_resume()
 {
 	DEBUG_THIS_CALL
-	_parent_cpu_thread.resume();
+		_parent_cpu_thread.resume();
 }
 
 

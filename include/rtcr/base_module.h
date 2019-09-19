@@ -43,19 +43,19 @@ class Rtcr::Base_module : public Init_module
 {
 private:
 	Genode::Entrypoint _ep;    
-        Pd_factory _pd_factory;
-        Cpu_factory _cpu_factory;
-        Log_factory _log_factory;
-        Timer_factory _timer_factory;
-        Rom_factory _rom_factory;
-        Rm_factory _rm_factory;      
+	Pd_factory _pd_factory;
+	Cpu_factory _cpu_factory;
+	Log_factory _log_factory;
+	Timer_factory _timer_factory;
+	Rom_factory _rom_factory;
+	Rm_factory _rm_factory;      
   
 public:	
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);
 
 
 	Genode::Service *resolve_session_request(const char *service_name,
-						 const char *args);
+	                                         const char *args);
 
 
   

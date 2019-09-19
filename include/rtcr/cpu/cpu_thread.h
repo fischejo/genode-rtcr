@@ -25,7 +25,7 @@ namespace Rtcr {
 
 
 class Rtcr::Cpu_thread : public Genode::Rpc_object<Genode::Cpu_thread>,
-						 public Cpu_thread_info
+                         public Cpu_thread_info
 
 {
 public:
@@ -54,13 +54,13 @@ private:
 public:
 	
 	Cpu_thread(Genode::Allocator &md_alloc,
-			   Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
-			   Genode::Pd_session_capability pd_session_cap,
-			   const char *name,
-			   Genode::Cpu_session::Weight weight,
-			   Genode::addr_t utcb,
-			   Genode::Affinity::Location affinity,
-			   bool bootstrapped);
+	           Genode::Capability<Genode::Cpu_thread> cpu_thread_cap,
+	           Genode::Pd_session_capability pd_session_cap,
+	           const char *name,
+	           Genode::Cpu_session::Weight weight,
+	           Genode::addr_t utcb,
+	           Genode::Affinity::Location affinity,
+	           bool bootstrapped);
 
 	~Cpu_thread() {}
 

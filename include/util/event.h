@@ -11,7 +11,7 @@
 #include <util/fifo.h>
 
 namespace Rtcr {
-  class Event;
+	class Event;
 }
 
 
@@ -29,26 +29,26 @@ private:
 	Genode::Fifo<Caller> _waiting_callers;
 	Genode::Lock _meta_lock;
 	bool _set;
-	
+
 public:
 	Event() :_set(false) {}
 	Event(bool set) :_set(set) {}
 	~Event() { release(); }
-	
+
 	void release()
 	{
 		_meta_lock.lock();
 		while(Caller *caller = _waiting_callers.dequeue()) {
 			caller->wake_up();
 		}
-		_meta_lock.unlock();		
+		_meta_lock.unlock();
 	}
 
 	void wait()
 	{
 		if(_set) return;
-		
-		_meta_lock.lock();		
+
+		_meta_lock.lock();
 		Caller caller;
 		_waiting_callers.enqueue(&caller);
 		_meta_lock.unlock();

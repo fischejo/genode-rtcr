@@ -26,22 +26,20 @@ public:
 	Signal_context_info* i_signal_contexts;
 	Native_capability_info* i_native_caps;
 
-	
 	Region_map_info *i_address_space;
 	Region_map_info *i_stack_area;
 	Region_map_info *i_linker_area;
 
-	
 	Pd_session_info(const char* creation_args, Genode::uint16_t badge)
-	 : Session_info(creation_args, badge) {}
+		: Session_info(creation_args, badge) {}
 
 	Pd_session_info() {}
-	
+
 	void print(Genode::Output &output) const {
 		Genode::print(output, " PD session:\n  ");
 		Session_info::print(output);
 		Genode::print(output, "\n");
-		
+
 		/* Signal contexts */
 		Genode::print(output, "  Signal contexts:\n");
 		Signal_context_info *context = i_signal_contexts;
@@ -72,8 +70,8 @@ public:
 		/* Address space */
 		Genode::print(output, "  Address space: \n");
 		Genode::print(output, "   ", *i_address_space);
-		Genode::print(output, "  Stack area: \n");		
-		Genode::print(output, "   ", *i_stack_area);		
+		Genode::print(output, "  Stack area: \n");
+		Genode::print(output, "   ", *i_stack_area);
 		Genode::print(output, "  Linker area: \n");
 		Genode::print(output, "   ", *i_linker_area);				
 	}

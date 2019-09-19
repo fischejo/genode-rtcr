@@ -29,9 +29,9 @@ Serializer::Serializer(Genode::Env &env, Genode::Allocator &alloc)
 
 
 void Serializer::add_child_info(Pb::Child_list *child_list,
-								Child_info *_child_info,
-								bool include_binary,
-								Genode::List<Attachment> &as)
+                                Child_info *_child_info,
+                                bool include_binary,
+                                Genode::List<Attachment> &as)
 {
 	Pb::Child_info *child_info = child_list->add_child_info();
 	Capability_mapping *cm = _child_info->capability_mapping;
@@ -50,18 +50,18 @@ void Serializer::add_child_info(Pb::Child_list *child_list,
 
 
 void Serializer::set_binary_info(Pb::Child_info *child_info,
-								 Child_info *_child_info,
-								 Genode::List<Attachment> &as)
+                                 Child_info *_child_info,
+                                 Genode::List<Attachment> &as)
 {
 #ifdef VERBOSE
 	Genode::warning("Packing child binary only works, ",
-					"if child and binary name are the same");
+	                "if child and binary name are the same");
 #endif
 	Pb::Attachment *attachment = new(_alloc) Pb::Attachment();
 	child_info->set_allocated_binary(attachment);
 	as.insert( new(_alloc) Rom_attachment(_env,
-										  _child_info->name.string(),
-										  attachment));
+	                                      _child_info->name.string(),
+	                                      attachment));
 }
 
 
@@ -85,10 +85,10 @@ void Serializer::attach(Genode::Region_map_client &rm, Genode::List<Attachment> 
 		if(a->pb) a->pb->set_offset(offset);
 #ifdef DEBUG
 		Genode::log("Region Map attach",
-					" offset=",Genode::Hex(offset),
-					" size=", Genode::Hex(a->size));
-#endif		
-		offset += a->size;		
+		            " offset=",Genode::Hex(offset),
+		            " size=", Genode::Hex(a->size));
+#endif
+		offset += a->size;
 		a = a->next();
 	}
 }
@@ -97,7 +97,7 @@ void Serializer::detach(Genode::Region_map_client &rm, Genode::List<Attachment> 
 {
 	Attachment *a = as.first();
 	while(a) {
-		
+
 		rm.detach(a->addr);
 		a = a->next();
 	}
@@ -113,16 +113,16 @@ void Serializer::free(Genode::List<Attachment> &as)
 
 
 Genode::Ram_dataspace_capability Serializer::serialize(
-	Genode::List<Child_info> *_child_list,
-	Genode::size_t *compressed_size,
-	bool include_binary)
+                                                       Genode::List<Child_info> *_child_list,
+                                                       Genode::size_t *compressed_size,
+                                                       bool include_binary)
 {
 	DEBUG_THIS_CALL; PROFILE_THIS_CALL;
 
 	/* Convert all Child information to Protobuf object */
 	Pb::Child_list *child_list = new(_alloc) Pb::Child_list();
 	Genode::List<Attachment> attachments;
-	Child_info *_child_info = _child_list->first();	
+	Child_info *_child_info = _child_list->first();
 	while(_child_info) {
 		add_child_info(child_list, _child_info, include_binary, attachments);
 		_child_info = _child_info->next();
@@ -133,7 +133,7 @@ Genode::Ram_dataspace_capability Serializer::serialize(
 	Genode::size_t pb_offset = sizeof(Genode::uint32_t);
 	Genode::size_t pb_ds_size = page_aligned_size(pb_size + pb_offset);
 	Genode::Ram_dataspace_capability pb_ds_cap = _env.ram().alloc(pb_ds_size);	
-    attachments.insert(new(_alloc) Attachment(pb_ds_cap, pb_ds_size));
+	attachments.insert(new(_alloc) Attachment(pb_ds_cap, pb_ds_size));
 
 	/* create region map which will hold all dataspaces */
 	Genode::size_t total_size = size(attachments);
@@ -157,54 +157,54 @@ Genode::Ram_dataspace_capability Serializer::serialize(
 		_env.ram().free(pb_ds_cap);
 		// 	_rm_connection.destroy(region_map);  /* hangs... */		
 
-		throw Genode::Exception();		
+		throw Genode::Exception();
 	}
 #ifdef VERBOSE
 	Genode::log(" rate=",100-(int) (((float)*compressed_size/total_size)*100),"%",
-				" compressed_size=", Genode::Hex(*compressed_size),
-				" uncompressed_size=", Genode::Hex(total_size),
-				" pb_size=",Genode::Hex(pb_size));
+	            " compressed_size=", Genode::Hex(*compressed_size),
+	            " uncompressed_size=", Genode::Hex(total_size),
+	            " pb_size=",Genode::Hex(pb_size));
 #endif
 	return compressed_ds_cap;
 }
 
 
 Genode::Ram_dataspace_capability Serializer::compress(Genode::Dataspace_capability src_cap,
-												  Genode::size_t src_size,
-												  Genode::size_t *dst_size)
+                                                      Genode::size_t src_size,
+                                                      Genode::size_t *dst_size)
 {
 	/* compress whole region map */
 	Genode::size_t estimated_ds_size = compressBound(src_size);
 	Genode::size_t compressed_offset = sizeof(Genode::uint32_t);
 	Genode::size_t compressed_ds_size = page_aligned_size(
-		estimated_ds_size + compressed_offset);
+	                                                      estimated_ds_size + compressed_offset);
 	Genode::Ram_dataspace_capability compressed_ds_cap(
-		_env.ram().alloc(compressed_ds_size));
-	
+	                                                   _env.ram().alloc(compressed_ds_size));
+
 	Bytef *dst = _env.rm().attach(compressed_ds_cap);
 	Bytef *src = _env.rm().attach(src_cap);
 	uLongf _dst_size = estimated_ds_size;
 	uLongf _src_size = src_size;
 	int return_value = compress2(dst + compressed_offset*2,
-								 &_dst_size,
-								 src,
-								 _src_size,
-								 Z_BEST_COMPRESSION);
+	                             &_dst_size,
+	                             src,
+	                             _src_size,
+	                             Z_BEST_COMPRESSION);
 
 	if(return_value != Z_OK) {
 		_env.rm().detach(dst);
 		_env.rm().detach(src);
 		_env.ram().free(compressed_ds_cap);
-		Genode::error("Compression failed");		
+		Genode::error("Compression failed");
 		throw Genode::Exception();
 	}
-	
+
 	*dst_size = _dst_size;
 	*((Genode::uint32_t*) dst) = _dst_size;
 	*((Genode::uint32_t*) dst+1) = src_size; // transfer the original size so,
-											 // the uncompression can allocate a
-											 // destination dataspace with the
-											 // right size.
+	// the uncompression can allocate a
+	// destination dataspace with the
+	// right size.
 	_env.rm().detach(dst);
 	_env.rm().detach(src);
 
@@ -239,12 +239,12 @@ Pb::Session_info *Serializer::session_info(Capability_mapping *_cm, Session_info
 
 
 void Serializer::set_pd_session(Capability_mapping *_cm,
-								Pb::Child_info *tc,
-								Child_info *_tc)
+                                Pb::Child_info *tc,
+                                Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
 	Pd_session_info *_info = _tc->pd_session;
-	
+
 	Pb::Pd_session_info *info = new(_alloc) Pb::Pd_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
@@ -269,15 +269,15 @@ void Serializer::set_pd_session(Capability_mapping *_cm,
 		add_native_capability(_cm, info, native_cap);
 		native_cap = native_cap->next();
 	}
-	
+
 	tc->set_allocated_pd_session_info(info);
 }
 
 
 void Serializer::set_ram_session(Capability_mapping *_cm,
-								 Pb::Child_info *tc,
-								 Child_info *_tc,
-								 Genode::List<Attachment> &as)
+                                 Pb::Child_info *tc,
+                                 Child_info *_tc,
+                                 Genode::List<Attachment> &as)
 {
 	DEBUG_THIS_CALL;
 	Ram_session_info *_info = _tc->ram_session;
@@ -290,13 +290,13 @@ void Serializer::set_ram_session(Capability_mapping *_cm,
 		ram_dataspace = ram_dataspace->next();
 	}
 
-	tc->set_allocated_ram_session_info(info);		
+	tc->set_allocated_ram_session_info(info);
 }
 
 
 void Serializer::set_cpu_session(Capability_mapping *_cm,
-								 Pb::Child_info *tc,
-								 Child_info *_tc)
+                                 Pb::Child_info *tc,
+                                 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
 	Cpu_session_info *_info = _tc->cpu_session;
@@ -310,46 +310,46 @@ void Serializer::set_cpu_session(Capability_mapping *_cm,
 		cpu_thread = cpu_thread->next();
 	}
 
-	tc->set_allocated_cpu_session_info(info);	
+	tc->set_allocated_cpu_session_info(info);
 }
 
 
 void Serializer::set_timer_session(Capability_mapping *_cm,
-								   Pb::Child_info *tc,
-								   Child_info *_tc)
+                                   Pb::Child_info *tc,
+                                   Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->timer_session) return;
 	Timer_session_info *_info = _tc->timer_session;
-	
+
 	Pb::Timer_session_info *info = new(_alloc) Pb::Timer_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 	info->set_sigh_badge(_info->i_sigh_badge);
 	info->set_timeout(_info->i_timeout);
 	info->set_periodic(_info->i_periodic);
 
-	tc->set_allocated_timer_session_info(info);		
+	tc->set_allocated_timer_session_info(info);
 }
 
 
 void Serializer::set_log_session(Capability_mapping *_cm,
-								 Pb::Child_info *tc,
-								 Child_info *_tc)
+                                 Pb::Child_info *tc,
+                                 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->log_session) return;
 	Log_session_info *_info = _tc->log_session;
-	
+
 	Pb::Log_session_info *info = new(_alloc) Pb::Log_session_info();
 	info->set_allocated_session_info(session_info(_cm, _info));
 
-	tc->set_allocated_log_session_info(info);				
+	tc->set_allocated_log_session_info(info);
 }
 
 
 void Serializer::set_rm_session(Capability_mapping *_cm,
-								Pb::Child_info *tc,
-								Child_info *_tc)
+                                Pb::Child_info *tc,
+                                Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->rm_session) return;
@@ -364,32 +364,32 @@ void Serializer::set_rm_session(Capability_mapping *_cm,
 		region_map = region_map->next();
 	}
 
-	tc->set_allocated_rm_session_info(info);			
+	tc->set_allocated_rm_session_info(info);
 }
 
 
 void Serializer::set_rom_session(Capability_mapping *_cm,
-								 Pb::Child_info *tc,
-								 Child_info *_tc)
+                                 Pb::Child_info *tc,
+                                 Child_info *_tc)
 {
 	DEBUG_THIS_CALL;
 	if(!_tc->rom_session) return;
 	Rom_session_info *_info = _tc->rom_session;
-	
+
 	Pb::Rom_session_info *info = new(_alloc) Pb::Rom_session_info();
-	info->set_allocated_session_info(session_info(_cm, _info));	
+	info->set_allocated_session_info(session_info(_cm, _info));
 	info->set_dataspace_badge(_info->i_dataspace_badge);
 	info->set_sigh_badge(_info->i_sigh_badge);
 
-	tc->set_allocated_rom_session_info(info);		
+	tc->set_allocated_rom_session_info(info);
 }
 
 
 void Serializer::add_region_map(Capability_mapping *_cm,
-								Pb::Rm_session_info *rm_session_info,
-								Region_map_info *_info)
+                                Pb::Rm_session_info *rm_session_info,
+                                Region_map_info *_info)
 {
-	DEBUG_THIS_CALL;	
+	DEBUG_THIS_CALL;
 	Pb::Region_map_info *info = rm_session_info->add_region_map_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 	info->set_size(_info->i_size);
@@ -400,13 +400,13 @@ void Serializer::add_region_map(Capability_mapping *_cm,
 	while(attached_region) {
 		add_attached_region(_cm, info, attached_region);
 		attached_region = attached_region->next();
-	}	
+	}
 }
 
 
 void Serializer::set_address_space(Capability_mapping *_cm,
-								   Pb::Pd_session_info *pd_session_info,
-								   Region_map_info *_info)
+                                   Pb::Pd_session_info *pd_session_info,
+                                   Region_map_info *_info)
 {
 	DEBUG_THIS_CALL;
 	Pb::Region_map_info *info = new(_alloc) Pb::Region_map_info();
@@ -425,8 +425,8 @@ void Serializer::set_address_space(Capability_mapping *_cm,
 
 
 void Serializer::set_stack_area(Capability_mapping *_cm,
-								Pb::Pd_session_info *pd_session_info,
-								Region_map_info *_info)
+                                Pb::Pd_session_info *pd_session_info,
+                                Region_map_info *_info)
 {
 	DEBUG_THIS_CALL;
 	Pb::Region_map_info *info = new(_alloc) Pb::Region_map_info();
@@ -446,8 +446,8 @@ void Serializer::set_stack_area(Capability_mapping *_cm,
 
 
 void Serializer::set_linker_area(Capability_mapping *_cm,
-								 Pb::Pd_session_info *pd_session_info,
-								 Region_map_info *_info)
+                                 Pb::Pd_session_info *pd_session_info,
+                                 Region_map_info *_info)
 {
 	DEBUG_THIS_CALL;
 	Pb::Region_map_info *info = new(_alloc) Pb::Region_map_info();
@@ -466,10 +466,10 @@ void Serializer::set_linker_area(Capability_mapping *_cm,
 
 
 void Serializer::add_attached_region(Capability_mapping *_cm,
-									 Pb::Region_map_info *region_map_info,
-									 Attached_region_info *_info)
+                                     Pb::Region_map_info *region_map_info,
+                                     Attached_region_info *_info)
 {
-	DEBUG_THIS_CALL;	
+	DEBUG_THIS_CALL;
 	Pb::Attached_region_info *info = region_map_info->add_attached_region_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 
@@ -482,8 +482,8 @@ void Serializer::add_attached_region(Capability_mapping *_cm,
 
 
 void Serializer::add_cpu_thread(Capability_mapping *_cm,
-								Pb::Cpu_session_info *cpu_session_info,
-								Cpu_thread_info *_info)
+                                Pb::Cpu_session_info *cpu_session_info,
+                                Cpu_thread_info *_info)
 {
 	DEBUG_THIS_CALL;
 	/* Cpu thread info */
@@ -502,35 +502,35 @@ void Serializer::add_cpu_thread(Capability_mapping *_cm,
 
 	/* Cpu_state (also known as ts) */
 	Pb::Cpu_state *state = new(_alloc) Pb::Cpu_state();
-	state->set_r0(_info->i_ts.r0);	
+	state->set_r0(_info->i_ts.r0);
 	state->set_r1(_info->i_ts.r1);
-	state->set_r2(_info->i_ts.r2);	
-	state->set_r3(_info->i_ts.r3);	
-	state->set_r4(_info->i_ts.r4);	
-	state->set_r5(_info->i_ts.r5);	
-	state->set_r6(_info->i_ts.r6);	
-	state->set_r7(_info->i_ts.r7);	
-	state->set_r8(_info->i_ts.r8);	
-	state->set_r9(_info->i_ts.r9);	
+	state->set_r2(_info->i_ts.r2);
+	state->set_r3(_info->i_ts.r3);
+	state->set_r4(_info->i_ts.r4);
+	state->set_r5(_info->i_ts.r5);
+	state->set_r6(_info->i_ts.r6);
+	state->set_r7(_info->i_ts.r7);
+	state->set_r8(_info->i_ts.r8);
+	state->set_r9(_info->i_ts.r9);
 	state->set_r10(_info->i_ts.r10);
 	state->set_r11(_info->i_ts.r11);
-	state->set_r12(_info->i_ts.r12);	
-	state->set_sp(_info->i_ts.sp);	
-	state->set_lr(_info->i_ts.lr);	
-	state->set_ip(_info->i_ts.ip);	
+	state->set_r12(_info->i_ts.r12);
+	state->set_sp(_info->i_ts.sp);
+	state->set_lr(_info->i_ts.lr);
+	state->set_ip(_info->i_ts.ip);
 	state->set_cpsr(_info->i_ts.cpsr);
-	state->set_cpu_exception(_info->i_ts.cpu_exception);		
+	state->set_cpu_exception(_info->i_ts.cpu_exception);
 
 	info->set_allocated_ts(state);
 }
 
 
 void Serializer::add_ram_dataspace(Capability_mapping *_cm,
-								   Pb::Ram_session_info *ram_session,
-								   Ram_dataspace_info *_info,
-								   Genode::List<Attachment> &as)
+                                   Pb::Ram_session_info *ram_session,
+                                   Ram_dataspace_info *_info,
+                                   Genode::List<Attachment> &as)
 {
-	DEBUG_THIS_CALL;	
+	DEBUG_THIS_CALL;
 	Pb::Ram_dataspace_info *info = ram_session->add_ram_dataspace_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 	info->set_size(_info->i_size);
@@ -541,26 +541,26 @@ void Serializer::add_ram_dataspace(Capability_mapping *_cm,
 	attachment->set_offset(0);
 	info->set_allocated_attachment(attachment);
 	as.insert(new(_alloc) Attachment(_info->i_dst_cap,
-									 page_aligned_size(_info->i_size),
-									 attachment));
+	                                 page_aligned_size(_info->i_size),
+	                                 attachment));
 }
 
 
 void Serializer::add_signal_source(Capability_mapping *_cm,
-								   Pb::Pd_session_info *pd_session,
-								   Signal_source_info *_info)
+                                   Pb::Pd_session_info *pd_session,
+                                   Signal_source_info *_info)
 {
-	DEBUG_THIS_CALL;	
+	DEBUG_THIS_CALL;
 	Pb::Signal_source_info *info = pd_session->add_signal_source_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 }
 
 
 void Serializer::add_signal_context(Capability_mapping *_cm,
-									Pb::Pd_session_info *pd_session,
-									Signal_context_info *_info)
+                                    Pb::Pd_session_info *pd_session,
+                                    Signal_context_info *_info)
 {
-	DEBUG_THIS_CALL;	
+	DEBUG_THIS_CALL;
 	Pb::Signal_context_info *info = pd_session->add_signal_context_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
 	info->set_signal_source_badge(_info->i_signal_source_badge);
@@ -569,13 +569,13 @@ void Serializer::add_signal_context(Capability_mapping *_cm,
 
 
 void Serializer::add_native_capability(Capability_mapping *_cm,
-									   Pb::Pd_session_info *pd_session,
-									   Native_capability_info *_info)
+                                       Pb::Pd_session_info *pd_session,
+                                       Native_capability_info *_info)
 {
-	DEBUG_THIS_CALL;	
+	DEBUG_THIS_CALL;
 	Pb::Native_capability_info *info = pd_session->add_native_capability_info();
 	info->set_allocated_normal_info(normal_info(_cm, _info));
-	info->set_ep_badge(_info->i_ep_badge);	
+	info->set_ep_badge(_info->i_ep_badge);
 }
 
 
@@ -585,33 +585,33 @@ Genode::List<Child_info> *Serializer::parse(Genode::Dataspace_capability compres
 
 	Genode::uint32_t *compressed_ds_addr = _env.rm().attach(compressed_ds_cap);
 	Genode::uint32_t compressed_size = *(compressed_ds_addr);
-	Genode::uint32_t total_size = *(compressed_ds_addr+1);	
+	Genode::uint32_t total_size = *(compressed_ds_addr+1);
 	Genode::log("compressed_size=", Genode::Hex(compressed_size),
-				" uncompressed_size=", Genode::Hex(total_size));
+	            " uncompressed_size=", Genode::Hex(total_size));
 
 	/* decompress */
 	Genode::size_t uncompressed_ds_size = page_aligned_size(total_size);
 	Genode::Ram_dataspace_capability uncompressed_ds_cap(
-		_env.ram().alloc(uncompressed_ds_size));
-	
-	Genode::size_t compressed_offset = sizeof(Genode::uint32_t);	
+	                                                     _env.ram().alloc(uncompressed_ds_size));
+
+	Genode::size_t compressed_offset = sizeof(Genode::uint32_t);
 	Genode::uint32_t *uncompressed_ds_addr = _env.rm().attach(uncompressed_ds_cap);
 	uLongf uncompressed_size = total_size;
 
 	int return_value = uncompress((Bytef *)uncompressed_ds_addr,
-								  &uncompressed_size,
-								  (Bytef *)(compressed_ds_addr+2),
-								  compressed_size);
+	                              &uncompressed_size,
+	                              (Bytef *)(compressed_ds_addr+2),
+	                              compressed_size);
 
 	_env.rm().detach(compressed_ds_addr);
-	
+
 	if(return_value != Z_OK) {
 		Genode::error("Uncompression failed");
 		throw Genode::Exception();
 	}
-	
+
 	/* read protobuf */
-	Genode::uint32_t pb_size = *uncompressed_ds_addr; 
+	Genode::uint32_t pb_size = *uncompressed_ds_addr;
 	Genode::log("pb_size=",Genode::Hex(pb_size));
 
 	/* parse protobuf in dataspace */
@@ -623,7 +623,7 @@ Genode::List<Child_info> *Serializer::parse(Genode::Dataspace_capability compres
 	Genode::List<Child_info> *_child_list = new(_alloc) Genode::List<Child_info>();
 	for(int i = 0; i < child_list->child_info_size(); i++) {
 		_child_list->insert(parse_child_info(child_list->child_info(i),
-								uncompressed_ds_addr));
+		                                     uncompressed_ds_addr));
 	}
 
 	return _child_list;
@@ -649,7 +649,7 @@ Child_info *Serializer::parse_child_info(const Pb::Child_info &child, void* raw_
 
 	if(child.has_rom_session_info())
 		_child->rom_session = parse_rom_session(child.rom_session_info());
-	
+
 	return _child;
 }
 
@@ -677,15 +677,15 @@ Pd_session_info *Serializer::parse_pd_session(const Pb::Pd_session_info &info)
 	Pd_session_info *_info = new(_alloc) Pd_session_info();
 	/* session infos */
 	parse_session_info(info.session_info(), _info);
-	
+
 	/* address pace */
 	_info->i_address_space = parse_region_map(info.address_space());
 
 	/* stack area */
-	_info->i_stack_area = parse_region_map(info.stack_area());	
+	_info->i_stack_area = parse_region_map(info.stack_area());
 
 	/* linker area */
-	_info->i_linker_area = parse_region_map(info.linker_area());		
+	_info->i_linker_area = parse_region_map(info.linker_area());
 
 	/* signal sources */
 	Genode::List<Signal_source_info> ss;
@@ -697,7 +697,7 @@ Pd_session_info *Serializer::parse_pd_session(const Pb::Pd_session_info &info)
 	 * list elements is stored in each element. */
 	_info->i_signal_sources = ss.first();
 
-	/* signal contexts */	
+	/* signal contexts */
 	Genode::List<Signal_context_info> sc;
 	for(int i = info.signal_context_info_size()-1; i>=0; i--) {
 		sc.insert(parse_signal_context(info.signal_context_info(i)));
@@ -721,7 +721,7 @@ Cpu_session_info *Serializer::parse_cpu_session(const Pb::Cpu_session_info &info
 	Cpu_session_info *_info = new(_alloc) Cpu_session_info();
 	parse_session_info(info.session_info(), _info);
 	_info->i_sigh_badge = info.sigh_badge();
-	
+
 	/* cpu threads */
 	Genode::List<Cpu_thread_info> ct;
 	for(int i = info.cpu_thread_info_size()-1; i>=0; i--) {
@@ -733,7 +733,7 @@ Cpu_session_info *Serializer::parse_cpu_session(const Pb::Cpu_session_info &info
 
 
 Ram_session_info *Serializer::parse_ram_session(const Pb::Ram_session_info &info,
-												void* raw_addr)
+                                                void* raw_addr)
 {
 	DEBUG_THIS_CALL;
 	Ram_session_info *_info = new(_alloc) Ram_session_info();
@@ -745,7 +745,7 @@ Ram_session_info *Serializer::parse_ram_session(const Pb::Ram_session_info &info
 		ds.insert(parse_ram_dataspace(info.ram_dataspace_info(i), raw_addr));
 	}
 	_info->i_ram_dataspaces = ds.first();
-	
+
 	return _info;
 }
 
@@ -783,7 +783,7 @@ Timer_session_info *Serializer::parse_timer_session(const Pb::Timer_session_info
 	parse_session_info(info.session_info(), _info);
 	_info->i_sigh_badge = info.sigh_badge();
 	_info->i_timeout = info.timeout();
-	_info->i_periodic = info.periodic();	
+	_info->i_periodic = info.periodic();
 	return _info;
 }
 
@@ -815,7 +815,7 @@ Signal_context_info *Serializer::parse_signal_context(const Pb::Signal_context_i
 	parse_normal_info(info.normal_info(), _info);
 
 	_info->i_signal_source_badge = info.signal_source_badge();
-	_info->i_imprint = info.imprint(); 
+	_info->i_imprint = info.imprint();
 	return _info;
 }
 
@@ -849,13 +849,13 @@ Cpu_thread_info *Serializer::parse_cpu_thread(const Pb::Cpu_thread_info &info)
 	_info->i_paused = info.paused();
 	_info->i_single_step = info.single_step();
 	_info->i_affinity = Genode::Affinity::Location(info.affinity_x(),
-												   info.affinity_y());
+	                                               info.affinity_y());
 
 	_info->i_sigh_badge = info.sigh_badge();
 
 	/* parse Cpu_state */
 	Pb::Cpu_state ts = info.ts();
-	_info->i_ts.r0 = ts.r0();	
+	_info->i_ts.r0 = ts.r0();
 	_info->i_ts.r1 = ts.r1();
 	_info->i_ts.r2 = ts.r2();
 	_info->i_ts.r3 = ts.r3();
@@ -874,16 +874,16 @@ Cpu_thread_info *Serializer::parse_cpu_thread(const Pb::Cpu_thread_info &info)
 	_info->i_ts.ip = ts.ip();
 	_info->i_ts.cpsr = ts.cpsr();
 	_info->i_ts.cpu_exception = ts.cpu_exception();
-	
+
 	return _info;
 }
 
 
 Ram_dataspace_info *Serializer::parse_ram_dataspace(const Pb::Ram_dataspace_info &info,
-	void *raw_addr)
+                                                    void *raw_addr)
 {
 	DEBUG_THIS_CALL;
-	
+
 	Ram_dataspace_info *_info = new(_alloc) Ram_dataspace_info();
 	parse_normal_info(info.normal_info(), _info);
 
@@ -897,7 +897,7 @@ Ram_dataspace_info *Serializer::parse_ram_dataspace(const Pb::Ram_dataspace_info
 	void *src = raw_addr + info.attachment().offset();
 	Genode::memcpy(dst, src, info.size());
 
-	_info->i_src_cap = src_cap;	
+	_info->i_src_cap = src_cap;
 	return _info;
 }
 
@@ -905,7 +905,7 @@ Ram_dataspace_info *Serializer::parse_ram_dataspace(const Pb::Ram_dataspace_info
 Region_map_info *Serializer::parse_region_map(const Pb::Region_map_info &info)
 {
 	DEBUG_THIS_CALL;
-	
+
 	Region_map_info *_info = new(_alloc) Region_map_info();
 	parse_normal_info(info.normal_info(), _info);
 
@@ -926,16 +926,15 @@ Region_map_info *Serializer::parse_region_map(const Pb::Region_map_info &info)
 Attached_region_info *Serializer::parse_attached_region(const Pb::Attached_region_info &info)
 {
 	DEBUG_THIS_CALL;
-	
+
 	Attached_region_info *_info = new(_alloc) Attached_region_info();
 	parse_normal_info(info.normal_info(), _info);
 
 	_info->i_badge = info.attached_ds_badge();
 	_info->i_size = info.size();
-	_info->i_offset = info.offset();		
+	_info->i_offset = info.offset();
 	_info->i_rel_addr = info.rel_addr();
-	_info->i_executable = info.executable();		
+	_info->i_executable = info.executable();
 	return _info;
 }
-
 

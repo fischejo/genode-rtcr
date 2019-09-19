@@ -31,8 +31,8 @@ namespace Rtcr {
  * destruction through its interface
  */
 class Rtcr::Log_session : public Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Log_session>,
-						  public Rtcr::Log_session_info
+                          public Genode::Rpc_object<Genode::Log_session>,
+                          public Rtcr::Log_session_info
 {
 protected:
 
@@ -59,13 +59,13 @@ protected:
 
 
 public:
-    using Genode::Rpc_object<Genode::Log_session>::cap;	
-	
+	using Genode::Rpc_object<Genode::Log_session>::cap;
+
 	Log_session(Genode::Env &env,
-				Genode::Allocator &md_alloc,
-				Genode::Entrypoint &ep,
-				const char *creation_args,
-				Child_info *child_info);
+	            Genode::Allocator &md_alloc,
+	            Genode::Entrypoint &ep,
+	            const char *creation_args,
+	            Child_info *child_info);
 
 	~Log_session();
 
@@ -74,9 +74,9 @@ public:
 	void checkpoint() override;
 
 	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;		
+		_upgrade_args = upgrade_args;
 	}
-	
+
 	const char* upgrade_args() { return _upgrade_args; }
 
 
@@ -99,27 +99,25 @@ private:
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
 
-        Genode::Local_service<Log_session> _service;  
+	Genode::Local_service<Log_session> _service;
 	Genode::Session::Diag _diag;
 
 protected:
 
-        Log_session *_create(Child_info *info, const char *args);
-  
+	Log_session *_create(Child_info *info, const char *args);
+ 
 public:
 	Log_factory(Genode::Env &env,
-		   Genode::Allocator &md_alloc,
-		   Genode::Entrypoint &ep,
-		   Genode::Lock &childs_lock,
-		   Genode::List<Child_info> &childs);
+	            Genode::Allocator &md_alloc,
+	            Genode::Entrypoint &ep,
+	            Genode::Lock &childs_lock,
+	            Genode::List<Child_info> &childs);
 
+	Log_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+	void upgrade(Log_session&, Genode::Session_state::Args const &) override;
+	void destroy(Log_session&) override;
 
-  
-  Log_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-  void upgrade(Log_session&, Genode::Session_state::Args const &) override;
-  void destroy(Log_session&) override;
-
-  Genode::Service *service() { return &_service; }
+	Genode::Service *service() { return &_service; }
 };
 
 

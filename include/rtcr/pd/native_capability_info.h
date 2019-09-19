@@ -20,8 +20,8 @@ namespace Rtcr {
 
 
 class Rtcr::Native_capability_info : public Normal_info,
-									 public Genode::List<Native_capability_info>::Element,
-									 public Genode::Fifo<Native_capability_info>::Element
+                                     public Genode::List<Native_capability_info>::Element,
+                                     public Genode::Fifo<Native_capability_info>::Element
 {
 public:
 	using Genode::List<Native_capability_info>::Element::next;

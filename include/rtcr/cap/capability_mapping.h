@@ -46,8 +46,8 @@ protected:
   
 public:
 	Capability_mapping(Genode::Env &env,
-					   Genode::Allocator &alloc,
-					   Pd_session *pd_session);
+	                   Genode::Allocator &alloc,
+	                   Pd_session *pd_session);
 
 	~Capability_mapping();
 

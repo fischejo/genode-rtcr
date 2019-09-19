@@ -22,29 +22,29 @@ namespace Rtcr {
 
 
 class Rtcr::Signal_context_info : public Normal_info,
-								  public Genode::List<Signal_context_info>::Element,
-								  public Genode::Fifo<Signal_context_info>::Element
+                                  public Genode::List<Signal_context_info>::Element,
+                                  public Genode::Fifo<Signal_context_info>::Element
 {
-public:	
+public:
 	using Genode::List<Signal_context_info>::Element::next;
-	
-  	Genode::uint16_t i_signal_source_badge;
+
+	Genode::uint16_t i_signal_source_badge;
 	unsigned long i_imprint;
 
 	Signal_context_info(Genode::uint16_t badge, Genode::uint16_t signal_source_badge)
 		:
 		Normal_info(badge),
 		i_signal_source_badge(signal_source_badge)
-		{}
+	{}
 
 	Signal_context_info() {};
-	
+
 	void print(Genode::Output &output) const {
 		using Genode::Hex;
 		Normal_info::print(output);
 		Genode::print(output,
-					  ", signal_source_badge=", i_signal_source_badge,
-					  ", imprint=",Hex(i_imprint));
+		              ", signal_source_badge=", i_signal_source_badge,
+		              ", imprint=",Hex(i_imprint));
 	}
 
 	Signal_context_info *find_by_badge(Genode::uint16_t badge) {
@@ -53,7 +53,6 @@ public:
 		Signal_context_info *info = next();
 		return info ? info->find_by_badge(badge) : 0;
 	}
-	
 };
 
 

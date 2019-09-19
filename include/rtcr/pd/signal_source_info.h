@@ -19,16 +19,16 @@ namespace Rtcr {
 }
 
 class Rtcr::Signal_source_info : public Normal_info,
-								 public Genode::List<Signal_source_info>::Element,
-								 public Genode::Fifo<Signal_source_info>::Element
+                                 public Genode::List<Signal_source_info>::Element,
+                                 public Genode::Fifo<Signal_source_info>::Element
 {
-public:	
+public:
 	using Genode::List<Signal_source_info>::Element::next;
 
 	Signal_source_info(Genode::uint16_t badge) : Normal_info(badge) {};
 
 	Signal_source_info() {};
-	
+
 	Signal_source_info *find_by_badge(Genode::uint16_t badge) {
 		if(badge == i_badge)
 			return this;

@@ -24,7 +24,7 @@ namespace Rtcr {
  * a Cpu_thread_capability
  */
 class Rtcr::Native_capability : private Simple_counter<Native_capability>,
-								public Rtcr::Native_capability_info
+                                public Rtcr::Native_capability_info
 
 {
 public:	
@@ -34,15 +34,15 @@ public:
 	bool bootstrapped;
 
 	Native_capability(Genode::Native_capability native_cap,
-					  Genode::Native_capability ep_cap,
-					  bool bootstrapped)
+	                  Genode::Native_capability ep_cap,
+	                  bool bootstrapped)
 		:
 		Native_capability_info(native_cap.local_name(),
-							   ep_cap.local_name()),
+		                       ep_cap.local_name()),
 		cap    (native_cap),
 		ep_cap (ep_cap),
 		bootstrapped (bootstrapped)
-		{ }
+	{ }
   
 	Genode::size_t timestamp() const {
 		return Simple_counter<Native_capability>::id();

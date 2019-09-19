@@ -14,11 +14,11 @@ Checkpointable::Checkpointable(Genode::Env &env, const char* name, bool ready)
 	_affinity(_read_affinity(name)),
 	_config(env, "config"),
 	Thread(env,
-		   name,
-		   64*1024,
-		   _affinity,
-		   Genode::Thread::Weight(),
-		   env.cpu()),
+	       name,
+	       64*1024,
+	       _affinity,
+	       Genode::Thread::Weight(),
+	       env.cpu()),
 	_running(true),
 	_next_job(NONE),
 	_ready_event(ready) // not ready by default
@@ -27,8 +27,8 @@ Checkpointable::Checkpointable(Genode::Env &env, const char* name, bool ready)
 
 #ifdef VERBOSE
 	Genode::log("Checkpointable[",name,"] started on CPU ",
-				"xpos=",_affinity.xpos(), " ypos=",_affinity.ypos());
-#endif	
+	            "xpos=",_affinity.xpos(), " ypos=",_affinity.ypos());
+#endif
 }
 
 
@@ -46,7 +46,7 @@ Genode::Affinity::Location Checkpointable::_read_affinity(const char* name)
 		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
 	}
 	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
-	return Genode::Affinity::Location(0, 0, 1, 1);  
+	return Genode::Affinity::Location(0, 0, 1, 1);
 }
 
 
@@ -54,7 +54,7 @@ void Checkpointable::stop()
 {
 	_running=false;
 	// TODO: not sure if this works, if not than use _next_event.release()
-	cancel_blocking(); 
+	cancel_blocking();
 }
 
 

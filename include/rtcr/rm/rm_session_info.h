@@ -18,18 +18,18 @@ namespace Rtcr {
 }
 
 class Rtcr::Rm_session_info : public Session_info {
-public:	
+public:
 	Region_map_info *i_region_maps;
 
 	Rm_session_info(const char* creation_args, Genode::uint16_t badge)
 		: Session_info(creation_args, badge) {}
 
 	Rm_session_info() {};
-	
+
 	void print(Genode::Output &output) const {
 		Genode::print(output, " RM session:\n  ");
 		Session_info::print(output);
-		Genode::print(output, "\n");		
+		Genode::print(output, "\n");
 		const Region_map_info *rm = i_region_maps;
 		if(!rm) Genode::print(output, "   <empty>\n");
 		while(rm) {

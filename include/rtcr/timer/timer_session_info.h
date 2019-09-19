@@ -24,14 +24,14 @@ struct Rtcr::Timer_session_info : Session_info {
 		: Session_info(creation_args, badge) {}
 
 	Timer_session_info() {}
-	
+
 	void print(Genode::Output &output) const {
 		Genode::print(output, " Timer session:\n  ");
 		Session_info::print(output);
 		Genode::print(output,
-					  ", sigh_badge ", i_sigh_badge,
-					  ", timeout=", i_timeout,
-					  ", periodic=", i_periodic, "\n");
+		              ", sigh_badge ", i_sigh_badge,
+		              ", timeout=", i_timeout,
+		              ", periodic=", i_periodic, "\n");
 	}
 };
 

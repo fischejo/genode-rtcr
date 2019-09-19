@@ -24,10 +24,10 @@ class Rtcr::Simple_counter
 private:
 	Genode::size_t const current_id;
 	static Genode::size_t get_id()
-		{
-			static Genode::size_t count = 0;
-			return count++;
-		}
+	{
+		static Genode::size_t count = 0;
+		return count++;
+	}
 
 public:
 	Simple_counter() : current_id(get_id()) { }
@@ -50,8 +50,8 @@ struct Rtcr::Normal_info
 	
 	void print(Genode::Output &output) const {
 		Genode::print(output,
-					  "badge=", i_badge,
-					  " kcap=", i_kcap);
+		              "badge=", i_badge,
+		              " kcap=", i_kcap);
 	}
 	
 };
@@ -72,8 +72,8 @@ struct Rtcr::Session_info : Rtcr::Normal_info
 	void print(Genode::Output &output) const {
 		Normal_info::print(output);		
 		Genode::print(output,
-					  ", cargs='", i_creation_args,
-					  "', uargs='", i_upgrade_args, "'");
+		              ", cargs='", i_creation_args,
+		              "', uargs='", i_upgrade_args, "'");
 
 	}
 };

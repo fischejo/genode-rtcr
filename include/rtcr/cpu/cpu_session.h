@@ -39,8 +39,8 @@ namespace Rtcr {
  * the client
  */
 class Rtcr::Cpu_session : public virtual Rtcr::Checkpointable,
-						  public Genode::Rpc_object<Genode::Cpu_session>,
-						  public Rtcr::Cpu_session_info
+                          public Genode::Rpc_object<Genode::Cpu_session>,
+                          public Rtcr::Cpu_session_info
 {
 protected:
 	Child_info *_child_info;
@@ -71,10 +71,10 @@ protected:
 	 */
 	Genode::Entrypoint &_ep;
 
-        /**
+	/**
 	 * Rom dataspace holding the XML config 
 	 */
-        Genode::Attached_rom_dataspace _config;
+	Genode::Attached_rom_dataspace _config;
   
 	/**
 	 * Connection to parent's Cpu session, usually from core; this class wraps this session
@@ -82,11 +82,11 @@ protected:
 	Genode::Cpu_connection _parent_cpu;
 
 	Cpu_thread &_create_thread(Genode::Pd_session_capability child_pd_cap,
-							   Genode::Pd_session_capability parent_pd_cap,
-							   Genode::Cpu_session::Name const &name,
-							   Genode::Affinity::Location affinity,
-							   Genode::Cpu_session::Weight weight,
-							   Genode::addr_t utcb);
+	                           Genode::Pd_session_capability parent_pd_cap,
+	                           Genode::Cpu_session::Name const &name,
+	                           Genode::Affinity::Location affinity,
+	                           Genode::Cpu_session::Weight weight,
+	                           Genode::addr_t utcb);
 	
 	void _kill_thread(Cpu_thread_info &cpu_thread);
 
@@ -110,23 +110,23 @@ protected:
 	 * KIA4SM method
 	 */
 	Cpu_thread &_create_fp_edf_thread(Genode::Pd_session_capability child_pd_cap,
-									  Genode::Pd_session_capability parent_pd_cap,
-									  Genode::Cpu_session::Name const &name,
-									  Genode::Affinity::Location affinity,
-									  Genode::Cpu_session::Weight weight,
-									  Genode::addr_t utcb,
-									  unsigned priority,
-									  unsigned deadline);
+	                                  Genode::Pd_session_capability parent_pd_cap,
+	                                  Genode::Cpu_session::Name const &name,
+	                                  Genode::Affinity::Location affinity,
+	                                  Genode::Cpu_session::Weight weight,
+	                                  Genode::addr_t utcb,
+	                                  unsigned priority,
+	                                  unsigned deadline);
 
 	
 public:
 	using Genode::Rpc_object<Genode::Cpu_session>::cap;
 	
 	Cpu_session(Genode::Env &env,
-				Genode::Allocator &md_alloc,
-				Genode::Entrypoint &ep,
-				const char *creation_args,
-				Child_info *child_info);
+	            Genode::Allocator &md_alloc,
+	            Genode::Entrypoint &ep,
+	            const char *creation_args,
+	            Child_info *child_info);
 	
 	~Cpu_session();
 
@@ -157,10 +157,10 @@ public:
 	 ***************************/
 
 	Genode::Thread_capability create_thread(Genode::Pd_session_capability pd_cap,
-											Genode::Cpu_session::Name const &name,
-											Genode::Affinity::Location affinity,
-											Genode::Cpu_session::Weight weight,
-											Genode::addr_t utcb) override;
+	                                        Genode::Cpu_session::Name const &name,
+	                                        Genode::Affinity::Location affinity,
+	                                        Genode::Cpu_session::Weight weight,
+	                                        Genode::addr_t utcb) override;
 
 	void kill_thread(Genode::Thread_capability thread_cap) override;
 	void exception_sigh(Genode::Signal_context_capability handler) override;
@@ -189,27 +189,27 @@ private:
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
 
-        Genode::Local_service<Cpu_session> _service;  
+	Genode::Local_service<Cpu_session> _service;  
 	Genode::Session::Diag _diag;
 
 protected:
 
-        Cpu_session *_create(Child_info *info, const char *args);
+	Cpu_session *_create(Child_info *info, const char *args);
   
 public:
 	Cpu_factory(Genode::Env &env,
-		   Genode::Allocator &md_alloc,
-		   Genode::Entrypoint &ep,
-		   Genode::Lock &childs_lock,
-		   Genode::List<Child_info> &childs);
+	            Genode::Allocator &md_alloc,
+	            Genode::Entrypoint &ep,
+	            Genode::Lock &childs_lock,
+	            Genode::List<Child_info> &childs);
 
 
   
-  Cpu_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-  void upgrade(Cpu_session&, Genode::Session_state::Args const &) override;
-  void destroy(Cpu_session&) override;
+	Cpu_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+	void upgrade(Cpu_session&, Genode::Session_state::Args const &) override;
+	void destroy(Cpu_session&) override;
 
-  Genode::Service *service() { return &_service; }
+	Genode::Service *service() { return &_service; }
 };
 
 

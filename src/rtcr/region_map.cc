@@ -23,10 +23,10 @@
 using namespace Rtcr;
 
 Region_map::Region_map(Genode::Allocator &md_alloc,
-					   Genode::Capability<Genode::Region_map> region_map_cap,
-					   Genode::size_t size,
-					   const char *label,
-					   bool &bootstrap_phase)
+                       Genode::Capability<Genode::Region_map> region_map_cap,
+                       Genode::size_t size,
+                       const char *label,
+                       bool &bootstrap_phase)
 	:
 	Region_map_info(region_map_cap.local_name()),
 	_md_alloc          (md_alloc),
@@ -36,7 +36,7 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
 	_size(size),
 	_ds_cap(_parent_region_map.dataspace())
 {
-	DEBUG_THIS_CALL
+	DEBUG_THIS_CALL;
 }
 
 
@@ -68,7 +68,6 @@ void Region_map::checkpoint()
 }
 
 
-
 Attached_region *Region_map::find_attached_region_by_addr(Genode::addr_t addr)
 {
 	/* no lock needed, as we are looking for something, which will not be
@@ -82,37 +81,41 @@ Attached_region *Region_map::find_attached_region_by_addr(Genode::addr_t addr)
 
 
 Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability ds_cap,
-												  Genode::size_t size,
-												  Genode::off_t offset,
-												  bool use_local_addr,
-												  Region_map::Local_addr local_addr,
-												  bool executable)
+                                                  Genode::size_t size,
+                                                  Genode::off_t offset,
+                                                  bool use_local_addr,
+                                                  Region_map::Local_addr local_addr,
+                                                  bool executable)
 {
 	DEBUG_THIS_CALL
 #ifdef DEBUG
-	if(use_local_addr) {
-		Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
-				    "\033[33m", __func__, "\033[0m(",
-				    "ds ",       ds_cap,
-				    ", size=",       Genode::Hex(size),
-				    ", offset=",     offset,
-				    ", local_addr=", Genode::Hex(local_addr),
-				    ", exe=",        executable,
-				    ")");
-	} else {
-		Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
-				    "\033[33m", __func__, "\033[0m(",
-				    "ds ",   ds_cap,
-				    ", size=",   Genode::Hex(size),
-				    ", offset=", offset,
-				    ", exe=",    executable,
-				    ")");
-	}
+		if(use_local_addr) {
+			Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
+			            "\033[33m", __func__, "\033[0m(",
+			            "ds ",       ds_cap,
+			            ", size=",       Genode::Hex(size),
+			            ", offset=",     offset,
+			            ", local_addr=", Genode::Hex(local_addr),
+			            ", exe=",        executable,
+			            ")");
+		} else {
+			Genode::log("Rmap<\033[35m", _label,"\033[0m>", "::",
+			            "\033[33m", __func__, "\033[0m(",
+			            "ds ",   ds_cap,
+			            ", size=",   Genode::Hex(size),
+			            ", offset=", offset,
+			            ", exe=",    executable,
+			            ")");
+		}
 #endif
 
 	/* Attach dataspace to real Region map */
-	Genode::addr_t addr = _parent_region_map.attach(
-		ds_cap, size, offset, use_local_addr, local_addr, executable);
+	Genode::addr_t addr = _parent_region_map.attach(ds_cap,
+	                                                size,
+	                                                offset,
+	                                                use_local_addr,
+	                                                local_addr,
+	                                                executable);
 
 	/* Actual size of the attached region; page-aligned */
 	Genode::size_t actual_size;
@@ -126,19 +129,19 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 
 	/* Store information about the attachment */
 	Attached_region *new_obj = new (_md_alloc) Attached_region(ds_cap,
-															   actual_size,
-															   offset,
-															   addr,
-															   executable,
-															   _bootstrap_phase);	
+	                                                           actual_size,
+	                                                           offset,
+	                                                           addr,
+	                                                           executable,
+	                                                           _bootstrap_phase);
 
 #ifdef DEBUG
 	Genode::size_t num_pages = actual_size/4096;
 
 	Genode::log("  Attached dataspace (", ds_cap, ")",
-			    " into [", Genode::Hex(addr),
-			    ", ", Genode::Hex(addr+actual_size), ") ",
-			    num_pages, num_pages==1?" page":" pages");
+	            " into [", Genode::Hex(addr),
+	            ", ", Genode::Hex(addr+actual_size), ") ",
+	            num_pages, num_pages==1?" page":" pages");
 #endif
 
 	/* Store Attached_region in a list */
@@ -163,9 +166,9 @@ void Region_map::detach(Region_map::Local_addr local_addr)
 		Genode::Lock::Guard lock_guard(_destroyed_attached_regions_lock);
 		_destroyed_attached_regions.enqueue(region);
 	} else {
-			Genode::warning("Region not found in Rm::detach(). Local address",
-							Genode::Hex(local_addr), " not in regions list.");
-	}			
+		Genode::warning("Region not found in Rm::detach(). Local address",
+		                Genode::Hex(local_addr), " not in regions list.");
+	}
 }
 
 
@@ -188,5 +191,5 @@ Genode::Region_map::State Region_map::state()
 
 Genode::Dataspace_capability Region_map::dataspace()
 {
-    return _parent_region_map.dataspace();
+	return _parent_region_map.dataspace();
 }

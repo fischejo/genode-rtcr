@@ -24,7 +24,7 @@
 
 namespace Rtcr {
 	class Init_module;
-	typedef Genode::String<16> Module_name;	
+	typedef Genode::String<16> Module_name;
 }
 
 
@@ -36,7 +36,7 @@ using namespace Rtcr;
  * The class Rtcr::Init_module provides the intercepting sessions and handles
  * the communication between a target child and the corresponding sessions.
  */
-class Rtcr::Init_module 
+class Rtcr::Init_module
 {
 protected:
 	/**
@@ -47,24 +47,22 @@ protected:
 
 	Genode::Lock _childs_lock;
 	Genode::List<Child_info> _childs;
-		
 
 	bool _parallel;
 	inline bool read_parallel();
 
 	void checkpoint(Child_info *child);
-	
-public:  
+
+public:
 
 	Init_module(Genode::Env &env, Genode::Allocator &alloc);
-	
 	~Init_module();
 
 
 	Child_info *child_info(const char* name);
 	Genode::List<Child_info> *child_info() { return &_childs; }
 
-        void pause();
+	void pause();
 	void resume();
 	void checkpoint();
 
@@ -74,7 +72,6 @@ public:
 	 * \return Name of your module
 	 */
 	virtual Module_name name() = 0;
-	
 };
 
 #endif /* _RTCR_BASE_MODULE_H_ */

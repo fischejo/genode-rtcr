@@ -32,9 +32,9 @@ void Module_factory::print()
 
 Module_factory* Module_factory::get()
 {
-  //	Genode::Xml_node module_node = Genode::config()->xml_node().sub_node("module");
-  //	Module_name module_name = module_node.attribute_value("name", Module_name());
-  //	return Module_factory::get(module_name);
+	//	Genode::Xml_node module_node = Genode::config()->xml_node().sub_node("module");
+	//	Module_name module_name = module_node.attribute_value("name", Module_name());
+	//	return Module_factory::get(module_name);
 	return Module_factory::get("base");  
 }
 

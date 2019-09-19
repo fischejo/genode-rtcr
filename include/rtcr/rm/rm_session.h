@@ -32,13 +32,13 @@ namespace Rtcr {
  * destruction through its interface
  */
 class Rtcr::Rm_session : public Rtcr::Checkpointable,
-						 public Genode::Rpc_object<Genode::Rm_session>,
-						 public Rtcr::Rm_session_info
+                         public Genode::Rpc_object<Genode::Rm_session>,
+                         public Rtcr::Rm_session_info
 {
 protected:
 	const char* _upgrade_args;
 	Genode::Lock _region_maps_lock;
-	Genode::Lock _destroyed_region_maps_lock;  
+	Genode::Lock _destroyed_region_maps_lock;
 	Genode::List<Region_map_info> _region_maps;
 	Genode::Fifo<Region_map_info> _destroyed_region_maps;
 
@@ -62,16 +62,15 @@ protected:
 
 	Child_info *_child_info;
 
-	
 public:
 	using Genode::Rpc_object<Genode::Rm_session>::cap;
-	
+
 	Rm_session(Genode::Env &env,
-		       Genode::Allocator &md_alloc,
-		       Genode::Entrypoint &ep,
-		       const char *creation_args,
-			   Child_info *child_info);
-  
+	           Genode::Allocator &md_alloc,
+	           Genode::Entrypoint &ep,
+	           const char *creation_args,
+	           Child_info *child_info);
+
 	~Rm_session();
 
 	Genode::Rm_session_capability parent_cap() { return _parent_rm.cap(); }
@@ -79,12 +78,11 @@ public:
 	void checkpoint() override;
 
 	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;		
+		_upgrade_args = upgrade_args;
 	}
-	
+
 	const char* upgrade_args() { return _upgrade_args; }
-	
-	
+
 	/******************************
 	 ** Rm session Rpc interface **
 	 ******************************/
@@ -114,26 +112,25 @@ private:
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
 
-        Genode::Local_service<Rm_session> _service;  
+	Genode::Local_service<Rm_session> _service;
 	Genode::Session::Diag _diag;
 
 protected:
 
-        Rm_session *_create(Child_info *info, const char *args);
-  
+	Rm_session *_create(Child_info *info, const char *args);
+
 public:
 	Rm_factory(Genode::Env &env,
-		   Genode::Allocator &md_alloc,
-		   Genode::Entrypoint &ep,
-		   Genode::Lock &childs_lock,
-		   Genode::List<Child_info> &childs);
+	           Genode::Allocator &md_alloc,
+	           Genode::Entrypoint &ep,
+	           Genode::Lock &childs_lock,
+	           Genode::List<Child_info> &childs);
 
-  
-  Rm_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-  void upgrade(Rm_session&, Genode::Session_state::Args const &) override;
-  void destroy(Rm_session&) override;
+	Rm_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+	void upgrade(Rm_session&, Genode::Session_state::Args const &) override;
+	void destroy(Rm_session&) override;
 
-  Genode::Service *service() { return &_service; }
+	Genode::Service *service() { return &_service; }
 };
 
 

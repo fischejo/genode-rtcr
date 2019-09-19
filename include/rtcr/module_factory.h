@@ -60,7 +60,7 @@ public:
 	 * \return A instance of a Module class
 	 */
 	virtual Init_module* create(Genode::Env &env,
-						   Genode::Allocator &alloc) = 0;
+	                            Genode::Allocator &alloc) = 0;
     
 	/**
 	 * Name of your module which you want to register.

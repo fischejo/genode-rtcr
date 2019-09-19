@@ -27,7 +27,7 @@ namespace Rtcr {
  * Custom Region map intercepting RPC methods
  */
 class Rtcr::Region_map : public Genode::Rpc_object<Genode::Region_map>,
-						 public Rtcr::Region_map_info
+                         public Rtcr::Region_map_info
 {
 public:
 	bool bootstrapped;
@@ -44,7 +44,7 @@ protected:
 	 * Wrapped region map from parent, usually core
 	 */
 	Genode::Region_map_client _parent_region_map;
-	
+
 	/**
 	 * Dataspace representation
 	 */
@@ -62,7 +62,7 @@ protected:
 	Genode::Lock _destroyed_attached_regions_lock;
 	Genode::Fifo<Attached_region_info> _destroyed_attached_regions;
 
-    /* this is public, so the capability_mapping has direct acess */
+	/* this is public, so the capability_mapping has direct acess */
 	Genode::Lock _attached_regions_lock;
 	Genode::List<Attached_region_info> _attached_regions;
 
@@ -75,7 +75,7 @@ protected:
 	 * Reference to Child's bootstrap phase
 	 */
 	bool &_bootstrap_phase;
-	
+
 	/**
 	 * Name of the Region map for debugging
 	 */
@@ -84,11 +84,11 @@ protected:
 public:
 
 	Region_map(Genode::Allocator &md_alloc,
-		       Genode::Capability<Genode::Region_map>
-		       region_map_cap,
-		       Genode::size_t size,
-		       const char *label,
-		       bool &bootstrap_phase);
+	           Genode::Capability<Genode::Region_map>
+	           region_map_cap,
+	           Genode::size_t size,
+	           const char *label,
+	           bool &bootstrap_phase);
 
 	~Region_map();
 
@@ -100,11 +100,9 @@ public:
 
 	void checkpoint();
 
-	
 	/* This function is implemented for capability_mapping.cc */
 	Attached_region *find_attached_region_by_addr(Genode::addr_t addr);
 
-	
 	/******************************
 	 ** Region map Rpc interface **
 	 ******************************/
@@ -114,19 +112,19 @@ public:
 	 * about the attachment
 	 */
 	Local_addr attach(Genode::Dataspace_capability ds_cap,
-					  Genode::size_t size,
-					  Genode::off_t offset,
-					  bool use_local_addr,
-					  Region_map::Local_addr local_addr,
-					  bool executable) override;
+	                  Genode::size_t size,
+	                  Genode::off_t offset,
+	                  bool use_local_addr,
+	                  Region_map::Local_addr local_addr,
+	                  bool executable) override;
 	/**
 	 * Detaches the dataspace from parent's region map and destroys the
 	 * information about the attachment
 	 */
 	void detach(Region_map::Local_addr local_addr) override;
-	
+
 	void fault_handler(Genode::Signal_context_capability handler) override;
-	
+
 	State state() override;
 
 	Genode::Dataspace_capability dataspace() override;

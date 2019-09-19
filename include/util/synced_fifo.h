@@ -11,7 +11,7 @@
 #include <base/semaphore.h>
 
 namespace Rtcr {
-	template<class T> class Synced_fifo;  
+	template<class T> class Synced_fifo;
 }
 
 
@@ -38,7 +38,7 @@ private:
 			caller->wake_up();
 		}
 	}
-  
+
 public:
 
 	void wait_until_empty()
@@ -51,14 +51,14 @@ public:
 			caller.block();
 		}
 	}
-  
+
 	/**
 	 * Remove element explicitely from queue
 	 */
 	void remove(T *qe)
 	{
 		_sema.down();
-		_meta_lock.lock();    
+		_meta_lock.lock();
 		Genode::Fifo<T>::remove(qe);
 		if(Genode::Fifo<T>::empty())
 			_release_callers();
@@ -85,9 +85,9 @@ public:
 	{
 		if(!block && Genode::Fifo<T>::empty())
 			return 0;
-      
+
 		_sema.down();
-		_meta_lock.lock();      
+		_meta_lock.lock();
 		T *head = Genode::Fifo<T>::dequeue();
 		if(Genode::Fifo<T>::empty())
 			_release_callers();

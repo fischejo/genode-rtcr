@@ -22,12 +22,12 @@ namespace Rtcr {
 
 
 class Rtcr::Attached_region_info : public Rtcr::Normal_info,
-								   public Genode::List<Attached_region_info>::Element,
-								   public Genode::Fifo<Attached_region_info>::Element
+                                   public Genode::List<Attached_region_info>::Element,
+                                   public Genode::Fifo<Attached_region_info>::Element
 {
 public:
 	using Genode::List<Attached_region_info>::Element::next;
-													  
+
 	Genode::Ram_dataspace_capability i_memory_content;
 	/**
 	 * Size of occupied region
@@ -47,10 +47,10 @@ public:
 	bool i_executable;
 
 	Attached_region_info(Genode::size_t size,
-						 Genode::off_t offset,
-						 Genode::addr_t local_addr,
-						 bool executable,
-						 Genode::uint16_t badge)
+	                     Genode::off_t offset,
+	                     Genode::addr_t local_addr,
+	                     bool executable,
+	                     Genode::uint16_t badge)
 		:
 		Normal_info(badge),
 		i_size       (size),
@@ -59,11 +59,11 @@ public:
 		i_executable (executable) {}
 
 	Attached_region_info() {};
-	
+
 	void print(Genode::Output &output) const {
-		using Genode::Hex;		
+		using Genode::Hex;
 		Normal_info::print(output),
-		Genode::print(output, ", [", Hex(i_rel_addr, Hex::PREFIX, Hex::PAD));
+			Genode::print(output, ", [", Hex(i_rel_addr, Hex::PREFIX, Hex::PAD));
 		Genode::print(output, ", ", Hex(i_rel_addr + i_size - i_offset, Hex::PREFIX, Hex::PAD));
 		Genode::print(output, ") exec=", i_executable, "\n");
 	}
@@ -75,7 +75,7 @@ public:
 		Attached_region_info *info = next();
 		return info ? info->find_by_addr(addr) : 0;
 	}
-  
+
 	Attached_region_info *find_by_badge(Genode::uint16_t badge) {
 		if(badge == i_badge)
 			return this;
@@ -83,7 +83,6 @@ public:
 		return info ? info->find_by_badge(badge) : 0;
 	}
 
-	
 };
 
 

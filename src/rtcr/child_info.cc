@@ -7,7 +7,6 @@
 
 using namespace Rtcr;
 
-	
 Child_info *Child_info::find_by_name(const char *_name)
 {
 	if(!Genode::strcmp(name.string(), _name))
@@ -40,11 +39,11 @@ void Child_info::print(Genode::Output &output) const
 	if(timer_session) Genode::print(output, *timer_session);
 	else Genode::print(output, " Timer session: <empty>\n");
 
-	/* (optional) Rom session */	
+	/* (optional) Rom session */
 	if(rom_session) Genode::print(output, *rom_session);
 	else Genode::print(output, " ROM session: <empty>\n");
 
 	/* Capabilities */
 	Genode::print(output, *capability_mapping);
-}	
+}
 

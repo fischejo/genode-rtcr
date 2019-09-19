@@ -44,8 +44,8 @@ namespace Rtcr {
  * destruction through its interface
  */
 class Rtcr::Pd_session : public Rtcr::Checkpointable,
-						 public Genode::Rpc_object<Genode::Pd_session>,
-						 public Rtcr::Pd_session_info
+                         public Genode::Rpc_object<Genode::Pd_session>,
+                         public Rtcr::Pd_session_info
 {
 protected:
 	const char* _upgrade_args;
@@ -53,24 +53,25 @@ protected:
 	/**
 	 * List for monitoring the creation and destruction of
 	 * Signal_source_capabilities
-	 */  
+	 */
 	Genode::Lock _signal_sources_lock;
 	Genode::List<Signal_source_info> _signal_sources;
 	Genode::Lock _destroyed_signal_sources_lock;
-	Genode::Fifo<Signal_source_info> _destroyed_signal_sources;  
+	Genode::Fifo<Signal_source_info> _destroyed_signal_sources;
 
 	/**
 	 * List for monitoring the creation and destruction of
 	 * Signal_context_capabilities
-	 */  
+	 */
 	Genode::Lock _signal_contexts_lock;
 	Genode::List<Signal_context_info> _signal_contexts;
 	Genode::Lock _destroyed_signal_contexts_lock;
-	Genode::Fifo<Signal_context_info> _destroyed_signal_contexts;  
+	Genode::Fifo<Signal_context_info> _destroyed_signal_contexts;
 
 	/**
-	 * List for monitoring the creation and destruction of Native_capabilities
-	 */  
+	 * List for monitoring the creation and destruction of
+	 * Native_capabilities
+	 */
 	Genode::Lock _native_caps_lock;
 	Genode::List<Native_capability_info> _native_caps;
 	Genode::Lock _destroyed_native_caps_lock;
@@ -88,12 +89,11 @@ protected:
 	 */
 	Genode::Entrypoint &_ep;
 
-public:  
 	/**
 	 * Connection to parent's pd session, usually from core
 	 */
 	Genode::Pd_connection  _parent_pd;
-protected:
+
 	/**
 	 * Custom address space for monitoring the attachments of the Region map
 	 */
@@ -108,31 +108,30 @@ protected:
 	Region_map   _linker_area;
 
 	Child_info *_child_info;
-	
+
 	void _checkpoint_signal_sources();
-	void _checkpoint_signal_contexts();  	
-	void _checkpoint_native_capabilities();  
+	void _checkpoint_signal_contexts();
+	void _checkpoint_native_capabilities();
 
 public:
 	using Genode::Rpc_object<Genode::Pd_session>::cap;
-	
-	Pd_session(Genode::Env &env,
-			   Genode::Allocator &md_alloc,
-			   Genode::Entrypoint &ep,
-			   const char *creation_args,
-			   Child_info *child_info);
 
-  
+	Pd_session(Genode::Env &env,
+	           Genode::Allocator &md_alloc,
+	           Genode::Entrypoint &ep,
+	           const char *creation_args,
+	           Child_info *child_info);
+
 	~Pd_session();
 
 	void checkpoint() override;
 
 	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;		
+		_upgrade_args = upgrade_args;
 	}
-	
+
 	const char* upgrade_args() { return _upgrade_args; }
-	
+
 	Genode::Pd_session_capability parent_cap() { return _parent_pd.cap(); }
 
 
@@ -159,7 +158,7 @@ public:
 	void free_signal_source(Signal_source_capability cap) override;
 
 	Genode::Signal_context_capability alloc_context(Signal_source_capability source,
-							unsigned long imprint) override;
+	                                                unsigned long imprint) override;
 	void free_context(Genode::Signal_context_capability cap) override;
 
 	void submit(Genode::Signal_context_capability context, unsigned cnt) override;
@@ -182,9 +181,9 @@ public:
 	Genode::Capability<Native_pd> native_pd() override;
 
 
-  	void map(Genode::addr_t _addr, Genode::addr_t __addr) override;
+	void map(Genode::addr_t _addr, Genode::addr_t __addr) override;
 
-        void ref_account(Genode::Capability<Genode::Pd_session>) override;
+	void ref_account(Genode::Capability<Genode::Pd_session>) override;
 
 	void transfer_quota(Genode::Capability<Genode::Pd_session>, Genode::Cap_quota) override;
 	void transfer_quota(Genode::Capability<Genode::Pd_session>, Genode::Ram_quota) override;
@@ -216,27 +215,24 @@ private:
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
 
-  Genode::Local_service<Pd_session> _service;  
+	Genode::Local_service<Pd_session> _service;
 	Genode::Session::Diag _diag;
 
 protected:
-  Pd_session *_create(Child_info *info, const char *args);
-  
+	Pd_session *_create(Child_info *info, const char *args);
+
 public:
 	Pd_factory(Genode::Env &env,
-		   Genode::Allocator &md_alloc,
-		   Genode::Entrypoint &ep,
-		   Genode::Lock &childs_lock,
-		   Genode::List<Child_info> &childs);
+	           Genode::Allocator &md_alloc,
+	           Genode::Entrypoint &ep,
+	           Genode::Lock &childs_lock,
+	           Genode::List<Child_info> &childs);
 
+	Pd_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+	void upgrade(Pd_session&, Genode::Session_state::Args const &) override;
+	void destroy(Pd_session&) override;
 
-  
-  Pd_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-  void upgrade(Pd_session&, Genode::Session_state::Args const &) override;
-  void destroy(Pd_session&) override;
-
-  Genode::Service *service() { return &_service; }
+	Genode::Service *service() { return &_service; }
 };
-
 
 #endif /* _RTCR_PD_SESSION_H_ */

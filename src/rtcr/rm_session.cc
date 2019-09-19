@@ -27,10 +27,10 @@ using namespace Rtcr;
 
 
 Rm_session::Rm_session(Genode::Env &env,
-					   Genode::Allocator &md_alloc,
-					   Genode::Entrypoint &ep,
-					   const char *creation_args,
-					   Child_info *child_info)
+                       Genode::Allocator &md_alloc,
+                       Genode::Entrypoint &ep,
+                       const char *creation_args,
+                       Child_info *child_info)
 	:
 	Checkpointable(env, "rm_session"),
 	Rm_session_info(creation_args, cap().local_name()),
@@ -39,8 +39,8 @@ Rm_session::Rm_session(Genode::Env &env,
 	_parent_rm        (env),
 	_child_info (child_info)
 {
-  DEBUG_THIS_CALL;
-  _ep.rpc_ep().manage(this);	  
+	DEBUG_THIS_CALL;
+	_ep.rpc_ep().manage(this);
 }
 
 
@@ -60,10 +60,10 @@ Region_map &Rm_session::_create(Genode::size_t size)
 
 	/* Create custom Region map */
 	Region_map *new_region_map = new (_md_alloc) Region_map(_md_alloc,
-															parent_cap,
-															size,
-															"custom",
-															_child_info->bootstrapped);
+	                                                        parent_cap,
+	                                                        size,
+	                                                        "custom",
+	                                                        _child_info->bootstrapped);
 	/* Manage custom Region map */
 	_ep.rpc_ep().manage(new_region_map);
 
@@ -71,7 +71,7 @@ Region_map &Rm_session::_create(Genode::size_t size)
 	Genode::Lock::Guard lock(_region_maps_lock);
 	_region_maps.insert(new_region_map);
 	Genode::log("new_region_map ds cap=", new_region_map->dataspace());
-//	_ram_session.mark_region_map_dataspace(new_region_map->dataspace()); TODO FJO
+	//	_ram_session.mark_region_map_dataspace(new_region_map->dataspace()); TODO FJO
 	return *new_region_map;
 }
 
@@ -93,7 +93,7 @@ void Rm_session::_destroy(Region_map *region_map)
 void Rm_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	i_upgrade_args = _upgrade_args;
+		i_upgrade_args = _upgrade_args;
 
 	Region_map_info *region_map = nullptr;
 	while(region_map = _destroyed_region_maps.dequeue()) {
@@ -114,8 +114,8 @@ void Rm_session::checkpoint()
 Genode::Capability<Genode::Region_map> Rm_session::create(Genode::size_t size)
 {
 	DEBUG_THIS_CALL
-	/* Create custom Region map */
-	Region_map &new_region_map = _create(size);
+		/* Create custom Region map */
+		Region_map &new_region_map = _create(size);
 	return new_region_map.cap();
 }
 
@@ -130,7 +130,7 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 
 		Genode::Lock::Guard lock(_destroyed_region_maps_lock);
 		_destroyed_region_maps.enqueue(region_map);
-		
+
 		_destroy(static_cast<Region_map*>(region_map));
 	} else {
 		Genode::error("No Region map with ", region_map_cap, " found!");
@@ -139,24 +139,24 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 
 
 Rm_factory::Rm_factory(Genode::Env &env,
-		       Genode::Allocator &md_alloc,
-		       Genode::Entrypoint &ep,
-		       Genode::Lock &childs_lock,
-		       Genode::List<Child_info> &childs)
-  :
-  _env              (env),
-  _md_alloc         (md_alloc),
-  _ep               (ep),
-  _childs_lock(childs_lock),
-  _childs(childs),
-  _service(*this)
+                       Genode::Allocator &md_alloc,
+                       Genode::Entrypoint &ep,
+                       Genode::Lock &childs_lock,
+                       Genode::List<Child_info> &childs)
+	:
+	_env              (env),
+	_md_alloc         (md_alloc),
+	_ep               (ep),
+	_childs_lock(childs_lock),
+	_childs(childs),
+	_service(*this)
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 }
 
 Rm_session *Rm_factory::_create(Child_info *info, const char *args)
 {
-    return new (_md_alloc) Rm_session(_env, _md_alloc, _ep, args, info);
+	return new (_md_alloc) Rm_session(_env, _md_alloc, _ep, args, info);
 }
 
 Rm_session &Rm_factory::create(Genode::Session_state::Args const &args, Genode::Affinity)
@@ -166,16 +166,16 @@ Rm_session &Rm_factory::create(Genode::Session_state::Args const &args, Genode::
 	char label_buf[160];
 	Genode::Arg label_arg = Genode::Arg_string::find_arg(args.string(), "label");
 	label_arg.string(label_buf, sizeof(label_buf), "");
-	
+
 	_childs_lock.lock();
 	Child_info *info = _childs.first();
 	if(info) info = info->find_by_name(label_buf);
 	if(!info) {
-	  info = new(_md_alloc) Child_info(label_buf);
-		_childs.insert(info);		
+		info = new(_md_alloc) Child_info(label_buf);
+		_childs.insert(info);
 	}
 	_childs_lock.unlock();
-	
+
 	/* Create custom Pd_session */
 	Rm_session *new_session = _create(info, args.string());
 
@@ -199,7 +199,7 @@ void Rm_factory::upgrade(Rm_session&, Genode::Session_state::Args const &)
 	// Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
 
 	// _env.parent().upgrade(Genode::Parent::Env::pd(), upgrade_args);
-	// session->upgrade(upgrade_args);  
+	// session->upgrade(upgrade_args);
 }
 
 

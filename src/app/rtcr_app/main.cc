@@ -42,20 +42,20 @@ struct Rtcr::Main
 	enum { ROOT_STACK_SIZE = 512*1024 };
 	Genode::Env              &env;
 	Genode::Heap              heap            { env.ram(), env.rm() };
-        Genode::Static_parent_services<Genode::Ram_session,
-				       Genode::Pd_session,
-				       Genode::Cpu_session,
-				       Genode::Rom_session,
-				       Genode::Log_session,
-				       Timer::Session> parent_services { };
-	
-  	Main(Genode::Env &env_) : env(env_)
+	Genode::Static_parent_services<Genode::Ram_session,
+	                               Genode::Pd_session,
+	                               Genode::Cpu_session,
+	                               Genode::Rom_session,
+	                               Genode::Log_session,
+	                               Timer::Session> parent_services { };
+
+	Main(Genode::Env &env_) : env(env_)
 	{
 
 		/* timer instance for sleeping */
 		Timer::Connection timer(env);
 
-	  Base_module module(env, heap);
+		Base_module module(env, heap);
 
 		/* create serializer */
 		//		Serializer serializer(env, heap);
@@ -78,7 +78,6 @@ struct Rtcr::Main
 		Genode::log("Child_info before serializing:");
 		Genode::log(*sheep_info);
 
-		
 		// /* Serialize the last checkpoint state */
 		// Genode::size_t size;
 		// Genode::List<Child_info> *child_infos = module.child_info();
