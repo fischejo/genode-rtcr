@@ -40,7 +40,8 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 	_parent_rom   (env, label),
 	_child_info (child_info)
 {
-	DEBUG_THIS_CALL
+  DEBUG_THIS_CALL;
+  _ep.rpc_ep().manage(this);
 }
 
 
@@ -75,103 +76,85 @@ void Rtcr::Rom_session::sigh(Genode::Signal_context_capability sigh)
 }
 
 
-Rom_session *Rom_root::_create_rom_session(Child_info *info, const char *args,
-	const char *label)
-{
-	return new (md_alloc()) Rom_session(_env, _md_alloc, _ep, args, label, info);
-}
 
-
-Rom_session *Rom_root::_create_session(const char *args)
-{
-	DEBUG_THIS_CALL;	
-	/* Extracting label from args */
-	char label_buf[128];
-	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
-	label_arg.string(label_buf, sizeof(label_buf), "");
-
-	/* Revert ram_quota calculation, because the monitor needs the original
-	 * session creation argument */
-	char ram_quota_buf[32];
-	char readjusted_args[160];
-	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
-
-	Genode::size_t readjusted_ram_quota = Genode::Arg_string::find_arg(readjusted_args, "ram_quota").ulong_value(0);
-	readjusted_ram_quota = readjusted_ram_quota + sizeof(Rom_session) + md_alloc()->overhead(sizeof(Rom_session));
-
-	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
-	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
-
-	Genode::Session_label prefix = Genode::label_from_args(args).prefix();
-	
-	_childs_lock.lock();
-	Child_info *info = _childs.first();
-	if(info) info = info->find_by_name(prefix.string());
-	if(!info) {
-		info = new(_md_alloc) Child_info(prefix.string());
-		_childs.insert(info);
-	}
-	_childs_lock.unlock();
-	
-	/* Create custom Rom_session */
-	Rom_session *new_session =  _create_rom_session(info, readjusted_args, label_buf);
-	info->rom_session = new_session;
-	return new_session;
-}
-
-
-void Rom_root::_upgrade_session(Rom_session *session, const char *upgrade_args)
-{
-	char ram_quota_buf[32];
-	char new_upgrade_args[160];
-
-//	Genode::strncpy(new_upgrade_args, session->parent_state().upgrade_args.string(), sizeof(new_upgrade_args));
-
-	Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
-	Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
-	ram_quota += extra_ram_quota;
-
-	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
-	Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
-
-	// TODO
-	// session->parent_state().upgrade_args = new_upgrade_args;
-
-	_env.parent().upgrade(session->parent_cap(), upgrade_args);
-}
-
-
-void Rom_root::_destroy_session(Rom_session *session)
-{
-	// TODO FJO
-}
-
-
-Rom_root::Rom_root(Genode::Env &env,
-				   Genode::Allocator &md_alloc,
-				   Genode::Entrypoint &session_ep,
-				   Genode::Lock &childs_lock,
-				   Genode::List<Child_info> &childs)
-	:
-	Root_component<Rom_session>(session_ep, md_alloc),
-	_env              (env),
-	_md_alloc         (md_alloc),
-	_ep               (session_ep),
-	_childs_lock(childs_lock),
-	_childs(childs)
+Rom_factory::Rom_factory(Genode::Env &env,
+		       Genode::Allocator &md_alloc,
+		       Genode::Entrypoint &ep,
+		       Genode::Lock &childs_lock,
+		       Genode::List<Child_info> &childs)
+  :
+  _env              (env),
+  _md_alloc         (md_alloc),
+  _ep               (ep),
+  _childs_lock(childs_lock),
+  _childs(childs),
+  _service(*this)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
 }
 
-
-Rom_root::~Rom_root()
+Rom_session *Rom_factory::_create(Child_info *info, const char *args)
 {
-	Genode::Lock::Guard lock(_childs_lock);
-	Child_info *info = _childs.first();
-	while(info) {
-		Genode::destroy(_md_alloc, info->rom_session);		
-		info->rom_session = nullptr;
-		if(info->child_destroyed()) _childs.remove(info);
-		info = info->next();
-	}
+  char label_buf[128];
+  Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
+  label_arg.string(label_buf, sizeof(label_buf), "");
+
+  return new (_md_alloc) Rom_session(_env, _md_alloc, _ep, args, label_buf, info);
 }
+
+Rom_session &Rom_factory::create(Genode::Session_state::Args const &args, Genode::Affinity)
+{
+	DEBUG_THIS_CALL;
+
+	char label_buf[160];
+	Genode::Arg label_arg = Genode::Arg_string::find_arg(args.string(), "label");
+	label_arg.string(label_buf, sizeof(label_buf), "");
+	
+	_childs_lock.lock();
+	Child_info *info = _childs.first();
+	if(info) info = info->find_by_name(label_buf);
+	if(!info) {
+	  info = new(_md_alloc) Child_info(label_buf);
+		_childs.insert(info);		
+	}
+	_childs_lock.unlock();
+	
+	/* Create custom Pd_session */
+	Rom_session *new_session = _create(info, args.string());
+
+	info->rom_session = new_session;
+	return *new_session;
+}
+
+
+void Rom_factory::upgrade(Rom_session&, Genode::Session_state::Args const &)
+{
+	// char ram_quota_buf[32];
+	// char new_upgrade_args[160];
+
+	// Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
+
+	// Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
+	// Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
+	// ram_quota += extra_ram_quota;
+
+	// Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
+	// Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
+
+	// _env.parent().upgrade(Genode::Parent::Env::pd(), upgrade_args);
+	// session->upgrade(upgrade_args);  
+}
+
+
+void Rom_factory::destroy(Rom_session&)
+{
+	// Genode::Lock::Guard lock(_childs_lock);
+	// Child_info *info = _childs.first();
+	// while(info) {
+	// 	Genode::destroy(_md_alloc, info->pd_session);		
+	// 	info->pd_session = nullptr;
+	// 	if(info->child_destroyed()) _childs.remove(info);
+	// 	info = info->next();
+	// }	  
+}
+

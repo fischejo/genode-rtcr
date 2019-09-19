@@ -15,14 +15,13 @@
 #include <base/snprintf.h>
 #include <rom_session/connection.h>
 #include <cpu_session/cpu_session.h>
-#include <cap_session/connection.h>
 #include <util/list.h>
+#include <os/session_requester.h>
 
 /* Rtcr includes */
-#include <rtcr/init_module.h>
+#include <rtcr/base_module.h>
 #include <rtcr/cpu/cpu_session.h>
 #include <rtcr/pd/pd_session.h>
-#include <rtcr/ram/ram_session.h>
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
@@ -34,7 +33,7 @@ namespace Rtcr {
  * Encapsulates the policy and creation of the child
  */
 class Rtcr::Child : public Genode::Child_policy,
-						   public Genode::List<Rtcr::Child>
+		    public Genode::List<Rtcr::Child>
 {
 private:
 	/**
@@ -52,59 +51,28 @@ private:
 	 */
 	Genode::Allocator &_alloc;
 
-	Init_module &_module;
+	Base_module &_module;
 
 	/**
 	 * Registry for parent's services (parent of RTCR component). It is shared
 	 * between all children.
 	 */
-	Genode::Service_registry      &_parent_services;
-
-	
-	/**
+	Genode::Registry<Genode::Registered<Genode::Parent_service>> &_parent_services;
+        /**
 	 * Entrypoint for child's creation
-	 *
-	 * Entry point used for serving the parent interface and the
-	 * locally provided ROM sessions for the 'config' and 'binary'
-	 * files.
 	 */
-	enum { ENTRYPOINT_STACK_SIZE = 12*1024 };
-	Genode::Cap_connection _cap_session;
-	Genode::Affinity::Location _affinity_location;
-	Genode::Rpc_entrypoint _entrypoint;
-
-	
-	Genode::Service *_ram_service;
-	Genode::Service *_pd_service;
-	Genode::Service *_cpu_service;
-	
-	Ram_session &_ram_session;
-	Pd_session &_pd_session;
-	Cpu_session &_cpu_session;
-
-	Genode::String<30> _binary_name;
-	Genode::Rom_connection _binary_rom;
-	Genode::Dataspace_capability _binary_rom_ds;
-
-	/**
-	 * Needed for child's creation
-	 */
-	Genode::Child::Initial_thread  _initial_thread;
-	/**
-	 * Needed for child's creation
-	 */
-	Genode::Region_map_client _address_space;
-
+	Genode::Entrypoint  _child_ep;
+  Genode::Pd_connection _pd_session;
+  Genode::Pd_session_capability _pd_session_cap;  
 	/**
 	 * Child object
 	 */
 	Genode::Child _child;
 
-	Cpu_session &create_cpu_session();
-	Pd_session &create_pd_session();
-	Ram_session &create_ram_session();  
+  //        Genode::Pd_session *_pd_session;
+        Genode::Cpu_session *_cpu_session;  
 
-	inline Genode::String<30> _read_binary(const char *name);	
+
 public:
 
 	/**
@@ -116,25 +84,28 @@ public:
 	 * \param name              Name of child component
 	 */
 	Child(Genode::Env &env,
-				 Genode::Allocator &alloc,
-				 const char *name,
-				 Genode::Service_registry &parent_services,
-				 Init_module &module);
+	      Genode::Allocator &alloc,
+	      const char *name,
+	      Genode::Registry<Genode::Registered<Genode::Parent_service>>  &parent_services,
+	      Base_module &module);
 	
-	~Child() {};
-  
-	/**
-	 * Start child from scratch
-	 */
-	void start();
 
 	/****************************
 	 ** Child-policy interface **
 	 ****************************/
 
-	const char *name() const { return _name; }
-	Genode::Service *resolve_session_request(const char *service_name, const char *args);
-	void filter_session_args(const char *service, char *args, Genode::size_t args_len);
+	Genode::Child_policy::Name name() const { return _name; }
+	Genode::Child_policy::Route resolve_session_request(Genode::Service::Name const &,
+		                              Genode::Session_label const &) override;
+	void init(Genode::Pd_session &, Genode::Capability<Genode::Pd_session>) override;
+	void init(Genode::Cpu_session &, Genode::Capability<Genode::Cpu_session>) override;
+  
+  Genode::Pd_session &ref_pd() override;
+  Genode::Pd_session_capability ref_pd_cap() const override;
+
+  void resource_request(Genode::Parent::Resource_args const &args);
+  
+  //	void filter_session_args(const char *service, char *args, Genode::size_t args_len);
 	
 };
 

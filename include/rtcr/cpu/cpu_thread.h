@@ -14,6 +14,7 @@
 #include <base/entrypoint.h>
 #include <util/fifo.h>
 #include <pd_session/connection.h>
+#include <base/session_object.h>
 
 /* Rtcr includes */
 #include <rtcr/cpu/cpu_thread_info.h>

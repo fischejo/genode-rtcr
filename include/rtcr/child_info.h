@@ -9,7 +9,6 @@
 
 #include <rtcr/cpu/cpu_session_info.h>
 #include <rtcr/pd/pd_session_info.h>
-#include <rtcr/ram/ram_session_info.h>
 #include <rtcr/rm/rm_session_info.h>
 #include <rtcr/log/log_session_info.h>
 #include <rtcr/timer/timer_session_info.h>
@@ -18,7 +17,6 @@
 #include <util/list.h>
 
 namespace Rtcr {
-	class Ram_session_info;
 	class Cpu_session_info;
 	class Pd_session_info;
 	class Log_session_info;
@@ -39,7 +37,6 @@ struct Rtcr::Child_info : Genode::List<Child_info>::Element
 	Genode::String<100> name;
 	bool bootstrapped;
 	
-	Ram_session_info *ram_session;
 	Cpu_session_info *cpu_session;
 	Pd_session_info *pd_session;
 	Log_session_info *log_session;

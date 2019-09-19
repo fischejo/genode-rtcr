@@ -13,18 +13,18 @@
 #include <base/allocator.h>
 #include <root/component.h>
 #include <util/list.h>
+#include <base/session_object.h>
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
 #include <rtcr/rm/region_map.h>
-#include <rtcr/ram/ram_session.h>
 #include <rtcr/rm/rm_session_info.h>
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
 	struct Child_info; /* forward declaration */
 	class Rm_session;
-	class Rm_root;
+	class Rm_factory;
 }
 
 /**
@@ -104,53 +104,37 @@ public:
 };
 
 
-
-/**
- * Custom root RPC object to intercept session RPC object creation,
- * modification, and destruction through the root interface
- */
-class Rtcr::Rm_root : public Genode::Root_component<Rm_session>
+class Rtcr::Rm_factory : public Genode::Local_service<Rtcr::Rm_session>::Factory
 {
 private:
-	/**
-	 * Environment of Rtcr; is forwarded to a created session object
-	 */
 	Genode::Env &_env;
-
-	/**
-	 * Allocator for session objects and monitoring list elements
-	 */
 	Genode::Allocator &_md_alloc;
-
-	/**
-	 * Entrypoint for managing session objects
-	 */
 	Genode::Entrypoint &_ep;
 
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
 
+        Genode::Local_service<Rm_session> _service;  
+	Genode::Session::Diag _diag;
+
 protected:
 
-	/**
-	 * Wrapper for creating a ram session
-	 */
-	virtual Rm_session *_create_rm_session(Child_info *info, const char *args);
-	
-	Rm_session *_create_session(const char *args);
-	void _upgrade_session(Rm_session *session, const char *upgrade_args);
-	void _destroy_session(Rm_session *session);
-
+        Rm_session *_create(Child_info *info, const char *args);
   
 public:
-	Rm_root(Genode::Env &env,
-			Genode::Allocator &md_alloc,
-			Genode::Entrypoint &session_ep,
-			Genode::Lock &childs_lock,
-			Genode::List<Child_info> &childs);
-			
+	Rm_factory(Genode::Env &env,
+		   Genode::Allocator &md_alloc,
+		   Genode::Entrypoint &ep,
+		   Genode::Lock &childs_lock,
+		   Genode::List<Child_info> &childs);
+
   
-	~Rm_root();
+  Rm_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+  void upgrade(Rm_session&, Genode::Session_state::Args const &) override;
+  void destroy(Rm_session&) override;
+
+  Genode::Service *service() { return &_service; }
 };
+
 
 #endif /* _RTCR_RM_SESSION_H_ */

@@ -30,180 +30,130 @@ using namespace Rtcr;
 
 
 Child::Child(Genode::Env &env,
-						   Genode::Allocator &alloc,
-						   const char* name,
-						   Genode::Service_registry &parent_services,
-						   Init_module &module)
+	     Genode::Allocator &alloc,
+	     const char* name,
+	     Genode::Registry<Genode::Registered<Genode::Parent_service>> &parent_services,
+	     Base_module &module)
 	:
 	_name (name),
 	_env (env),
 	_alloc (alloc),
 	_module(module),
+	_pd_session(env),
 	_parent_services(parent_services),
-	_pd_service(module.pd_service()),
-	_cpu_service(module.cpu_service()),
-	_ram_service(module.ram_service()),
-	_ram_session(create_ram_session()),
-	_pd_session(create_pd_session()),	
-	_cpu_session(create_cpu_session()),
-	_binary_name(_read_binary(name)),
-	_binary_rom(env, _binary_name.string()),
-	_binary_rom_ds(_binary_rom.dataspace()),
-	_entrypoint(&_cap_session,
-				ENTRYPOINT_STACK_SIZE,
-				"entrypoint",
-				false,
-				_affinity_location), /* TODO: FJO still necessary? */
-	_address_space(_pd_session.address_space()),
-	_initial_thread(_cpu_session,
-					_pd_session.cap(),
-					_name),
-	_child(_binary_rom_ds,
-		   Genode::Dataspace_capability(),
-		   _pd_session.cap(), _pd_session,
-		   _ram_session.cap(), _ram_session,
-		   _cpu_session.cap(),
-		   _initial_thread,
-		   _env.rm(),
-		   _address_space,
-		   _entrypoint,
-		   *this,
-		   *_pd_service,
-		   *_ram_service,
-		   *_cpu_service)
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-}
-
-
-Genode::String<30> Child::_read_binary(const char *child_name)
-{
-	Genode::String<30> binary_name = child_name;
-	try {
-		Genode::Xml_node config_node = Genode::config()->xml_node();
-		Genode::Xml_node ck_node = config_node.sub_node("child");
-		Genode::String<30> node_name;
-		while(Genode::strcmp(child_name, ck_node.attribute_value("name", node_name).string()))
-			ck_node = ck_node.next("child");
-
-		binary_name = ck_node.attribute_value("binary", binary_name);
-	}
-	catch (...) {}
-	Genode::log("binary_name: ", binary_name);
-	/* fallback to child name as binary name */
-	return binary_name;
-}
-
-
-void Child::start()
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL
-	_entrypoint.activate();
-}
-
-
-Genode::Service *Child::resolve_session_request(const char *service_name,
-													   const char *args)
-{
-	Genode::Service *service = _module.resolve_session_request(service_name, args);
-
-	/* Service known from parent? */
-	if(!service) service = _parent_services.find(service_name);
-
-	/* Service not known, cannot intercept it */
-	if(!service) {
-		service = new (_alloc) Genode::Parent_service(service_name);
-		_parent_services.insert(service);
-		Genode::warning("Unknown service: ", service_name);
-	}
+	_child_ep (_env, 16*1024, "child ep"),
+	_child(_env.rm(), _child_ep.rpc_ep(), *this)
 	
-	
-	return service;
-}
-
-
-void Child::filter_session_args(const char *service,
-									   char *args,
-									   Genode::size_t args_len)
 {
-#ifdef DEBUG
-	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
-#endif
-	Genode::Session_label const old_label = Genode::label_from_args(args);
-	if (old_label == "") {
-		Genode::Arg_string::set_arg_string(args, args_len, "label", _name);
-	} else {
-		Genode::Session_label const name(_name);
-		Genode::Session_label const new_label = prefixed_label(name, old_label);
-		Genode::Arg_string::set_arg_string(args, args_len, "label", new_label.string());
-	}
+  DEBUG_THIS_CALL PROFILE_THIS_CALL;
+  _pd_session_cap = _pd_session.cap();
+  //  Genode::Pd_session *genode_pd_session = &_pd_session;
+  //  Pd_session *pd_session = static_cast<Pd_session *>(genode_pd_session);
+  //  _pd_session_cap = pd_session->parent_cap();
+  Genode::log("Child::parent_pd_cap=", _pd_session_cap);
 }
 
 
-Cpu_session &Child::create_cpu_session()
+void Child::init(Genode::Pd_session &session, Genode::Capability<Genode::Pd_session> /*cap*/)
 {
-	DEBUG_THIS_CALL;	
-	/* Preparing argument string */
-	char args_buf[160];
-	Genode::snprintf(args_buf, sizeof(args_buf),
-					 "priority=0x%x, ram_quota=%u, label=\"%s\"",
-					 Genode::Cpu_session::DEFAULT_PRIORITY, 128*1024, _name);
+  DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-	/* Issuing session method of Cpu_root */
-	Genode::Session_capability cpu_cap = _cpu_service->session(args_buf,Genode::Affinity());
-	
-	Cpu_session *cpu_session = static_cast<Cpu_session*>(_module.child_info(_name)->cpu_session);
-	if(!cpu_session) {
-		Genode::error("Creating custom CPU session failed: "
-					  "Could not find PD session in PD root");
-		throw Genode::Exception();
-	}
+  Genode::Ram_quota quota;
+  quota.value=150000;
 
-	return *cpu_session;
+  Genode::Cap_quota caps;
+  caps.value=1000;
+
+  
+  session.ref_account(_env.pd_session_cap());
+  Pd_session &_session = static_cast<Pd_session &>(session);
+
+  //  try {
+    _env.pd().transfer_quota(_session.parent_cap(), caps);
+    //  } catch (Genode::Out_of_caps) { }	
+
+    //  try {
+    _env.pd().transfer_quota(_session.parent_cap(), quota);
+    //  } catch (Genode::Out_of_ram) { }
+
+  Genode::log("_session ram after transfer: ",_session.ram_quota().value);
+  Genode::log("_session cap after transfer: ",_session.cap_quota().value);
+  Genode::log("session.parent ram after transfer: ",_session._parent_pd.ram_quota().value);
+  Genode::log("session.parent cap after transfer: ",_session._parent_pd.cap_quota().value);  
 }
 
-
-Pd_session &Child::create_pd_session()
+void Child::init(Genode::Cpu_session &, Genode::Capability<Genode::Cpu_session>)
 {
-	DEBUG_THIS_CALL;	
-	/* Preparing argument string */
-	char args_buf[160];
-	Genode::snprintf(args_buf, sizeof(args_buf), "ram_quota=%u, label=\"%s\"", 20*1024*sizeof(long), _name);
-	
-	/* Issuing session method of pd_root */
-	Genode::Session_capability pd_cap = _pd_service->session(args_buf, Genode::Affinity());
-	Pd_session *pd_session = static_cast<Pd_session *>(_module.child_info(_name)->pd_session);
-	
-	if(!pd_session) {
-		Genode::error("Creating custom PD session failed: Could",
-					  " not find PD session in PD root");
-		throw Genode::Exception();
-	}
+  DEBUG_THIS_CALL PROFILE_THIS_CALL;  
 
-	return *pd_session;
 }
 
 
-Ram_session &Child::create_ram_session()
+Genode::Pd_session &Child::ref_pd()
 {
-	DEBUG_THIS_CALL;
-	/* Preparing argument string */
-	char args_buf[160];
-	Genode::snprintf(args_buf, sizeof(args_buf),
-					 "ram_quota=%u, phys_start=0x%lx, phys_size=0x%lx, label=\"%s\"",
-					 4*1024*sizeof(long), 0UL, 0UL, _name);
-
-	/* Issuing session method of Ram_root */
-	Genode::Session_capability ram_cap = _ram_service->session(args_buf,Genode::Affinity());
-
-	/* Find created RPC object in Ram_root's list */
-	Ram_session *ram_session = static_cast<Ram_session *>(_module.child_info(_name)->ram_session);
-	Genode::log("b");	
-	if(!ram_session) {
-		Genode::error("Creating custom RAM session failed",
-					  ": Could not find RAM session in RAM root");
-		throw Genode::Exception();
-	}
-
-	return *ram_session;
+  DEBUG_THIS_CALL PROFILE_THIS_CALL;    
+  return _pd_session;
 }
+
+
+Genode::Pd_session_capability Child::ref_pd_cap() const
+{
+  DEBUG_THIS_CALL PROFILE_THIS_CALL;
+  return _pd_session_cap;
+}
+
+
+Genode::Child_policy::Route Child::resolve_session_request(Genode::Service::Name const &name,
+		                              Genode::Session_label const &label)
+{
+  Genode::Service *service = 0;
+  DEBUG_THIS_CALL PROFILE_THIS_CALL;
+  Genode::log("resolve_session_request name=",name," label=", label);
+
+  /* service is provided by module */
+  if(!Genode::strcmp(_name,label.string())) {
+      service = _module.resolve_session_request(name.string(), label.string());
+  }
+
+  /* service is provided by parent */
+  if(!service){
+	_parent_services.for_each([&] (Genode::Registered<Genode::Parent_service> &s) {
+	      if (service || s.name() != name)
+		return;
+		service = &s;
+	});
+  }
+  
+  
+  if(!service) {
+    Genode::warning("Unknown service: ", name);
+  }
+
+  return Route { *service, label, Genode::Session::Diag{false} };
+}
+
+
+void Child::resource_request(Genode::Parent::Resource_args const &args)
+{
+  DEBUG_THIS_CALL;
+
+}
+
+
+// void Child::filter_session_args(const char *service,
+// 									   char *args,
+// 									   Genode::size_t args_len)
+// {
+// #ifdef DEBUG
+// 	Genode::log("\033[36m", __PRETTY_FUNCTION__, "\033[0m");
+// #endif
+// 	Genode::Session_label const old_label = Genode::label_from_args(args);
+// 	if (old_label == "") {
+// 		Genode::Arg_string::set_arg_string(args, args_len, "label", _name);
+// 	} else {
+// 		Genode::Session_label const name(_name);
+// 		Genode::Session_label const new_label = prefixed_label(name, old_label);
+// 		Genode::Arg_string::set_arg_string(args, args_len, "label", new_label.string());
+// 	}
+// }
+

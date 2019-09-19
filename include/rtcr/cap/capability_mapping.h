@@ -7,9 +7,6 @@
 #ifndef _RTCR_CAPABILITY_MAPPING_H_
 #define _RTCR_CAPABILITY_MAPPING_H_
 
-/* Genode includes */
-#include <foc_native_pd/client.h>
-
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>

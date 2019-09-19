@@ -30,7 +30,7 @@ namespace Rtcr {
 	class Child_info;
 
 	class Cpu_session;
-	class Cpu_root;
+	class Cpu_factory;
 }
 
 /**
@@ -165,13 +165,6 @@ public:
 	int transfer_quota(Genode::Cpu_session_capability c, Genode::size_t q) override;
 	Genode::Capability<Native_cpu> native_cpu() override;
 
-	/*
-	 * KIA4SM methods
-	 */
-
-	int set_sched_type(unsigned core, unsigned sched_type) override;
-	int get_sched_type(unsigned core) override;
-	void set(Genode::Ram_session_capability ram_cap) override;
 	void deploy_queue(Genode::Dataspace_capability ds) override;
 	void rq(Genode::Dataspace_capability ds) override;
 	void dead(Genode::Dataspace_capability ds) override;
@@ -180,60 +173,38 @@ public:
 };
 
 
-/**
- * Custom root RPC object to intercept session RPC object creation, modification, and destruction through the root interface
- */
-class Rtcr::Cpu_root : public Genode::Root_component<Cpu_session>
+class Rtcr::Cpu_factory : public Genode::Local_service<Rtcr::Cpu_session>::Factory
 {
 private:
-	/**
-	 * Environment of Rtcr; is forwarded to a created session object
-	 */
-	Genode::Env        &_env;
-	/**
-	 * Allocator for session objects and monitoring list elements
-	 */
-	Genode::Allocator  &_md_alloc;
-	/**
-	 * Entrypoint for managing session objects
-	 */
+	Genode::Env &_env;
+	Genode::Allocator &_md_alloc;
 	Genode::Entrypoint &_ep;
-
-	/**
-	 * Monitor's PD root for the list of all PD sessions known to the child
-	 *
-	 * The PD sessions are used to translate child's PD sessions to parent's PD sessions.
-	 * For creating a CPU thread, child needs to pass a PD session capability. Because the
-	 * custom CPU session uses parent's CPU session (e.g. core's CPU session), it also has
-	 * to pass a PD session which is known by the parent.
-	 */
 
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
 
-	
-protected:
-	/**
-	 * Wrapper for creating a ram session
-	 */
-	virtual Cpu_session *_create_cpu_session(Child_info *info, const char *args);
-	
-	Cpu_session *_create_session(const char *args);
-	void _upgrade_session(Cpu_session *session, const char *upgrade_args);
-	void _destroy_session(Cpu_session *session);
+        Genode::Local_service<Cpu_session> _service;  
+	Genode::Session::Diag _diag;
 
-	inline Genode::Affinity::Location _read_child_affinity(Genode::Xml_node *config,
-														   const char* child_name);
+protected:
+
+        Cpu_session *_create(Child_info *info, const char *args);
   
 public:
-	Cpu_root(Genode::Env &env,
-			 Genode::Allocator &md_alloc,
-			 Genode::Entrypoint &session_ep,
-			 Genode::Lock &childs_lock,
-			 Genode::List<Child_info> &childs);
-			 
-	~Cpu_root();
+	Cpu_factory(Genode::Env &env,
+		   Genode::Allocator &md_alloc,
+		   Genode::Entrypoint &ep,
+		   Genode::Lock &childs_lock,
+		   Genode::List<Child_info> &childs);
 
+
+  
+  Cpu_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+  void upgrade(Cpu_session&, Genode::Session_state::Args const &) override;
+  void destroy(Cpu_session&) override;
+
+  Genode::Service *service() { return &_service; }
 };
+
 
 #endif /* _RTCR_CPU_SESSION_H_ */

@@ -11,7 +11,6 @@
 #include <util/list.h>
 #include <base/heap.h>
 #include <base/env.h>
-#include <os/config.h>
 #include <util/string.h>
 
 /* Rtcr includes */

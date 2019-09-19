@@ -33,18 +33,19 @@ Checkpointable::Checkpointable(Genode::Env &env, const char* name, bool ready)
 
 Genode::Affinity::Location Checkpointable::_read_affinity(const char* name)
 {
-	try {
-		Genode::Xml_node config_node = Genode::config()->xml_node();
-		Genode::Xml_node ck_node = config_node.sub_node("checkpointable");
-		Genode::String<30> node_name;
-		while(Genode::strcmp(name, ck_node.attribute_value("name", node_name).string()))
-			ck_node = ck_node.next("checkpointable");
+	// try {
+	// 	Genode::Xml_node config_node = Genode::config()->xml_node();
+	// 	Genode::Xml_node ck_node = config_node.sub_node("checkpointable");
+	// 	Genode::String<30> node_name;
+	// 	while(Genode::strcmp(name, ck_node.attribute_value("name", node_name).string()))
+	// 		ck_node = ck_node.next("checkpointable");
 
-		long const xpos = ck_node.attribute_value<long>("xpos", 0);
-		long const ypos = ck_node.attribute_value<long>("ypos", 0);
-		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
-	}
-	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
+	// 	long const xpos = ck_node.attribute_value<long>("xpos", 0);
+	// 	long const ypos = ck_node.attribute_value<long>("ypos", 0);
+	// 	return Genode::Affinity::Location(xpos, ypos, 1 ,1);
+	// }
+	// catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
+  return Genode::Affinity::Location(0, 0, 1, 1);  
 }
 
 

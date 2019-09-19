@@ -20,13 +20,13 @@
 #include <base/sleep.h>
 #include <base/log.h>
 #include <timer_session/connection.h>
-#include <os/config.h>
+#include <os/static_parent_services.h>
 
 /* Rtcr includes */
 #include <rtcr/child.h>
 #include <rtcr/module_factory.h>
-#include <rtcr/init_module.h>
-#include <rtcr_serializer/serializer.h>
+#include <rtcr/base_module.h>
+//#include <rtcr_serializer/serializer.h>
 
 
 Genode::size_t Component::stack_size() { return 512*1024; }
@@ -42,26 +42,30 @@ struct Rtcr::Main
 	enum { ROOT_STACK_SIZE = 512*1024 };
 	Genode::Env              &env;
 	Genode::Heap              heap            { env.ram(), env.rm() };
-	Genode::Service_registry  parent_services { };
+        Genode::Static_parent_services<Genode::Ram_session,
+				       Genode::Pd_session,
+				       Genode::Cpu_session,
+				       Genode::Rom_session,
+				       Genode::Log_session,
+				       Timer::Session> parent_services { };
 	
   	Main(Genode::Env &env_) : env(env_)
 	{
+
 		/* timer instance for sleeping */
 		Timer::Connection timer(env);
 
-		/* create XML configured module with the factory */
-		Init_module &module = *Module_factory::get()->create(env, heap);
+	  Base_module module(env, heap);
 
 		/* create serializer */
-		Serializer serializer(env, heap);
+		//		Serializer serializer(env, heap);
 
 		/* create a single child */
 		/* Note: multiple childs are not yet fully supported by Rtcr */
 		Child sheep (env, heap, "sheep_counter", parent_services, module);
-		sheep.start();
 
 		/* sleep a moment until child is running */
-		timer.msleep(2000);
+		timer.msleep(6000);
 
 		/* Pause, checkpoint, Resume all childs */
 		module.pause();
@@ -74,22 +78,20 @@ struct Rtcr::Main
 		Genode::log("Child_info before serializing:");
 		Genode::log(*sheep_info);
 
-		Genode::log(*sheep_info);
-
 		
-		/* Serialize the last checkpoint state */
-		Genode::size_t size;
-		Genode::List<Child_info> *child_infos = module.child_info();
-		Genode::Dataspace_capability ds_cap = serializer.serialize(child_infos, &size);
-		Genode::log("Serialized Size: ", size);
+		// /* Serialize the last checkpoint state */
+		// Genode::size_t size;
+		// Genode::List<Child_info> *child_infos = module.child_info();
+		// Genode::Dataspace_capability ds_cap = serializer.serialize(child_infos, &size);
+		// Genode::log("Serialized Size: ", size);
 	  
-		/* Parse serialized dataspace*/
-		child_infos = serializer.parse(ds_cap);
-		Genode::log("Child_info after serializing:");
-		Genode::log(*child_infos->first());
+		// /* Parse serialized dataspace*/
+		// child_infos = serializer.parse(ds_cap);
+		// Genode::log("Child_info after serializing:");
+		// Genode::log(*child_infos->first());
 
-		Genode::log("print ooool:");
-		Genode::log(*sheep_info);
+		// Genode::log("print ooool:");
+		// Genode::log(*sheep_info);
 
 		
 		/* finally sleep forever */

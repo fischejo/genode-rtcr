@@ -17,13 +17,12 @@ create_boot_directory
 #
 
 install_config {
-<config>
+<config verbose="yes">
     <affinity-space width="1"/>
 	<parent-provides>
 		<service name="PD"/>
 		<service name="CPU"/>
 		<service name="ROM"/>
-		<service name="RAM"/>
 		<service name="RM"/>
 		<service name="LOG"/>
 		<service name="IO_MEM"/>
@@ -34,7 +33,7 @@ install_config {
 	<default-route>
 		<any-service> <parent/> <any-child/> </any-service>	
 	</default-route>
-
+	<default caps="50"/>
 	<start name="timer">
      	<resource name="RAM" quantum="1M"/>
         <provides>
@@ -42,7 +41,7 @@ install_config {
        </provides>
 	</start>
 
-	<start name="rtcr_app">
+	<start name="rtcr_app" caps="8000">
 	       <route>
 		       <service name="Timer"> <child name="timer"/> </service>
                <any-service> <parent/> </any-service>
@@ -52,7 +51,6 @@ install_config {
     		   <service name="PD"/>
 			   <service name="CPU"/>
 			   <service name="ROM"/>
-			   <service name="RAM"/>
 			   <service name="RM"/>
 			   <service name="LOG"/>
             </provides>
@@ -80,17 +78,11 @@ install_config {
 
 build_boot_image {
 core
+ld.lib.so
 init
 timer
 rtcr_app
 sheep_counter
-ld.lib.so
-libc.lib.so
-pthread.lib.so
-stdcxx.lib.so
-libm.lib.so
-libprotobuf.lib.so
-zlib.lib.so
 }
 
 

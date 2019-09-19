@@ -14,7 +14,6 @@
 #include <cpu_session/connection.h>
 #include <cpu_thread/client.h>
 #include <util/xml_node.h>
-#include <os/config.h>
 #include <timer_session/connection.h>
 
 /* Rtcr includes */

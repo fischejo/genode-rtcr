@@ -18,7 +18,7 @@ Child_info *Child_info::find_by_name(const char *_name)
 
 bool Child_info::child_destroyed()
 {
-	return (!ram_session || !cpu_session || !pd_session);
+	return (!cpu_session || !pd_session);
 }
 
 
@@ -27,7 +27,6 @@ void Child_info::print(Genode::Output &output) const
 	Genode::print(output, "Child: ",name,"\n");
 	Genode::print(output, *pd_session);
 	Genode::print(output, *cpu_session);
-	Genode::print(output, *ram_session);
 
 	/* (optional) RM session */
 	if(rm_session) Genode::print(output, *rm_session);

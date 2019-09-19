@@ -54,15 +54,17 @@ Pd_session::Pd_session(Genode::Env &env,
 {
 	DEBUG_THIS_CALL;
 
+	_ep.rpc_ep().manage(this);
+	
 	i_address_space = &_address_space;
 	i_stack_area = &_stack_area;
 	i_linker_area = &_linker_area;
 		
-	_ep.manage(_address_space);
-	_ep.manage(_stack_area);
-	_ep.manage(_linker_area);
+	_ep.rpc_ep().manage(&_address_space);
+	_ep.rpc_ep().manage(&_stack_area);
+	_ep.rpc_ep().manage(&_linker_area);
 
-	Genode::log("new_region_map ds address_space=", _address_space.dataspace());	
+	Genode::log("pd_session::creation_args=", creation_args);
 }
 
 
@@ -161,18 +163,21 @@ void Pd_session::checkpoint()
 
 void Pd_session::assign_parent(Genode::Capability<Genode::Parent> parent)
 {
+	DEBUG_THIS_CALL;  
 	_parent_pd.assign_parent(parent);
 }
 
 
 bool Pd_session::assign_pci(Genode::addr_t addr, Genode::uint16_t bdf)
 {
+	DEBUG_THIS_CALL;  
 	return _parent_pd.assign_pci(addr, bdf);
 }
 
 
 Genode::Capability<Genode::Signal_source> Pd_session::alloc_signal_source()
 {
+	DEBUG_THIS_CALL;  
 	auto result_cap = _parent_pd.alloc_signal_source();
 
 	/* Create and insert list element to monitor this signal source */
@@ -188,6 +193,7 @@ Genode::Capability<Genode::Signal_source> Pd_session::alloc_signal_source()
 
 void Pd_session::free_signal_source(Genode::Capability<Genode::Signal_source> cap)
 {
+	DEBUG_THIS_CALL;  
 	/* Find list element */
 	Genode::Lock::Guard guard(_signal_sources_lock);
 	Signal_source_info *ss = _signal_sources.first();
@@ -205,6 +211,7 @@ void Pd_session::free_signal_source(Genode::Capability<Genode::Signal_source> ca
 Genode::Signal_context_capability Pd_session::alloc_context(Signal_source_capability source,
 															unsigned long imprint)
 {
+	DEBUG_THIS_CALL;  
 	auto result_cap = _parent_pd.alloc_context(source, imprint);
 
 	/* Create and insert list element to monitor this signal context */
@@ -295,103 +302,148 @@ Genode::Capability<Genode::Pd_session::Native_pd> Pd_session::native_pd()
 }
 
 
-Pd_session *Pd_root::_create_pd_session(Child_info *info, const char *args)
+void Pd_session::map(Genode::addr_t _addr, Genode::addr_t __addr)
 {
-	return new (md_alloc()) Pd_session(_env, _md_alloc, _ep, args, info);
+	_parent_pd.map(_addr, __addr);
 }
 
 
-Pd_session *Pd_root::_create_session(const char *args)
+void Pd_session::ref_account(Genode::Capability<Genode::Pd_session> cap)
+{
+	_parent_pd.ref_account(cap);
+}
+
+void Pd_session::transfer_quota(Genode::Capability<Genode::Pd_session> cap, Genode::Cap_quota quota)
+{
+	_parent_pd.transfer_quota(cap, quota);
+}
+
+void Pd_session::transfer_quota(Genode::Capability<Genode::Pd_session> cap, Genode::Ram_quota quota)
+{
+	_parent_pd.transfer_quota(cap, quota);
+}
+
+Genode::Cap_quota Pd_session::cap_quota() const
+{
+	return _parent_pd.cap_quota();
+}
+
+Genode::Cap_quota Pd_session::used_caps() const
+{
+	return _parent_pd.used_caps();
+}
+
+Genode::Ram_quota Pd_session::ram_quota() const
+{
+	return _parent_pd.ram_quota();
+}
+
+Genode::Ram_quota Pd_session::used_ram() const
+{
+	return _parent_pd.used_ram();
+}
+
+Genode::Ram_dataspace_capability Pd_session::alloc(Genode::size_t size, Genode::Cache_attribute cached)
+{
+	DEBUG_THIS_CALL;  
+  return _parent_pd.alloc(size, cached);
+}
+
+
+void Pd_session::free(Genode::Ram_dataspace_capability ram_cap)
+{
+	DEBUG_THIS_CALL;  
+	_parent_pd.free(ram_cap);
+}
+
+
+Genode::size_t Pd_session::dataspace_size(Genode::Ram_dataspace_capability cap) const
+{
+	return _parent_pd.dataspace_size(cap);
+}
+
+
+
+Pd_factory::Pd_factory(Genode::Env &env,
+		       Genode::Allocator &md_alloc,
+		       Genode::Entrypoint &ep,
+		       Genode::Lock &childs_lock,
+		       Genode::List<Child_info> &childs)
+  :
+  _env              (env),
+  _md_alloc         (md_alloc),
+  _ep               (ep),
+  _childs_lock(childs_lock),
+  _childs(childs),
+  _service(*this)
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
+}
+
+Pd_session *Pd_factory::_create(Child_info *info, const char *args)
+{
+    return new (_md_alloc) Pd_session(_env, _md_alloc, _ep, args, info);
+}
+
+Pd_session &Pd_factory::create(Genode::Session_state::Args const &args, Genode::Affinity)
 {
 	DEBUG_THIS_CALL;
-	/* Extracting label from args */
-	char label_buf[128];
-	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
+
+	char label_buf[160];
+	Genode::Arg label_arg = Genode::Arg_string::find_arg(args.string(), "label");
 	label_arg.string(label_buf, sizeof(label_buf), "");
-
-	/* Revert ram_quota calculation, because the monitor needs the original
-	 * session creation argument */
-	char ram_quota_buf[32];
-	char readjusted_args[160];
-	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
-
-	Genode::size_t readjusted_ram_quota = Genode::Arg_string::find_arg(readjusted_args, "ram_quota").ulong_value(0);
-	readjusted_ram_quota = readjusted_ram_quota + sizeof(Pd_session) + md_alloc()->overhead(sizeof(Pd_session));
-
-	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
-	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
-
+	
 	_childs_lock.lock();
 	Child_info *info = _childs.first();
 	if(info) info = info->find_by_name(label_buf);
 	if(!info) {
-		info = new(_md_alloc) Child_info(label_buf);
+	  info = new(_md_alloc) Child_info(label_buf);
 		_childs.insert(info);		
 	}
 	_childs_lock.unlock();
 	
 	/* Create custom Pd_session */
-	Pd_session *new_session = _create_pd_session(info, readjusted_args);
-	Capability_mapping *cap_mapping = new(md_alloc()) Capability_mapping(_env,
-																	   _md_alloc,
-																	   new_session);
+	Pd_session *new_session = _create(info, args.string());
+	Capability_mapping *cap_mapping = new(_md_alloc) Capability_mapping(_env,
+									     _md_alloc,
+									     new_session);
+
 	info->pd_session = new_session;
-	info->capability_mapping = cap_mapping;		
-	return new_session;
+	info->capability_mapping = cap_mapping;
+	return *new_session;
 }
 
 
-void Pd_root::_upgrade_session(Pd_session *session, const char *upgrade_args)
+void Pd_factory::upgrade(Pd_session&, Genode::Session_state::Args const &)
 {
-	char ram_quota_buf[32];
-	char new_upgrade_args[160];
+	DEBUG_THIS_CALL;  
+	// char ram_quota_buf[32];
+	// char new_upgrade_args[160];
 
-	Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
+	// Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
 
-	Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
-	Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
-	ram_quota += extra_ram_quota;
+	// Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
+	// Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
+	// ram_quota += extra_ram_quota;
 
-	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
-	Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
+	// Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
+	// Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
 
-	_env.parent().upgrade(session->parent_cap(), upgrade_args);
-	session->upgrade(upgrade_args);
+	// _env.parent().upgrade(Genode::Parent::Env::pd(), upgrade_args);
+	// session->upgrade(upgrade_args);  
 }
 
 
-void Pd_root::_destroy_session(Pd_session *session)
+void Pd_factory::destroy(Pd_session&)
 {
-
+	DEBUG_THIS_CALL;  
+	// Genode::Lock::Guard lock(_childs_lock);
+	// Child_info *info = _childs.first();
+	// while(info) {
+	// 	Genode::destroy(_md_alloc, info->pd_session);		
+	// 	info->pd_session = nullptr;
+	// 	if(info->child_destroyed()) _childs.remove(info);
+	// 	info = info->next();
+	// }	  
 }
 
-
-Pd_root::Pd_root(Genode::Env &env,
-				 Genode::Allocator &md_alloc,
-				 Genode::Entrypoint &session_ep,
-				 Genode::Lock &childs_lock,
-				 Genode::List<Child_info> &childs)
-				 
-	:
-	Root_component<Pd_session>(session_ep, md_alloc),
-	_env              (env),
-	_md_alloc         (md_alloc),
-	_ep               (session_ep),
-	_childs_lock(childs_lock),
-	_childs(childs)
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
-}
-
-
-Pd_root::~Pd_root()
-{
-	Genode::Lock::Guard lock(_childs_lock);
-	Child_info *info = _childs.first();
-	while(info) {
-		Genode::destroy(_md_alloc, info->pd_session);		
-		info->pd_session = nullptr;
-		if(info->child_destroyed()) _childs.remove(info);
-		info = info->next();
-	}	
-}

@@ -9,12 +9,19 @@
 #define _RTCR_PD_SESSION_H_
 
 /* Genode includes */
-#include <root/component.h>
 #include <base/allocator.h>
 #include <base/rpc_server.h>
 #include <pd_session/connection.h>
 #include <util/list.h>
 #include <util/fifo.h>
+#include <util/arg_string.h>
+#include <util/reconstructible.h>
+#include <base/allocator_guard.h>
+#include <base/session_object.h>
+#include <base/registry.h>
+#include <root/component.h>
+#include <base/service.h>
+#include <base/session_state.h>
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
@@ -29,7 +36,7 @@ namespace Rtcr {
 	class Capability_mapping;
 	class Child_info;
 	class Pd_session;
-	class Pd_root;
+	class Pd_factory;
 }
 
 /**
@@ -81,11 +88,12 @@ protected:
 	 */
 	Genode::Entrypoint &_ep;
 
+public:  
 	/**
 	 * Connection to parent's pd session, usually from core
 	 */
 	Genode::Pd_connection  _parent_pd;
-
+protected:
 	/**
 	 * Custom address space for monitoring the attachments of the Region map
 	 */
@@ -151,7 +159,7 @@ public:
 	void free_signal_source(Signal_source_capability cap) override;
 
 	Genode::Signal_context_capability alloc_context(Signal_source_capability source,
-													unsigned long imprint) override;
+							unsigned long imprint) override;
 	void free_context(Genode::Signal_context_capability cap) override;
 
 	void submit(Genode::Signal_context_capability context, unsigned cnt) override;
@@ -173,51 +181,62 @@ public:
 	Genode::Capability<Genode::Region_map> linker_area() override;
 	Genode::Capability<Native_pd> native_pd() override;
 
+
+  	void map(Genode::addr_t _addr, Genode::addr_t __addr) override;
+
+        void ref_account(Genode::Capability<Genode::Pd_session>) override;
+
+	void transfer_quota(Genode::Capability<Genode::Pd_session>, Genode::Cap_quota) override;
+	void transfer_quota(Genode::Capability<Genode::Pd_session>, Genode::Ram_quota) override;
+
+	Genode::Cap_quota cap_quota() const override;
+
+	Genode::Cap_quota used_caps() const override;
+
+	Genode::Ram_quota ram_quota() const override;
+
+	Genode::Ram_quota used_ram() const override;
+
+	Genode::Ram_dataspace_capability alloc(Genode::size_t, Genode::Cache_attribute) override;
+
+	void free(Genode::Ram_dataspace_capability) override;
+
+	Genode::size_t dataspace_size(Genode::Ram_dataspace_capability) const override;
+
 };
 
 
-/**
- * Custom root RPC object to intercept session RPC object creation,
- * modification, and destruction through the root interface
- */
-class Rtcr::Pd_root : public Genode::Root_component<Pd_session>
+class Rtcr::Pd_factory : public Genode::Local_service<Rtcr::Pd_session>::Factory
 {
 private:
-	/**
-	 * Environment of Rtcr; is forwarded to a created session object
-	 */
 	Genode::Env &_env;
-	/**
-	 * Allocator for session objects and monitoring list elements
-	 */
 	Genode::Allocator &_md_alloc;
-	/**
-	 * Entrypoint for managing session objects
-	 */
 	Genode::Entrypoint &_ep;
 
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
-  
-protected:
 
-	/**
-	 * Wrapper for creating a ram session
-	 */
-	virtual Pd_session *_create_pd_session(Child_info *info, const char *args);
-	
-	Pd_session *_create_session(const char *args);
-	void _upgrade_session(Pd_session *session, const char *upgrade_args);
-	void _destroy_session(Pd_session *session);
+  Genode::Local_service<Pd_session> _service;  
+	Genode::Session::Diag _diag;
+
+protected:
+  Pd_session *_create(Child_info *info, const char *args);
   
 public:
-	Pd_root(Genode::Env &env,
-			Genode::Allocator &md_alloc,
-			Genode::Entrypoint &session_ep,
-			Genode::Lock &childs_lock,
-			Genode::List<Child_info> &childs);
-			
-	~Pd_root();
+	Pd_factory(Genode::Env &env,
+		   Genode::Allocator &md_alloc,
+		   Genode::Entrypoint &ep,
+		   Genode::Lock &childs_lock,
+		   Genode::List<Child_info> &childs);
+
+
+  
+  Pd_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+  void upgrade(Pd_session&, Genode::Session_state::Args const &) override;
+  void destroy(Pd_session&) override;
+
+  Genode::Service *service() { return &_service; }
 };
+
 
 #endif /* _RTCR_PD_SESSION_H_ */

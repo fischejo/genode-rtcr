@@ -30,6 +30,7 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 										Genode::addr_t utcb)
 {
 	DEBUG_THIS_CALL;
+	Genode::log("_create_thread::parend_pd_cap=", parent_pd_cap);
 	/* Create real CPU thread from parent */
 	auto cpu_thread_cap = _parent_cpu.create_thread(parent_pd_cap,
 													name,
@@ -48,7 +49,7 @@ Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_c
 															_child_info->bootstrapped);
 	
 	/* Manage custom CPU thread */
-	_ep.manage(*new_cpu_thread);
+	_ep.rpc_ep().manage(new_cpu_thread);
 
 	/* Insert custom CPU thread into list */
 	Genode::Lock::Guard _lock_guard(_cpu_threads_lock);
@@ -91,6 +92,8 @@ Cpu_session::Cpu_session(Genode::Env &env,
 	_child_info (child_info)
 {
 	DEBUG_THIS_CALL;
+
+	_ep.rpc_ep().manage(this);	
 }
 
 
@@ -106,18 +109,19 @@ Cpu_session::~Cpu_session()
 
 Genode::Affinity::Location Cpu_session::_read_child_affinity(const char* child_name)
 {
-	try {
-		Genode::Xml_node config_node = Genode::config()->xml_node();
-		Genode::Xml_node ck_node = config_node.sub_node("child");
-		Genode::String<30> node_name;
-		while(Genode::strcmp(child_name, ck_node.attribute_value("name", node_name).string()))
-			ck_node = ck_node.next("child");
+	// try {
+	// 	Genode::Xml_node config_node = Genode::config()->xml_node();
+	// 	Genode::Xml_node ck_node = config_node.sub_node("child");
+	// 	Genode::String<30> node_name;
+	// 	while(Genode::strcmp(child_name, ck_node.attribute_value("name", node_name).string()))
+	// 		ck_node = ck_node.next("child");
 
-		long const xpos = ck_node.attribute_value<long>("xpos", 0);
-		long const ypos = ck_node.attribute_value<long>("ypos", 0);
-		return Genode::Affinity::Location(xpos, ypos, 1 ,1);
-	}
-	catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}	
+	// 	long const xpos = ck_node.attribute_value<long>("xpos", 0);
+	// 	long const ypos = ck_node.attribute_value<long>("ypos", 0);
+	// 	return Genode::Affinity::Location(xpos, ypos, 1 ,1);
+	// }
+	// catch (...) { return Genode::Affinity::Location(0, 0, 1, 1);}
+  return Genode::Affinity::Location(0, 0, 1, 1);  
 }
 
 
@@ -183,6 +187,7 @@ Genode::Thread_capability Cpu_session::create_thread(Genode::Pd_session_capabili
 	DEBUG_THIS_CALL;
 	/* Find corresponding parent PD session cap for the given custom PD session
 	 * cap */
+	Genode::log("child_info name=", _child_info->name);
 	if(!_child_info->pd_session) {
 		Genode::error("Thread creation failed: PD session ",
 					  child_pd_cap, " is unknown.");
@@ -259,24 +264,6 @@ Genode::Capability<Genode::Cpu_session::Native_cpu> Cpu_session::native_cpu()
 }
 
 
-int Cpu_session::set_sched_type(unsigned core, unsigned sched_type)
-{
-	return _parent_cpu.set_sched_type(core, sched_type);
-}
-
-
-int Cpu_session::get_sched_type(unsigned core)
-{
-	return _parent_cpu.get_sched_type(core);
-}
-
-
-void Cpu_session::set(Genode::Ram_session_capability ram_cap)
-{
-	_parent_cpu.set(ram_cap);
-}
-
-
 void Cpu_session::deploy_queue(Genode::Dataspace_capability ds)
 {
 	_parent_cpu.deploy_queue(ds);
@@ -301,98 +288,80 @@ void Cpu_session::killed()
 }
 
 
-Cpu_session *Cpu_root::_create_cpu_session(Child_info *info, const char *args)
-{
-	return new (md_alloc()) Cpu_session(_env, _md_alloc, _ep, args, info);
-}
-
-
-Cpu_session *Cpu_root::_create_session(const char *args)
-{
-	DEBUG_THIS_CALL;
-	/* Extracting label from args */
-	char label_buf[128];
-	Genode::Arg label_arg = Genode::Arg_string::find_arg(args, "label");
-	label_arg.string(label_buf, sizeof(label_buf), "");
-
-	/* Revert ram_quota calculation, because the monitor needs the original
-	 * session creation argument */
-	char ram_quota_buf[32];
-	char readjusted_args[160];
-	Genode::strncpy(readjusted_args, args, sizeof(readjusted_args));
-
-	Genode::size_t readjusted_ram_quota = Genode::Arg_string::find_arg(readjusted_args, "ram_quota").ulong_value(0);
-	readjusted_ram_quota = readjusted_ram_quota + sizeof(Cpu_session) + md_alloc()->overhead(sizeof(Cpu_session));
-
-	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", readjusted_ram_quota);
-	Genode::Arg_string::set_arg(readjusted_args, sizeof(readjusted_args), "ram_quota", ram_quota_buf);
-
-	_childs_lock.lock();
-	Child_info *info = _childs.first();
-	if(info) info = info->find_by_name(label_buf);	
-	if(!info) {
-		info = new(_md_alloc) Child_info(label_buf);
-		_childs.insert(info);		
-	}
-	_childs_lock.unlock();	
-	
-	/* Create custom Rm_session */
-	Cpu_session *new_session = _create_cpu_session(info, readjusted_args);
-
-	info->cpu_session = new_session;	
-	return new_session;
-}
-
-
-void Cpu_root::_upgrade_session(Cpu_session *session, const char *upgrade_args)
-{
-	char ram_quota_buf[32];
-	char new_upgrade_args[160];
-
-	Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
-	Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
-	Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
-	ram_quota += extra_ram_quota;
-
-	Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
-	Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
-
-	_env.parent().upgrade(session->parent_cap(), upgrade_args);
-	session->upgrade(upgrade_args);
-}
-
-
-void Cpu_root::_destroy_session(Cpu_session *session)
-{
-
-}
-
-
-Cpu_root::Cpu_root(Genode::Env &env,
-				   Genode::Allocator &md_alloc,
-				   Genode::Entrypoint &session_ep,
-				   Genode::Lock &childs_lock,
-				   Genode::List<Child_info> &childs)
-	:
-	Root_component<Cpu_session>(session_ep, md_alloc),
-	_env              (env),
-	_md_alloc         (md_alloc),
-	_ep               (session_ep),
-	_childs_lock(childs_lock),
-	_childs(childs)
+Cpu_factory::Cpu_factory(Genode::Env &env,
+		       Genode::Allocator &md_alloc,
+		       Genode::Entrypoint &ep,
+		       Genode::Lock &childs_lock,
+		       Genode::List<Child_info> &childs)
+  :
+  _env              (env),
+  _md_alloc         (md_alloc),
+  _ep               (ep),
+  _childs_lock(childs_lock),
+  _childs(childs),
+  _service(*this)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;	
 }
 
-
-Cpu_root::~Cpu_root()
+Cpu_session *Cpu_factory::_create(Child_info *info, const char *args)
 {
-	Genode::Lock::Guard lock(_childs_lock);
-	Child_info *info = _childs.first();
-	while(info) {
-		Genode::destroy(_md_alloc, info->cpu_session);		
-		info->cpu_session = nullptr;
-		if(info->child_destroyed()) _childs.remove(info);
-		info = info->next();
-	}
+    return new (_md_alloc) Cpu_session(_env, _md_alloc, _ep, args, info);
 }
+
+Cpu_session &Cpu_factory::create(Genode::Session_state::Args const &args, Genode::Affinity)
+{
+	DEBUG_THIS_CALL;
+
+	char label_buf[160];
+	Genode::Arg label_arg = Genode::Arg_string::find_arg(args.string(), "label");
+	label_arg.string(label_buf, sizeof(label_buf), "");
+	
+	_childs_lock.lock();
+	Child_info *info = _childs.first();
+	if(info) info = info->find_by_name(label_buf);
+	if(!info) {
+	  info = new(_md_alloc) Child_info(label_buf);
+		_childs.insert(info);		
+	}
+	_childs_lock.unlock();
+	
+	/* Create custom Pd_session */
+	Cpu_session *new_session = _create(info, args.string());
+
+	info->cpu_session = new_session;
+	return *new_session;
+}
+
+
+void Cpu_factory::upgrade(Cpu_session&, Genode::Session_state::Args const &)
+{
+	// char ram_quota_buf[32];
+	// char new_upgrade_args[160];
+
+	// Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
+
+	// Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
+	// Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
+	// ram_quota += extra_ram_quota;
+
+	// Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
+	// Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
+
+	// _env.parent().upgrade(Genode::Parent::Env::pd(), upgrade_args);
+	// session->upgrade(upgrade_args);  
+}
+
+
+void Cpu_factory::destroy(Cpu_session&)
+{
+	// Genode::Lock::Guard lock(_childs_lock);
+	// Child_info *info = _childs.first();
+	// while(info) {
+	// 	Genode::destroy(_md_alloc, info->pd_session);		
+	// 	info->pd_session = nullptr;
+	// 	if(info->child_destroyed()) _childs.remove(info);
+	// 	info = info->next();
+	// }	  
+}
+

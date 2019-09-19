@@ -13,6 +13,7 @@
 #include <root/component.h>
 #include <base/allocator.h>
 #include <util/list.h>
+#include <base/session_object.h>
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
@@ -21,7 +22,7 @@
 
 namespace Rtcr {
 	class Timer_session;
-	class Timer_root;
+	class Timer_factory;
 }
 
 
@@ -95,7 +96,7 @@ public:
 
 	unsigned long elapsed_ms() const override;
 
-	unsigned long now_us() const override;
+        unsigned long elapsed_us() const override;  
 
 	void msleep(unsigned ms) override;
 
@@ -103,51 +104,37 @@ public:
 };
 
 
-class Rtcr::Timer_root : public Genode::Root_component<Timer_session>
+class Rtcr::Timer_factory : public Genode::Local_service<Rtcr::Timer_session>::Factory
 {
 private:
-
-	/**
-	 * Environment of Rtcr; is forwarded to a created session object
-	 */
-	Genode::Env        &_env;
-
-	/**
-	 * Allocator for session objects and monitoring list elements
-	 */
-	Genode::Allocator  &_md_alloc;
-
-	/**
-	 * Entrypoint for managing session objects
-	 */
+	Genode::Env &_env;
+	Genode::Allocator &_md_alloc;
 	Genode::Entrypoint &_ep;
 
 	Genode::Lock &_childs_lock;
 	Genode::List<Child_info> &_childs;
 
+        Genode::Local_service<Timer_session> _service;  
+	Genode::Session::Diag _diag;
+
 protected:
 
-	/**
-	 * Wrapper for creating a ram session
-	 */
-	virtual Timer_session *_create_timer_session(Child_info *info, const char *args);
-	
-	Timer_session *_create_session(const char *args);
-
-	void _upgrade_session(Timer_session *session, const char *upgrade_args);
-
-	void _destroy_session(Timer_session *session);
-
-public:
+        Timer_session *_create(Child_info *info, const char *args);
   
-	Timer_root(Genode::Env &env,
-			   Genode::Allocator &md_alloc,
-			   Genode::Entrypoint &session_ep,
-			   Genode::Lock &childs_lock,
-			   Genode::List<Child_info> &childs);
+public:
+	Timer_factory(Genode::Env &env,
+		   Genode::Allocator &md_alloc,
+		   Genode::Entrypoint &ep,
+		   Genode::Lock &childs_lock,
+		   Genode::List<Child_info> &childs);
 
-	~Timer_root();
 
+  
+  Timer_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
+  void upgrade(Timer_session&, Genode::Session_state::Args const &) override;
+  void destroy(Timer_session&) override;
+
+  Genode::Service *service() { return &_service; }
 };
 
 

@@ -57,10 +57,14 @@ void Capability_mapping::checkpoint()
 	index = 0;
 	
 	/* Retrieve cap_idx_alloc_addr */
-	Genode::Pd_session_client pd_client(_pd_session->parent_cap());
-	addr_t const cap_idx_alloc_addr = Genode::Foc_native_pd_client(
-		pd_client.native_pd()).cap_map_info();
+	// commented due to porting to Genode 18.02
+	//	Genode::Pd_session_client pd_client(_pd_session->parent_cap());
+	//	addr_t const cap_idx_alloc_addr = Genode::Foc_native_pd_client(
+	//		pd_client.native_pd()).cap_map_info();
+	addr_t const cap_idx_alloc_addr = 0xc0198;
+	
 	_cap_idx_alloc_addr = cap_idx_alloc_addr;
+	
 
 #ifdef DEBUG
 	Genode::log("Address of cap_idx_alloc = ", Hex(cap_idx_alloc_addr));
