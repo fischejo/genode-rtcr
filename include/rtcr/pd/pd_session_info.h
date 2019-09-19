@@ -13,8 +13,9 @@
 #include <rtcr/pd/native_capability_info.h>
 #include <rtcr/pd/signal_context_info.h>
 #include <rtcr/pd/signal_source_info.h>
+#include <rtcr/pd/ram_dataspace_info.h>
 #include <rtcr/rm/region_map_info.h>
-
+#include <pd_session/connection.h>
 
 namespace Rtcr {
 	class Pd_session_info;
@@ -29,6 +30,9 @@ public:
 	Region_map_info *i_address_space;
 	Region_map_info *i_stack_area;
 	Region_map_info *i_linker_area;
+
+	Ram_dataspace_info *i_ram_dataspaces;
+	Genode::Pd_session_capability   i_ref_account_cap;
 
 	Pd_session_info(const char* creation_args, Genode::uint16_t badge)
 		: Session_info(creation_args, badge) {}
@@ -73,7 +77,16 @@ public:
 		Genode::print(output, "  Stack area: \n");
 		Genode::print(output, "   ", *i_stack_area);
 		Genode::print(output, "  Linker area: \n");
-		Genode::print(output, "   ", *i_linker_area);				
+		Genode::print(output, "   ", *i_linker_area);
+
+		/* Ram dataspaces */
+		Genode::print(output, "  Ram dataspaces:\n");
+		Ram_dataspace_info *ds = i_ram_dataspaces;
+		if(!ds) Genode::print(output, "  <empty>\n");
+		while(ds) {
+			Genode::print(output, "  ", *ds);
+			ds = ds->next();
+		}
 	}
 };
 

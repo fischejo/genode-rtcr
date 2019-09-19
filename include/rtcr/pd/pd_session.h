@@ -22,6 +22,7 @@
 #include <root/component.h>
 #include <base/service.h>
 #include <base/session_state.h>
+#include <util/retry.h>
 
 /* Rtcr includes */
 #include <rtcr/checkpointable.h>
@@ -30,6 +31,9 @@
 #include <rtcr/pd/signal_context.h>
 #include <rtcr/pd/signal_source.h>
 #include <rtcr/pd/pd_session_info.h>
+#include <rtcr/pd/ram_dataspace.h>
+#include <rtcr/pd/ram_dataspace_info.h>
+
 #include <rtcr/child_info.h>
 
 namespace Rtcr {
@@ -77,6 +81,17 @@ protected:
 	Genode::Lock _destroyed_native_caps_lock;
 	Genode::Fifo<Native_capability_info> _destroyed_native_caps;
 
+	Genode::Ram_session_capability _ref_account_cap;
+
+	/**
+	 * List of allocated ram dataspaces
+	 */
+	Genode::Lock _ram_dataspaces_lock;
+	Genode::List<Ram_dataspace_info> _ram_dataspaces;
+
+	Genode::Lock _destroyed_ram_dataspaces_lock;
+	Genode::Fifo<Ram_dataspace_info> _destroyed_ram_dataspaces;
+
 
 	Genode::Env &_env;
 	/**
@@ -112,6 +127,14 @@ protected:
 	void _checkpoint_signal_sources();
 	void _checkpoint_signal_contexts();
 	void _checkpoint_native_capabilities();
+	void _checkpoint_ram_dataspaces();	
+
+
+	virtual void _destroy_dataspace(Ram_dataspace *ds);
+	virtual void _attach_dataspace(Ram_dataspace *ds);
+	virtual void _alloc_dataspace(Ram_dataspace *ds);
+	virtual void _copy_dataspace(Ram_dataspace *ds);
+
 
 public:
 	using Genode::Rpc_object<Genode::Pd_session>::cap;

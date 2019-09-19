@@ -90,6 +90,11 @@ Pd_session::~Pd_session()
 		_native_caps.remove(nc);
 		Genode::destroy(_md_alloc, nc);
 	}
+
+	while(Ram_dataspace_info *ds = _ram_dataspaces.first()) {
+		_ram_dataspaces.remove(ds);
+		Genode::destroy(_md_alloc, ds);
+	}	
 }
 
 
@@ -147,6 +152,40 @@ void Pd_session::_checkpoint_native_capabilities()
 }
 
 
+void Pd_session::_checkpoint_ram_dataspaces()
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL
+		i_upgrade_args = _upgrade_args;
+
+	/* step 1: remove all destroyed dataspaces */
+	Ram_dataspace_info *dataspace = nullptr;
+	while(dataspace = _destroyed_ram_dataspaces.dequeue()) {
+		_ram_dataspaces.remove(dataspace);
+		_destroy_dataspace(static_cast<Ram_dataspace*>(dataspace));
+	}
+
+	/* step 2: allocate cold dataspace for recently added dataspaces */
+	dataspace = _ram_dataspaces.first();
+	while(dataspace && dataspace != i_ram_dataspaces) {
+		_alloc_dataspace(static_cast<Ram_dataspace*>(dataspace));
+		_attach_dataspace(static_cast<Ram_dataspace*>(dataspace));
+		dataspace = dataspace->next();
+	}
+
+	/* step 3: copy memory of hot ds to cold ds */
+	dataspace = _ram_dataspaces.first();
+	while(dataspace) {
+		static_cast<Ram_dataspace*>(dataspace)->checkpoint();
+		_copy_dataspace(static_cast<Ram_dataspace*>(dataspace));
+
+		dataspace = dataspace->next();
+	}
+
+	/* step 4: move pointer forward to update ck_ram_dataspaces */
+	i_ram_dataspaces = _ram_dataspaces.first();
+}
+
+
 void Pd_session::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
@@ -159,7 +198,45 @@ void Pd_session::checkpoint()
 	_checkpoint_native_capabilities();
 	_checkpoint_signal_sources();
 	_checkpoint_signal_contexts();
+	_checkpoint_ram_dataspaces();
 }
+
+
+void Pd_session::_destroy_dataspace(Ram_dataspace *ds)
+{
+	/* detach */
+	_env.rm().detach(ds->dst);
+	_env.rm().detach(ds->src);
+
+	/* free */
+	_parent_pd.free(ds->i_src_cap);
+	_env.ram().free(ds->i_dst_cap);
+
+	/* Destroy Ram_dataspace */
+	Genode::destroy(_md_alloc, ds);
+}
+
+
+void Pd_session::_copy_dataspace(Ram_dataspace *ds)
+{
+	DEBUG_THIS_CALL PROFILE_THIS_CALL;
+
+	Genode::memcpy(ds->dst, ds->src, ds->i_size);
+}
+
+
+void Pd_session::_alloc_dataspace(Ram_dataspace *ds)
+{
+	ds->i_dst_cap = _env.ram().alloc(ds->i_size);
+}
+
+void Pd_session::_attach_dataspace(Ram_dataspace *ds)
+{
+	ds->dst = _env.rm().attach(ds->i_dst_cap);
+	ds->src = _env.rm().attach(ds->i_src_cap);
+}
+
+
 
 
 void Pd_session::assign_parent(Genode::Capability<Genode::Parent> parent)
@@ -311,7 +388,8 @@ void Pd_session::map(Genode::addr_t _addr, Genode::addr_t __addr)
 
 void Pd_session::ref_account(Genode::Capability<Genode::Pd_session> cap)
 {
-	_parent_pd.ref_account(cap);
+	_ref_account_cap = cap;	
+	return _parent_pd.ref_account(cap);
 }
 
 
@@ -357,14 +435,34 @@ Genode::Ram_dataspace_capability Pd_session::alloc(Genode::size_t size,
                                                    Genode::Cache_attribute cached)
 {
 	DEBUG_THIS_CALL;
-	return _parent_pd.alloc(size, cached);
+
+	Genode::Ram_dataspace_capability src_cap = _parent_pd.alloc(size, cached);
+
+	/* Create a Ram_dataspace to monitor the newly created Ram_dataspace */
+	Ram_dataspace *ds = new (_md_alloc) Ram_dataspace(src_cap,
+	                                                  size,
+	                                                  cached,
+	                                                  _child_info->bootstrapped);
+	Genode::Lock::Guard guard(_ram_dataspaces_lock);
+	_ram_dataspaces.insert(ds);
+
+	return src_cap;
 }
 
 
-void Pd_session::free(Genode::Ram_dataspace_capability ram_cap)
+void Pd_session::free(Genode::Ram_dataspace_capability ds_cap)
 {
-	DEBUG_THIS_CALL;
-	_parent_pd.free(ram_cap);
+	DEBUG_THIS_CALL;	
+	/* Find the Ram_dataspace which monitors the given Ram_dataspace */
+	Ram_dataspace_info *rds = _ram_dataspaces.first();
+	if(rds) rds = rds->find_by_badge(ds_cap.local_name());
+	if(rds) {
+		Genode::Lock::Guard lock_guard(_destroyed_ram_dataspaces_lock);
+		_destroyed_ram_dataspaces.enqueue(rds);
+	} else {
+		Genode::warning(__func__, " Ram_dataspace not found for ", ds_cap);
+		return;
+	}	
 }
 
 
