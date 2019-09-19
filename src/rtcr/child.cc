@@ -127,8 +127,9 @@ void Child::init(Genode::Pd_session &session, Genode::Capability<Genode::Pd_sess
 	session.ref_account(_env.pd_session_cap());
 
 	Pd_session &_session = static_cast<Pd_session &>(session);
-	_env.pd().transfer_quota(_session.parent_cap(), _caps_quota);
-	_env.pd().transfer_quota(_session.parent_cap(), _ram_quota);
+	_parent_pd_cap = _session.parent_cap();
+	_env.pd().transfer_quota(_parent_pd_cap, _caps_quota);
+	_env.pd().transfer_quota(_parent_pd_cap, _ram_quota);
 
 #ifdef VERBOSE
 	Genode::log("Pd_session[",_name,"]",
@@ -189,3 +190,54 @@ Genode::Child_policy::Route Child::resolve_session_request(Genode::Service::Name
 	return Route { *service, label, Genode::Session::Diag{false} };
 }
 
+
+void Child::resource_request(Genode::Parent::Resource_args const &args)
+{
+	DEBUG_THIS_CALL;
+
+	Genode::Ram_quota ram = Genode::ram_quota_from_args(args.string());
+	Genode::Cap_quota caps = Genode::cap_quota_from_args(args.string());
+
+#ifdef VERBOSE
+	Genode::log("requested: ",ram.value," ",caps.value," available: ",
+	            _env.pd().avail_ram().value," ",_env.pd().avail_caps().value);
+#endif
+	ram.value *= 5;
+	
+	if (ram.value) {
+		Genode::Ram_quota avail = _env.pd().avail_ram();
+		if (avail.value > ram.value) {
+			try {
+				_env.pd().transfer_quota(_parent_pd_cap, ram);
+			} catch (Genode::Out_of_ram) {
+				Genode::log("Something went wrong during RAM transfer");
+			}	
+		} else {
+			try {
+				_env.pd().transfer_quota(_parent_pd_cap, Genode::Ram_quota{avail.value >> 1});
+			} catch (Genode::Out_of_ram) {
+				Genode::log("Something went wrong during RAM transfer");				
+			}	
+			_env.parent().resource_request(args);
+		}
+	}
+
+	if (caps.value) {
+		Genode::Cap_quota avail = _env.pd().avail_caps();
+		if (avail.value > caps.value) {
+			try {
+				_env.pd().transfer_quota(_parent_pd_cap, caps);
+			} catch (Genode::Out_of_caps) {
+				Genode::log("Something went wrong during cap transfer");
+			}	
+		} else {
+			try {
+				_env.pd().transfer_quota(_parent_pd_cap, Genode::Cap_quota{avail.value >> 1});
+			} catch (Genode::Out_of_caps) {
+				Genode::log("Something went wrong during cap transfer");
+			}	
+			_env.parent().resource_request(args);
+		}
+	}
+	_child.notify_resource_avail();	
+}

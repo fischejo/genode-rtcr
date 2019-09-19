@@ -45,6 +45,7 @@ private:
 	Genode::Allocator &_alloc;
 
 	Genode::Pd_connection _pd_session;
+	Genode::Pd_session_capability _parent_pd_cap;
   
 	/**
 	 * Registry for parent's services
@@ -107,6 +108,8 @@ public:
   
 	Genode::Pd_session &ref_pd() override;
 	Genode::Pd_session_capability ref_pd_cap() const override;
+
+	void resource_request(Genode::Parent::Resource_args const &args) override;	
 };
 
 #endif /* _RTCR_CHILD_H_ */
