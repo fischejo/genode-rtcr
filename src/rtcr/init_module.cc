@@ -26,6 +26,7 @@ Init_module::Init_module(Genode::Env &env, Genode::Allocator &alloc)
 
 	_env(env),
 	_alloc(alloc),
+	_config(env, "config"),
 	_parallel(read_parallel())
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
@@ -47,14 +48,14 @@ Init_module::~Init_module()
 
 bool Init_module::read_parallel()
 {
-	// try {
-	//   Genode::Xml_node child_node = Genode::config()->xml_node().sub_node("checkpoint");
-	//   bool const parallel = child_node.attribute_value<bool>("parallel", false);
-	//   Genode::log("Running Checkpointable in parallel: ", parallel);
-	//   return parallel;
-	// } catch(...) {
-	// 	Genode::warning("No parallel configured.");
-	// }
+	try {
+		Genode::Xml_node child_node = _config.xml().sub_node("checkpoint");
+		bool const parallel = child_node.attribute_value<bool>("parallel", false);
+		Genode::log("Running Checkpointable in parallel: ", parallel);
+		return parallel;
+	} catch(...) {
+		Genode::warning("No parallel configured.");
+	}
 	return false;
 }
 

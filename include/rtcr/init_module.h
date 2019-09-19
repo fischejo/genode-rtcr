@@ -11,8 +11,9 @@
 #include <base/allocator.h>
 #include <base/service.h>
 #include <util/list.h>
+#include <base/attached_rom_dataspace.h>
 
-/* Local includes */
+/* Rtcr includes */
 #include <rtcr/cpu/cpu_session.h>
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/rm/rm_session.h>
@@ -48,6 +49,10 @@ protected:
 	Genode::Lock _childs_lock;
 	Genode::List<Child_info> _childs;
 
+	/**
+	 * Rom dataspace holding configuration
+	 */
+	Genode::Attached_rom_dataspace _config;
 	bool _parallel;
 	inline bool read_parallel();
 
