@@ -14,26 +14,24 @@ Install genode toolchain in `/usr/local/genode-gcc`
 ```bash
 sudo su
 cd /
-wget -qO- https://nextcloud.os.in.tum.de/s/9idiw8BLbuwp35z/download | tar xj -C .
+wget -qO- https://nextcloud.os.in.tum.de/s/oHeGQp3rVk5MPpQ/download | tar x -J .
 ```
 
 ## Downloads
 
 ### Genode
 ```bash
-git clone origin/focnados-1608_red-mem
-git checkout origin/focnados-1608_red-mem
+git clone -b origin/focnados-18.02_r78 https://github.com/malsami/genode.git
 ```
 
 ### Genode Repositories
 ```bash
-git clone git@gitlab.lrz.de:rtcr_workspace/rtcr.git genode/repos/rtcr
-git clone git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repos/world
+git clone -b 18.02-v1.0 git@gitlab.lrz.de:rtcr_workspace/rtcr.git genode/repos/rtcr
 ```
 
 ## Prepare Ports
 ```bash
-./genode/tool/ports/prepare_port focnados libc stdcxx zlib libprotobuf
+./genode/tool/ports/prepare_port focnados
 ```
 
 ## Create Build Directory
@@ -47,8 +45,6 @@ genode/tool/create_builddir focnados_pbxa9 BUILD_DIR=./build_pbxa9
 
 ```bash
 cat <<'EOF' >> ./build_pbxa9/etc/build.conf
-REPOSITORIES += $(GENODE_DIR)/repos/libports
-REPOSITORIES += $(GENODE_DIR)/repos/world
 REPOSITORIES += $(GENODE_DIR)/repos/rtcr
 EOF
 ```
