@@ -17,7 +17,7 @@ create_boot_directory
 #
 
 install_config {
-<config verbose="yes">
+<config>
     <affinity-space width="1"/>
 	<parent-provides>
 		<service name="PD"/>
@@ -33,7 +33,9 @@ install_config {
 	<default-route>
 		<any-service> <parent/> <any-child/> </any-service>	
 	</default-route>
+
 	<default caps="50"/>
+
 	<start name="timer">
      	<resource name="RAM" quantum="1M"/>
         <provides>
@@ -61,7 +63,7 @@ install_config {
                  <checkpoint parallel="false"/>
                  <checkpointable name="cpu_session" xpos="0" />
                  <checkpointable name="pd_session" xpos="0" />    
-                 <checkpointable name="ram_session" xpos="0" />    
+                 <checkpointable name="ram_dataspaces" xpos="0" />    
                  <checkpointable name="rm_session" xpos="0" />    
                  <checkpointable name="rom_session" xpos="0" />    
                  <checkpointable name="log_session" xpos="0" />    

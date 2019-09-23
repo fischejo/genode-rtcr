@@ -23,7 +23,6 @@ install_config {
 		<service name="PD"/>
 		<service name="CPU"/>
 		<service name="ROM"/>
-		<service name="RAM"/>
 		<service name="RM"/>
 		<service name="LOG"/>
 		<service name="IO_MEM"/>
@@ -35,6 +34,8 @@ install_config {
 		<any-service> <parent/> <any-child/> </any-service>	
 	</default-route>
 
+	<default caps="50"/>
+
 	<start name="timer">
      	<resource name="RAM" quantum="1M"/>
         <provides>
@@ -42,7 +43,7 @@ install_config {
        </provides>
 	</start>
 
-	<start name="rtcr_app">
+	<start name="rtcr_app" caps="8000">
 	       <route>
 		       <service name="Timer"> <child name="timer"/> </service>
                <any-service> <parent/> </any-service>
@@ -52,18 +53,17 @@ install_config {
     		   <service name="PD"/>
 			   <service name="CPU"/>
 			   <service name="ROM"/>
-			   <service name="RAM"/>
 			   <service name="RM"/>
 			   <service name="LOG"/>
             </provides>
     		<resource name="RAM" quantum="256M"/>
             <config>
 	             <module name="base"/>
-                 <child name="sheep_counter" quota="520192" xpos="1" />
+                 <child name="sheep_counter" quota="140000" xpos="1" caps="1000"/>
                  <checkpoint parallel="true"/>
                  <checkpointable name="cpu_session" xpos="0" />
                  <checkpointable name="pd_session" xpos="0" />    
-                 <checkpointable name="ram_session" xpos="1" />    
+                 <checkpointable name="ram_dataspaces" xpos="1" />    
                  <checkpointable name="rm_session" xpos="0" />    
                  <checkpointable name="rom_session" xpos="0" />    
                  <checkpointable name="log_session" xpos="0" />    
@@ -80,11 +80,11 @@ install_config {
 
 build_boot_image {
 core
+ld.lib.so
 init
 timer
 rtcr_app
 sheep_counter
-ld.lib.so
 libc.lib.so
 pthread.lib.so
 stdcxx.lib.so

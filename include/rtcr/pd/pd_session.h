@@ -55,7 +55,7 @@ public:
 
 		Pd_checkpointable(Genode::Env &env, Pd_session *pd)
 			:
-			Checkpointable(env, "Pd_checkpointable"),
+			Checkpointable(env, "pd_session"),
 			_pd(pd) {};
 
 		void checkpoint() override;
@@ -67,7 +67,7 @@ public:
 
 		Ram_checkpointable(Genode::Env &env, Pd_session *pd)
 			:
-			Checkpointable(env, "Ram_checkpointable"),
+			Checkpointable(env, "ram_dataspaces"),
 			_pd(pd) {};
 
 		void checkpoint() override;
