@@ -12,6 +12,8 @@
 #include <base/service.h>
 #include <util/list.h>
 #include <base/attached_rom_dataspace.h>
+#include <base/registry.h>
+
 
 /* Rtcr includes */
 #include <rtcr/cpu/cpu_session.h>
@@ -49,6 +51,8 @@ protected:
 	Genode::Lock _childs_lock;
 	Genode::List<Child_info> _childs;
 
+	Genode::Registry<Genode::Service> _services;
+	
 	/**
 	 * Rom dataspace holding configuration
 	 */
@@ -70,6 +74,9 @@ public:
 	virtual Genode::Service *resolve_session_request(const char *service_name,
 	                                                 const char *args) = 0;
 
+	Genode::Registry<Genode::Service> &services() {
+		return _services;
+	}
 	
 	void pause();
 	void resume();

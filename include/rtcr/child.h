@@ -51,8 +51,8 @@ private:
 	 * Registry for parent's services
 	 */
 	Genode::Registry<Genode::Registered<Genode::Parent_service>> &_parent_services;
+	Genode::Registry<Genode::Service> &_local_services;
 
-	Init_module &_module;
 	/**
 	 * Rom dataspace holding the XML config 
 	 */
@@ -92,8 +92,7 @@ public:
 	      Genode::Allocator &alloc,
 	      const char *name,
 	      Genode::Registry<Genode::Registered<Genode::Parent_service>>  &parent_services,
-	      Init_module &module);
-
+	      Genode::Registry<Genode::Service> &services);
 	
 
 	/****************************

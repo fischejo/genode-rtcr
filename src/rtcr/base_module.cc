@@ -4,6 +4,8 @@
  * \date   2019-08-29
  */
 #include <rtcr/base_module.h>
+#include <base/service.h>
+#include <base/registry.h>
 
 #ifdef PROFILE
 #include <util/profiler.h>
@@ -29,16 +31,14 @@ Base_module::Base_module(Genode::Env &env, Genode::Allocator &alloc)
 	:
 	Init_module(env, alloc),
 	_ep(env, 16*1024, "resources ep"),
-	_pd_factory(env, alloc, _ep, _childs_lock, _childs),
-	_cpu_factory(env, alloc, _ep, _childs_lock, _childs),
-	_log_factory(env, alloc, _ep, _childs_lock, _childs),
-	_timer_factory(env, alloc, _ep, _childs_lock, _childs),
-	_rom_factory(env, alloc, _ep, _childs_lock, _childs),
-	_rm_factory(env, alloc, _ep, _childs_lock, _childs)    
+	_pd_factory(env, alloc, _ep, _childs_lock, _childs, _services),
+	_cpu_factory(env, alloc, _ep, _childs_lock, _childs, _services),
+	_log_factory(env, alloc, _ep, _childs_lock, _childs, _services),
+	_timer_factory(env, alloc, _ep, _childs_lock, _childs, _services),
+	_rom_factory(env, alloc, _ep, _childs_lock, _childs, _services),
+	_rm_factory(env, alloc, _ep, _childs_lock, _childs, _services)
 {
 	DEBUG_THIS_CALL;
-
-
 }
 
 
@@ -46,7 +46,7 @@ Genode::Service *Base_module::resolve_session_request(const char *service_name,
                                                       const char *args)
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-
+	/*
 	if(!Genode::strcmp(service_name, "PD")) {
 		return _pd_factory.service();
 	} else if(!Genode::strcmp(service_name, "CPU")) {
@@ -60,6 +60,6 @@ Genode::Service *Base_module::resolve_session_request(const char *service_name,
 	} else if(!Genode::strcmp(service_name, "ROM")) {
 		return _rom_factory.service();
 	}
-
+	*/
 	return 0;
 }

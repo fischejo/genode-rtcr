@@ -20,11 +20,11 @@
 #include <rtcr/rm/region_map.h>
 #include <rtcr/rm/rm_session_info.h>
 #include <rtcr/child_info.h>
+#include <rtcr/root_component.h>
 
 namespace Rtcr {
-	struct Child_info; /* forward declaration */
 	class Rm_session;
-	class Rm_factory;
+	class Rm_root;
 }
 
 /**
@@ -47,6 +47,7 @@ protected:
 	 */
 	Genode::Allocator &_md_alloc;
 
+	Genode::Env &_env;
 	/**
 	 * Entrypoint for managing created Rpc objects
 	 */
@@ -77,9 +78,7 @@ public:
 
 	void checkpoint() override;
 
-	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;
-	}
+	void upgrade(const char *upgrade_args);
 
 	const char* upgrade_args() { return _upgrade_args; }
 
@@ -102,36 +101,32 @@ public:
 };
 
 
-class Rtcr::Rm_factory : public Genode::Local_service<Rtcr::Rm_session>::Factory
+class Rtcr::Rm_root : public Root_component<Rm_session>
 {
-private:
-	Genode::Env &_env;
-	Genode::Allocator &_md_alloc;
-	Genode::Entrypoint &_ep;
+public:	
+	Rtcr::Rm_session *_create_session(Child_info *info, const char *args) override
+	{
+		Rm_session *rm_session = new (_alloc) Rm_session(_env, _alloc, _ep, args, info);
+		info->rm_session = rm_session;
+		return rm_session;
+	}
 
-	Genode::Lock &_childs_lock;
-	Genode::List<Child_info> &_childs;
+	void _destroy_session(Child_info *info, Rm_session *session) override
+	{
+		Genode::destroy(_alloc, session);
+		info->rm_session = nullptr;
+	}
 
-	Genode::Local_service<Rm_session> _service;
-	Genode::Session::Diag _diag;
-
-protected:
-
-	Rm_session *_create(Child_info *info, const char *args);
-
-public:
-	Rm_factory(Genode::Env &env,
-	           Genode::Allocator &md_alloc,
-	           Genode::Entrypoint &ep,
-	           Genode::Lock &childs_lock,
-	           Genode::List<Child_info> &childs);
-
-	Rm_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-	void upgrade(Rm_session&, Genode::Session_state::Args const &) override;
-	void destroy(Rm_session&) override;
-
-	Genode::Service *service() { return &_service; }
+	
+	Rm_root(Genode::Env &env,
+	        Genode::Allocator &alloc,
+	        Genode::Entrypoint &ep,
+	        Genode::Lock &childs_lock,
+	        Genode::List<Child_info> &childs,
+	        Genode::Registry<Genode::Service> &registry)
+		:
+		Root_component<Rm_session>(env, alloc, ep, childs_lock, childs, registry)
+	{}
 };
-
 
 #endif /* _RTCR_RM_SESSION_H_ */

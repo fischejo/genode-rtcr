@@ -21,6 +21,7 @@
 #include <base/log.h>
 #include <timer_session/connection.h>
 #include <os/static_parent_services.h>
+#include <base/registry.h>
 
 /* Libc includes */
 #include <libc/component.h>
@@ -31,6 +32,12 @@
 #include <rtcr/base_module.h>
 #include <rtcr_serializer/serializer.h>
 
+#include <rtcr/pd/pd_session.h>
+#include <rtcr/cpu/cpu_session.h>
+#include <rtcr/rm/rm_session.h>
+#include <rtcr/rom/rom_session.h>
+#include <rtcr/log/log_session.h>
+#include <rtcr/timer/timer_session.h>
 
 Genode::size_t Component::stack_size() { return 512*1024; }
 
@@ -45,18 +52,20 @@ struct Rtcr::Main
 	enum { ROOT_STACK_SIZE = 512*1024 };
 	Genode::Env              &env;
 	Genode::Heap              heap            { env.ram(), env.rm() };
-	Genode::Static_parent_services<Genode::Ram_session,
-	                               Genode::Pd_session,
-	                               Genode::Cpu_session,
-	                               Genode::Rom_session,
-	                               Genode::Log_session,
-	                               Timer::Session> parent_services { };
+	Genode::Static_parent_services<Rtcr::Pd_session,
+	                               Rtcr::Cpu_session,
+	                               Rtcr::Rm_session,	                               
+	                               Rtcr::Rom_session,
+	                               Rtcr::Log_session,
+	                               Rtcr::Timer_session> parent_services { };
+	
 	Genode::Attached_rom_dataspace config {env, "config" };
 
 	Main(Genode::Env &env_) : env(env_)
 	{
 		Module_name module_name = config.xml().sub_node("module")
 			.attribute_value("name", Module_name());
+
 		Init_module &module = *Module_factory::get(module_name)->create(env, heap);
 		
 		/* timer instance for sleeping */
@@ -67,7 +76,7 @@ struct Rtcr::Main
 
 		/* create a single child */
 		/* Note: multiple childs are not yet fully supported by Rtcr */
-		Child sheep (env, heap, "sheep_counter", parent_services, module);
+		Child sheep (env, heap, "sheep_counter", parent_services, module.services());
 
 		/* sleep a moment until child is running */
 		timer.msleep(2000);

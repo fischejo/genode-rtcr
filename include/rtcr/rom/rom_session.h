@@ -9,7 +9,6 @@
 #define _RTCR_ROM_SESSION_H_
 
 /* Genode includes */
-#include <root/component.h>
 #include <rom_session/connection.h>
 #include <dataspace/client.h>
 #include <base/rpc_server.h>
@@ -21,10 +20,11 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/rom/rom_session_info.h>
 #include <rtcr/child_info.h>
+#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Rom_session;
-	class Rom_factory;
+	class Rom_root;
 }
 
 class Rtcr::Rom_session : public Rtcr::Checkpointable,
@@ -67,16 +67,13 @@ public:
 	            Genode::Allocator &md_alloc,
 	            Genode::Entrypoint &ep,
 	            const char *creation_args,
-	            const char *label,
 	            Child_info *child_info);
 
 	~Rom_session();
 
 	void checkpoint() override;
 
-	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;
-	}
+	void upgrade(const char *upgrade_args);
 
 	const char* upgrade_args() { return _upgrade_args; }
 
@@ -92,36 +89,33 @@ public:
 };
 
 
-
-class Rtcr::Rom_factory : public Genode::Local_service<Rtcr::Rom_session>::Factory
+class Rtcr::Rom_root : public Root_component<Rom_session>
 {
-private:
-	Genode::Env &_env;
-	Genode::Allocator &_md_alloc;
-	Genode::Entrypoint &_ep;
+public:	
+	Rtcr::Rom_session *_create_session(Child_info *info, const char *args) override
+	{
+		Rom_session *rom_session = new (_alloc) Rom_session(_env, _alloc, _ep, args, info);
+		info->rom_session = rom_session;
+		return rom_session;
+	}
 
-	Genode::Lock &_childs_lock;
-	Genode::List<Child_info> &_childs;
+	void _destroy_session(Child_info *info, Rom_session *session) override
+	{
+		Genode::destroy(_alloc, session);
+		info->rom_session = nullptr;
+	}
 
-	Genode::Local_service<Rom_session> _service;
-	Genode::Session::Diag _diag;
 
-protected:
-
-	Rom_session *_create(Child_info *info, const char *args);
-
-public:
-	Rom_factory(Genode::Env &env,
-	            Genode::Allocator &md_alloc,
-	            Genode::Entrypoint &ep,
-	            Genode::Lock &childs_lock,
-	            Genode::List<Child_info> &childs);
-
-	Rom_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-	void upgrade(Rom_session&, Genode::Session_state::Args const &) override;
-	void destroy(Rom_session&) override;
-
-	Genode::Service *service() { return &_service; }
+	Rom_root(Genode::Env &env,
+	         Genode::Allocator &alloc,
+	         Genode::Entrypoint &ep,
+	         Genode::Lock &childs_lock,
+	         Genode::List<Child_info> &childs,
+	         Genode::Registry<Genode::Service> &registry)
+		:
+		Root_component<Rom_session>(env, alloc, ep, childs_lock, childs, registry)
+	{}
 };
+
 
 #endif /* _RTCR_ROM_SESSION_H_ */

@@ -11,7 +11,6 @@
 /* Genode includes */
 #include <log_session/connection.h>
 #include <base/allocator.h>
-#include <root/component.h>
 #include <util/list.h>
 #include <base/session_object.h>
 
@@ -19,10 +18,11 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/log/log_session_info.h>
 #include <rtcr/child_info.h>
+#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Log_session;
-	class Log_factory;
+	class Log_root;
 }
 
 
@@ -45,6 +45,7 @@ protected:
 	 */
 	Genode::Allocator &_md_alloc;
 
+	Genode::Env &_env;
 	/**
 	 * Entrypoint for managing created Rpc objects
 	 */
@@ -73,9 +74,7 @@ public:
 
 	void checkpoint() override;
 
-	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;
-	}
+	void upgrade(const char *upgrade_args);
 
 	const char* upgrade_args() { return _upgrade_args; }
 
@@ -88,39 +87,33 @@ public:
 };
 
 
-
-class Rtcr::Log_factory : public Genode::Local_service<Rtcr::Log_session>::Factory
+class Rtcr::Log_root : public Root_component<Log_session>
 {
-private:
-	Genode::Env &_env;
-	Genode::Allocator &_md_alloc;
-	Genode::Entrypoint &_ep;
+public:	
+	Rtcr::Log_session *_create_session(Child_info *info, const char *args) override
+	{
+		Log_session *log_session = new (_alloc) Log_session(_env, _alloc, _ep, args, info);
+		info->log_session = log_session;
+		return log_session;
+	}
 
-	Genode::Lock &_childs_lock;
-	Genode::List<Child_info> &_childs;
+	void _destroy_session(Child_info *info, Log_session *session) override
+	{
+		Genode::destroy(_alloc, session);
+		info->log_session = nullptr;
+	}
 
-	Genode::Local_service<Log_session> _service;
-	Genode::Session::Diag _diag;
 
-protected:
-
-	Log_session *_create(Child_info *info, const char *args);
- 
-public:
-	Log_factory(Genode::Env &env,
-	            Genode::Allocator &md_alloc,
-	            Genode::Entrypoint &ep,
-	            Genode::Lock &childs_lock,
-	            Genode::List<Child_info> &childs);
-
-	Log_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-	void upgrade(Log_session&, Genode::Session_state::Args const &) override;
-	void destroy(Log_session&) override;
-
-	Genode::Service *service() { return &_service; }
+	Log_root(Genode::Env &env,
+	         Genode::Allocator &alloc,
+	         Genode::Entrypoint &ep,
+	         Genode::Lock &childs_lock,
+	         Genode::List<Child_info> &childs,
+	         Genode::Registry<Genode::Service> &registry)
+		:
+	         Root_component<Log_session>(env, alloc, ep, childs_lock, childs, registry)
+	{}
 };
-
-
 
 
 #endif /* _RTCR_LOG_SESSION_H_ */

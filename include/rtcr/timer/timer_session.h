@@ -10,7 +10,6 @@
 
 /* Genode includes */
 #include <timer_session/connection.h>
-#include <root/component.h>
 #include <base/allocator.h>
 #include <util/list.h>
 #include <base/session_object.h>
@@ -19,10 +18,11 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/timer/timer_session_info.h>
 #include <rtcr/child_info.h>
+#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Timer_session;
-	class Timer_factory;
+	class Timer_root;
 }
 
 
@@ -47,6 +47,7 @@ protected:
 	 */
 	Genode::Allocator  &_md_alloc;
 
+	Genode::Env &_env;
 	/**
 	 * Entrypoint for managing created Rpc objects
 	 */
@@ -74,9 +75,7 @@ public:
 
 	void checkpoint() override;
 
-	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;
-	}
+	void upgrade(const char *upgrade_args);
 
 	const char* upgrade_args() { return _upgrade_args; }
 
@@ -100,40 +99,31 @@ public:
 };
 
 
-class Rtcr::Timer_factory : public Genode::Local_service<Rtcr::Timer_session>::Factory
+class Rtcr::Timer_root : public Root_component<Timer_session>
 {
-private:
-	Genode::Env &_env;
-	Genode::Allocator &_md_alloc;
-	Genode::Entrypoint &_ep;
+public:	
+	Rtcr::Timer_session *_create_session(Child_info *info, const char *args) override
+	{
+		Timer_session *timer_session = new (_alloc) Timer_session(_env, _alloc, _ep, args, info);
+		info->timer_session = timer_session;
+		return timer_session;
+	}
 
-	Genode::Lock &_childs_lock;
-	Genode::List<Child_info> &_childs;
+	void _destroy_session(Child_info *info, Timer_session *session) override
+	{
+		Genode::destroy(_alloc, session);
+		info->timer_session = nullptr;
+	}
 
-	Genode::Local_service<Timer_session> _service;
-	Genode::Session::Diag _diag;
-
-protected:
-
-	Timer_session *_create(Child_info *info, const char *args);
-
-public:
-	Timer_factory(Genode::Env &env,
-	              Genode::Allocator &md_alloc,
-	              Genode::Entrypoint &ep,
-	              Genode::Lock &childs_lock,
-	              Genode::List<Child_info> &childs);
-
-	Timer_session &create(Genode::Session_state::Args const &args,
-	                      Genode::Affinity) override;
-
-	void upgrade(Timer_session&,
-	             Genode::Session_state::Args const &) override;
-
-	void destroy(Timer_session&) override;
-
-	Genode::Service *service() { return &_service; }
+	Timer_root(Genode::Env &env,
+	           Genode::Allocator &alloc,
+	           Genode::Entrypoint &ep,
+	           Genode::Lock &childs_lock,
+	           Genode::List<Child_info> &childs,
+	           Genode::Registry<Genode::Service> &registry)
+		:
+		Root_component<Timer_session>(env, alloc, ep, childs_lock, childs, registry)
+	{}
 };
-
 
 #endif /* _RTCR_TIMER_SESSION_H_ */

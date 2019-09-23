@@ -33,14 +33,12 @@
 #include <rtcr/pd/pd_session_info.h>
 #include <rtcr/pd/ram_dataspace.h>
 #include <rtcr/pd/ram_dataspace_info.h>
-
 #include <rtcr/child_info.h>
+#include <rtcr/root_component.h>
 
 namespace Rtcr {
-	class Capability_mapping;
-	class Child_info;
 	class Pd_session;
-	class Pd_factory;
+	class Pd_root;
 }
 
 /**
@@ -172,9 +170,7 @@ public:
 
 	~Pd_session();
 	
-	void upgrade(const char *upgrade_args) {
-		_upgrade_args = upgrade_args;
-	}
+	void upgrade(const char *upgrade_args);
 
 	const char* upgrade_args() { return _upgrade_args; }
 
@@ -248,37 +244,52 @@ public:
 
 	Genode::size_t dataspace_size(Genode::Ram_dataspace_capability) const override;
 
+	Genode::Capability<Pd_session> const cap() const {
+		return Genode::reinterpret_cap_cast<Pd_session>(_parent_pd.cap());	
+	}
 };
 
 
-class Rtcr::Pd_factory : public Genode::Local_service<Rtcr::Pd_session>::Factory
+class Rtcr::Pd_root : public Root_component<Pd_session>
 {
-private:
-	Genode::Env &_env;
-	Genode::Allocator &_md_alloc;
-	Genode::Entrypoint &_ep;
+public:	
+	Rtcr::Pd_session *_create_session(Child_info *info, const char *args) override
+	{
+		Pd_session *pd_session = new (_alloc) Pd_session(_env, _alloc, _ep, args, info);
+		info->pd_session = pd_session;
+		return pd_session;
+	}
 
-	Genode::Lock &_childs_lock;
-	Genode::List<Child_info> &_childs;
-
-	Genode::Local_service<Pd_session> _service;
-	Genode::Session::Diag _diag;
-
-protected:
-	Pd_session *_create(Child_info *info, const char *args);
-
-public:
-	Pd_factory(Genode::Env &env,
-	           Genode::Allocator &md_alloc,
-	           Genode::Entrypoint &ep,
-	           Genode::Lock &childs_lock,
-	           Genode::List<Child_info> &childs);
-
-	Pd_session &create(Genode::Session_state::Args const &args, Genode::Affinity) override;
-	void upgrade(Pd_session&, Genode::Session_state::Args const &) override;
-	void destroy(Pd_session&) override;
-
-	Genode::Service *service() { return &_service; }
+	void _destroy_session(Child_info *info, Pd_session *session) override
+	{
+		Genode::destroy(_alloc, session);
+		info->pd_session = nullptr;
+	}
+	
+	Pd_root(Genode::Env &env,
+	        Genode::Allocator &alloc,
+	        Genode::Entrypoint &ep,
+	        Genode::Lock &childs_lock,
+	        Genode::List<Child_info> &childs,
+		Genode::Registry<Genode::Service> &registry)
+		:
+		Root_component<Pd_session>(env, alloc, ep, childs_lock, childs, registry)
+	{}
 };
+
 
 #endif /* _RTCR_PD_SESSION_H_ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+

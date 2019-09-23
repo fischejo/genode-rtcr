@@ -7,6 +7,8 @@
 
 #include <rtcr/pd/pd_session.h>
 
+#include <rtcr/cap/capability_mapping.h>
+
 #ifdef PROFILE
 #include <util/profiler.h>
 #define PROFILE_THIS_CALL PROFILE_FUNCTION("red");
@@ -63,6 +65,9 @@ Pd_session::Pd_session(Genode::Env &env,
 	i_address_space = &_address_space;
 	i_stack_area = &_stack_area;
 	i_linker_area = &_linker_area;
+
+	/* init capability mapping */
+	child_info->capability_mapping = new(md_alloc) Capability_mapping(env, md_alloc, this);
 }
 
 
@@ -472,89 +477,10 @@ Genode::size_t Pd_session::dataspace_size(Genode::Ram_dataspace_capability cap) 
 }
 
 
-Pd_factory::Pd_factory(Genode::Env &env,
-                       Genode::Allocator &md_alloc,
-                       Genode::Entrypoint &ep,
-                       Genode::Lock &childs_lock,
-                       Genode::List<Child_info> &childs)
-	:
-	_env              (env),
-	_md_alloc         (md_alloc),
-	_ep               (ep),
-	_childs_lock(childs_lock),
-	_childs(childs),
-	_service(*this)
+void Pd_session::upgrade(const char *upgrade_args)
 {
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;
+	/* instead of upgrading the intercepting session, the
+	   intercepted session is upgraded */
+	_env.parent().upgrade(Genode::Parent::Env::pd(), upgrade_args);
+	_upgrade_args = upgrade_args;
 }
-
-
-Pd_session *Pd_factory::_create(Child_info *info, const char *args)
-{
-	return new (_md_alloc) Pd_session(_env, _md_alloc, _ep, args, info);
-}
-
-
-Pd_session &Pd_factory::create(Genode::Session_state::Args const &args,
-                               Genode::Affinity)
-{
-	DEBUG_THIS_CALL;
-
-	char label_buf[160];
-	Genode::Arg label_arg = Genode::Arg_string::find_arg(args.string(), "label");
-	label_arg.string(label_buf, sizeof(label_buf), "");
-
-	_childs_lock.lock();
-	Child_info *info = _childs.first();
-	if(info) info = info->find_by_name(label_buf);
-	if(!info) {
-		info = new(_md_alloc) Child_info(label_buf);
-		_childs.insert(info);
-	}
-	_childs_lock.unlock();
-
-	/* Create custom Pd_session */
-	Pd_session *new_session = _create(info, args.string());
-	Capability_mapping *cap_mapping = new(_md_alloc) Capability_mapping(_env,
-	                                                                    _md_alloc,
-	                                                                    new_session);
-
-	info->pd_session = new_session;
-	info->capability_mapping = cap_mapping;
-	return *new_session;
-}
-
-
-void Pd_factory::upgrade(Pd_session&, Genode::Session_state::Args const &)
-{
-	DEBUG_THIS_CALL;
-	// char ram_quota_buf[32];
-	// char new_upgrade_args[160];
-
-	// Genode::strncpy(new_upgrade_args, session->upgrade_args(), sizeof(new_upgrade_args));
-
-	// Genode::size_t ram_quota = Genode::Arg_string::find_arg(new_upgrade_args, "ram_quota").ulong_value(0);
-	// Genode::size_t extra_ram_quota = Genode::Arg_string::find_arg(upgrade_args, "ram_quota").ulong_value(0);
-	// ram_quota += extra_ram_quota;
-
-	// Genode::snprintf(ram_quota_buf, sizeof(ram_quota_buf), "%zu", ram_quota);
-	// Genode::Arg_string::set_arg(new_upgrade_args, sizeof(new_upgrade_args), "ram_quota", ram_quota_buf);
-
-	// _env.parent().upgrade(Genode::Parent::Env::pd(), upgrade_args);
-	// session->upgrade(upgrade_args);
-}
-
-
-void Pd_factory::destroy(Pd_session&)
-{
-	DEBUG_THIS_CALL;
-	// Genode::Lock::Guard lock(_childs_lock);
-	// Child_info *info = _childs.first();
-	// while(info) {
-	// 	Genode::destroy(_md_alloc, info->pd_session);		
-	// 	info->pd_session = nullptr;
-	// 	if(info->child_destroyed()) _childs.remove(info);
-	// 	info = info->next();
-	// }	  
-}
-

@@ -5,6 +5,15 @@
  */
 #include <rtcr/child_info.h>
 
+#include <rtcr/cpu/cpu_session_info.h>
+#include <rtcr/pd/pd_session_info.h>
+#include <rtcr/rm/rm_session_info.h>
+#include <rtcr/log/log_session_info.h>
+#include <rtcr/timer/timer_session_info.h>
+#include <rtcr/rom/rom_session_info.h>
+#include <rtcr/cap/capability_mapping.h>
+
+
 using namespace Rtcr;
 
 Child_info *Child_info::find_by_name(const char *_name)

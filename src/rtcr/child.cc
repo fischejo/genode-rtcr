@@ -33,14 +33,14 @@ Child::Child(Genode::Env &env,
              Genode::Allocator &alloc,
              const char* name,
              Genode::Registry<Genode::Registered<Genode::Parent_service>> &parent_services,
-             Init_module &module)
+             Genode::Registry<Genode::Service> &local_services)             
 	:
 	_name (name),
 	_env (env),
 	_alloc (alloc),
 	_pd_session(env),
 	_parent_services(parent_services),
-	_module(module),
+	_local_services(local_services),
 	_config(_env, "config"),
 	_caps_quota(read_cap_quota()),
 	_ram_quota(read_ram_quota()),	
@@ -121,20 +121,18 @@ Genode::Ram_quota Child::read_ram_quota()
 }
 
 
-void Child::init(Genode::Pd_session &session, Genode::Capability<Genode::Pd_session> /*cap*/)
+void Child::init(Genode::Pd_session &session, Genode::Capability<Genode::Pd_session> cap)
 {
 	DEBUG_THIS_CALL;
 	session.ref_account(_env.pd_session_cap());
-
-	Pd_session &_session = static_cast<Pd_session &>(session);
-	_parent_pd_cap = _session.parent_cap();
-	_env.pd().transfer_quota(_parent_pd_cap, _caps_quota);
-	_env.pd().transfer_quota(_parent_pd_cap, _ram_quota);
-
+	_env.pd().transfer_quota(cap, _caps_quota);
+	_env.pd().transfer_quota(cap, _ram_quota);
+	_parent_pd_cap = cap; // keep the cap for later resource_request calls
+	
 #ifdef VERBOSE
 	Genode::log("Pd_session[",_name,"]",
-	            " ram_quota=",_session.ram_quota().value,
-	            " cap_quota=",_session.cap_quota().value);
+	            " ram_quota=",session.ram_quota().value,
+	            " cap_quota=",session.cap_quota().value);
 #endif
 }
 
@@ -170,9 +168,12 @@ Genode::Child_policy::Route Child::resolve_session_request(Genode::Service::Name
 
 	Genode::Service *service = 0;
 
-	/* service is provided by module */
+	/* service is provided locally */
 	if(!Genode::strcmp(_name,label.string())) {
-		service = _module.resolve_session_request(name.string(), label.string());
+		_local_services.for_each([&] (Genode::Service &s) {
+			                   if (service || s.name() != name) return;
+			                   service = &s;
+		                   });
 	}
 
 	/* service is provided by parent */

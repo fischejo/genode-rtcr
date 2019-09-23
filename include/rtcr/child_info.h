@@ -7,23 +7,19 @@
 #ifndef _RTCR_CHILD_INFO_H_
 #define _RTCR_CHILD_INFO_H_
 
-#include <rtcr/cpu/cpu_session_info.h>
-#include <rtcr/pd/pd_session_info.h>
-#include <rtcr/rm/rm_session_info.h>
-#include <rtcr/log/log_session_info.h>
-#include <rtcr/timer/timer_session_info.h>
-#include <rtcr/rom/rom_session_info.h>
-#include <rtcr/cap/capability_mapping.h>
 #include <util/list.h>
+#include <util/string.h>
 
 namespace Rtcr {
+	/* forward declarations */
 	class Cpu_session_info;
 	class Pd_session_info;
 	class Log_session_info;
 	class Timer_session_info;
 	class Rm_session_info;
 	class Rom_session_info;
-	class Capability_mapping;	
+	class Capability_mapping;
+
 	struct Child_info;
 }
 

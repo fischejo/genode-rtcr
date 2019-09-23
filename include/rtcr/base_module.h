@@ -43,12 +43,12 @@ class Rtcr::Base_module : public Init_module
 {
 private:
 	Genode::Entrypoint _ep;    
-	Pd_factory _pd_factory;
-	Cpu_factory _cpu_factory;
-	Log_factory _log_factory;
-	Timer_factory _timer_factory;
-	Rom_factory _rom_factory;
-	Rm_factory _rm_factory;      
+	Pd_root _pd_factory;
+	Cpu_root _cpu_factory;
+	Log_root _log_factory;
+	Timer_root _timer_factory;
+	Rom_root _rom_factory;
+	Rm_root _rm_factory;      
   
 public:	
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);
