@@ -18,11 +18,9 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/timer/timer_session_info.h>
 #include <rtcr/child_info.h>
-#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Timer_session;
-	class Timer_root;
 }
 
 
@@ -96,34 +94,6 @@ public:
 	void msleep(unsigned ms) override;
 
 	void usleep(unsigned us) override;
-};
-
-
-class Rtcr::Timer_root : public Root_component<Timer_session>
-{
-public:	
-	Rtcr::Timer_session *_create_session(Child_info *info, const char *args) override
-	{
-		Timer_session *timer_session = new (_alloc) Timer_session(_env, _alloc, _ep, args, info);
-		info->timer_session = timer_session;
-		return timer_session;
-	}
-
-	void _destroy_session(Child_info *info, Timer_session *session) override
-	{
-		Genode::destroy(_alloc, session);
-		info->timer_session = nullptr;
-	}
-
-	Timer_root(Genode::Env &env,
-	           Genode::Allocator &alloc,
-	           Genode::Entrypoint &ep,
-	           Genode::Lock &childs_lock,
-	           Genode::List<Child_info> &childs,
-	           Genode::Registry<Genode::Service> &registry)
-		:
-		Root_component<Timer_session>(env, alloc, ep, childs_lock, childs, registry)
-	{}
 };
 
 #endif /* _RTCR_TIMER_SESSION_H_ */

@@ -44,53 +44,36 @@ to initialize these. This is done by root classes.
 
 A root class creates a session whenever a child application requests it. For
 this reason, it is necessary to also provide a custom root-class for your custom
-session. The most simple way is by inheriting from `Rtcr::Root_component`
-root-class and overriding the `_create_session(..)` and `_destroy_session`
-factory method.
+session. The most simple way is by using the `Rtcr::Root_component` template. It
+takes care of providing a valid `Child_info` objects to your session, creating a
+`Genode::Service` object and announcing your custom session to the parent
+application.
 
-```C++
-Rtcr::Pd_cdma_session *_create_session(Child_info *info, const char *args) override
-{
-	Pd_cdma_session *pd_session = new (_alloc) Pd_cdma_session(_env, _alloc, _ep, args, info);
-	info->pd_session = pd_session;
-	return pd_session;
-}
-
-void _destroy_session(Child_info *info, Pd_cdma_session *session) override
-{
-	Genode::destroy(_alloc, session);
-	info->pd_session = nullptr;
-}
-```
-
-As your custom root-class is implemented, this has to be bundled with all other
-root classes in a module-class.
 
 ## Custom Module Class
 
 In general, the module class is just a wrapper around the `Init_module` which
 holds all the logic for pausing, checkpointing, resuming the child
 applications. Your module shall inherit from the `Init_module` and also
-initializes all root objects in the constructor.
+initializes a root component for each session.
 
 ```C++
-Cdma_module::Cdma_module(Genode::Env &env, Genode::Allocator &alloc)
-	:
-	Init_module(env, alloc),
-	_ep(env, 16*1024, "resources ep"),
-	_pd_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_cpu_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_log_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_timer_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_rom_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_rm_factory(env, alloc, _ep, _childs_lock, _childs, _services)
-	{}
+class Rtcr::Base_module : public Init_module
+{
+	Genode::Entrypoint _ep;    
+	Root_component<Pd_session> _pd_root;
+	Root_component<Cpu_session> _cpu_root;
+	Root_component<Log_session> _log_root;
+	Root_component<Timer_session> _timer_root;
+	Root_component<Rom_session> _rom_root;
+	Root_component<Rm_session> _rm_root;
+	...
+}
 ```
 
 Now you are ready to test your module. If you want to initialize your module
-based on the module name, as it is used in the `rtcr_app` application, it will
-be necessary to implement a factory for your module with help of the
-`Rtcr::Module_factory` class.
+based on the module name, it will be necessary to implement a factory for your
+module with help of the `Rtcr::Module_factory` class.
 
 ```C++
 class Rtcr::Cdma_module_factory : public Module_factory

@@ -68,11 +68,15 @@ Pd_session::Pd_session(Genode::Env &env,
 
 	/* init capability mapping */
 	child_info->capability_mapping = new(md_alloc) Capability_mapping(env, md_alloc, this);
+	child_info->pd_session = this;
 }
 
 
 Pd_session::~Pd_session()
 {
+	_child_info->capability_mapping = nullptr;
+	_child_info->pd_session = nullptr;
+	
 	_ep.rpc_ep().dissolve(this);
 
 	while(Signal_context_info *sc = _signal_contexts.first()) {

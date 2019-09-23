@@ -31,12 +31,12 @@ Base_module::Base_module(Genode::Env &env, Genode::Allocator &alloc)
 	:
 	Init_module(env, alloc),
 	_ep(env, 16*1024, "resources ep"),
-	_pd_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_cpu_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_log_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_timer_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_rom_factory(env, alloc, _ep, _childs_lock, _childs, _services),
-	_rm_factory(env, alloc, _ep, _childs_lock, _childs, _services)
+	_pd(env, alloc, _ep, _childs_lock, _childs, _services),
+	_cpu(env, alloc, _ep, _childs_lock, _childs, _services),
+	_log(env, alloc, _ep, _childs_lock, _childs, _services),
+	_timer(env, alloc, _ep, _childs_lock, _childs, _services),
+	_rom(env, alloc, _ep, _childs_lock, _childs, _services),
+	_rm(env, alloc, _ep, _childs_lock, _childs, _services)
 {
 	DEBUG_THIS_CALL;
 }

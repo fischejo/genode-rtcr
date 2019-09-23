@@ -24,8 +24,8 @@
 #include <rtcr/timer/timer_session.h>
 #include <rtcr/rom/rom_session.h>
 #include <rtcr/cap/capability_mapping.h>
-
 #include <rtcr/child_info.h>
+#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Base_module;
@@ -43,12 +43,12 @@ class Rtcr::Base_module : public Init_module
 {
 private:
 	Genode::Entrypoint _ep;    
-	Pd_root _pd_factory;
-	Cpu_root _cpu_factory;
-	Log_root _log_factory;
-	Timer_root _timer_factory;
-	Rom_root _rom_factory;
-	Rm_root _rm_factory;      
+	Root_component<Pd_session> _pd;
+	Root_component<Cpu_session> _cpu;
+	Root_component<Log_session> _log;
+	Root_component<Timer_session> _timer;
+	Root_component<Rom_session> _rom;
+	Root_component<Rm_session> _rm;      
   
 public:	
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);

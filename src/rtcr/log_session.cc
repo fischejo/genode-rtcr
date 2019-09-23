@@ -39,11 +39,13 @@ Log_session::Log_session(Genode::Env &env,
 {
 	DEBUG_THIS_CALL;
 	_ep.rpc_ep().manage(this);
+	child_info->log_session = this;		
 }
 
 
 Log_session::~Log_session() {
 	_ep.rpc_ep().dissolve(this);
+	_child_info->log_session = nullptr;	
 }
 
 

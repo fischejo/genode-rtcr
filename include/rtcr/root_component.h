@@ -38,8 +38,6 @@ protected:
 	Genode::Allocator &_alloc;
 	Genode::Entrypoint &_ep;
 
-	virtual SESSION *_create_session(Child_info *info, const char *args) = 0;
-	virtual void _destroy_session(Child_info *info, SESSION *session) = 0;
 public:
 
 	SESSION *_create_session(const char *args) override
@@ -58,8 +56,9 @@ public:
 			_childs.insert(info);
 		}
 		_childs_lock.unlock();
-		
-		return _create_session(info, args);
+
+		/* create session */
+		return new(_alloc) SESSION(_env, _alloc, _ep, args, info);
 	}
 
 	
@@ -70,24 +69,7 @@ public:
  	}
 
 	void _destroy_session(SESSION *session) override {
-		/* get child label from args */
-		Genode::Session_label label = Genode::label_from_args(session->i_creation_args.string());
-		
-		/* find child of session */
-		Genode::Lock::Guard lock(_childs_lock);
-		Child_info *info = _childs.first();
-		if(info) info = info->find_by_name(label.string());
-
-		if(!info) {
-			Genode::error("can not destroy session of unknown child");
-			throw Genode::Exception();
-		}
-
-		/* destroy session */
-		_destroy_session(info, session);
-
-		/* remove child if all pd & cpu session of child are destroyed */
-		if(info->child_destroyed()) _childs.remove(info);
+		Genode::destroy(_alloc, session);
 	}
 
 	Root_component(Genode::Env &env,

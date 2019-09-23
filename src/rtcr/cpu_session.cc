@@ -22,6 +22,41 @@
 
 using namespace Rtcr;
 
+
+Cpu_session::Cpu_session(Genode::Env &env,
+                         Genode::Allocator &md_alloc,
+                         Genode::Entrypoint &ep,
+                         const char *creation_args,
+                         Child_info *child_info)
+	:
+	Checkpointable(env, "cpu_session"),
+	Cpu_session_info(creation_args, cap().local_name()),
+	_env             (env),
+	_md_alloc        (md_alloc),
+	_config (env, "config"),
+	_ep              (ep),
+	_parent_cpu      (env, child_info->name.string()),
+	_child_affinity (_read_child_affinity(child_info->name.string())),
+	_child_info (child_info)
+{
+	DEBUG_THIS_CALL;
+
+	_ep.rpc_ep().manage(this);
+	child_info->cpu_session = this;	
+}
+
+
+Cpu_session::~Cpu_session()
+{
+	_ep.rpc_ep().dissolve(this);
+	_child_info->cpu_session = nullptr;	
+	while(Cpu_thread_info *cpu_thread_info = _cpu_threads.first()) {
+		_cpu_threads.remove(cpu_thread_info);
+		Genode::destroy(_md_alloc, cpu_thread_info);
+	}
+}
+
+
 Cpu_thread &Cpu_session::_create_thread(Genode::Pd_session_capability child_pd_cap,
                                         Genode::Pd_session_capability parent_pd_cap,
                                         Genode::Cpu_session::Name const &name,
@@ -68,39 +103,6 @@ void Cpu_session::_kill_thread(Cpu_thread_info &cpu_thread_info)
 
 	/* Destroy real CPU thread from parent */
 	_parent_cpu.kill_thread(parent_cap);
-}
-
-
-Cpu_session::Cpu_session(Genode::Env &env,
-                         Genode::Allocator &md_alloc,
-                         Genode::Entrypoint &ep,
-                         const char *creation_args,
-                         Child_info *child_info)
-	:
-	Checkpointable(env, "cpu_session"),
-	Cpu_session_info(creation_args, cap().local_name()),
-	_env             (env),
-	_md_alloc        (md_alloc),
-	_config (env, "config"),
-	_ep              (ep),
-	_parent_cpu      (env, child_info->name.string()),
-	_child_affinity (_read_child_affinity(child_info->name.string())),
-	_child_info (child_info)
-{
-	DEBUG_THIS_CALL;
-
-	_ep.rpc_ep().manage(this);
-}
-
-
-Cpu_session::~Cpu_session()
-{
-	_ep.rpc_ep().dissolve(this);
-	
-	while(Cpu_thread_info *cpu_thread_info = _cpu_threads.first()) {
-		_cpu_threads.remove(cpu_thread_info);
-		Genode::destroy(_md_alloc, cpu_thread_info);
-	}
 }
 
 

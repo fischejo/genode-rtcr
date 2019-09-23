@@ -20,11 +20,9 @@
 #include <rtcr/rm/region_map.h>
 #include <rtcr/rm/rm_session_info.h>
 #include <rtcr/child_info.h>
-#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Rm_session;
-	class Rm_root;
 }
 
 /**
@@ -98,35 +96,6 @@ public:
 	 * XXX Untested! During the implementation time, the destroy method was not working.
 	 */
 	void destroy(Genode::Capability<Genode::Region_map> region_map_cap) override;
-};
-
-
-class Rtcr::Rm_root : public Root_component<Rm_session>
-{
-public:	
-	Rtcr::Rm_session *_create_session(Child_info *info, const char *args) override
-	{
-		Rm_session *rm_session = new (_alloc) Rm_session(_env, _alloc, _ep, args, info);
-		info->rm_session = rm_session;
-		return rm_session;
-	}
-
-	void _destroy_session(Child_info *info, Rm_session *session) override
-	{
-		Genode::destroy(_alloc, session);
-		info->rm_session = nullptr;
-	}
-
-	
-	Rm_root(Genode::Env &env,
-	        Genode::Allocator &alloc,
-	        Genode::Entrypoint &ep,
-	        Genode::Lock &childs_lock,
-	        Genode::List<Child_info> &childs,
-	        Genode::Registry<Genode::Service> &registry)
-		:
-		Root_component<Rm_session>(env, alloc, ep, childs_lock, childs, registry)
-	{}
 };
 
 #endif /* _RTCR_RM_SESSION_H_ */

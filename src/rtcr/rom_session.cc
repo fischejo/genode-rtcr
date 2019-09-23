@@ -42,11 +42,13 @@ Rtcr::Rom_session::Rom_session(Genode::Env& env,
 {
 	DEBUG_THIS_CALL;
 	_ep.rpc_ep().manage(this);
+	child_info->rom_session = this;	
 }
 
 
 Rom_session::~Rom_session() {
 	_ep.rpc_ep().dissolve(this);
+	_child_info->rom_session = nullptr;	
 }
 
 

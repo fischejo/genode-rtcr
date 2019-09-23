@@ -39,11 +39,13 @@ Timer_session::Timer_session(Genode::Env &env,
 {
 	DEBUG_THIS_CALL;
 	_ep.rpc_ep().manage(this);
+	child_info->timer_session = this;	
 }
 
 
 Timer_session::~Timer_session() {
 	_ep.rpc_ep().dissolve(this);
+	_child_info->timer_session = nullptr;	
 }
 
 

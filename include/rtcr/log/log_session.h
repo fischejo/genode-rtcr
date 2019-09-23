@@ -18,11 +18,9 @@
 #include <rtcr/checkpointable.h>
 #include <rtcr/log/log_session_info.h>
 #include <rtcr/child_info.h>
-#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Log_session;
-	class Log_root;
 }
 
 
@@ -85,35 +83,5 @@ public:
 
 	Genode::size_t write(String const &string) override;
 };
-
-
-class Rtcr::Log_root : public Root_component<Log_session>
-{
-public:	
-	Rtcr::Log_session *_create_session(Child_info *info, const char *args) override
-	{
-		Log_session *log_session = new (_alloc) Log_session(_env, _alloc, _ep, args, info);
-		info->log_session = log_session;
-		return log_session;
-	}
-
-	void _destroy_session(Child_info *info, Log_session *session) override
-	{
-		Genode::destroy(_alloc, session);
-		info->log_session = nullptr;
-	}
-
-
-	Log_root(Genode::Env &env,
-	         Genode::Allocator &alloc,
-	         Genode::Entrypoint &ep,
-	         Genode::Lock &childs_lock,
-	         Genode::List<Child_info> &childs,
-	         Genode::Registry<Genode::Service> &registry)
-		:
-	         Root_component<Log_session>(env, alloc, ep, childs_lock, childs, registry)
-	{}
-};
-
 
 #endif /* _RTCR_LOG_SESSION_H_ */

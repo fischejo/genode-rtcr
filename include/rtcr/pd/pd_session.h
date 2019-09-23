@@ -34,11 +34,9 @@
 #include <rtcr/pd/ram_dataspace.h>
 #include <rtcr/pd/ram_dataspace_info.h>
 #include <rtcr/child_info.h>
-#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Pd_session;
-	class Pd_root;
 }
 
 /**
@@ -250,46 +248,5 @@ public:
 };
 
 
-class Rtcr::Pd_root : public Root_component<Pd_session>
-{
-public:	
-	Rtcr::Pd_session *_create_session(Child_info *info, const char *args) override
-	{
-		Pd_session *pd_session = new (_alloc) Pd_session(_env, _alloc, _ep, args, info);
-		info->pd_session = pd_session;
-		return pd_session;
-	}
-
-	void _destroy_session(Child_info *info, Pd_session *session) override
-	{
-		Genode::destroy(_alloc, session);
-		info->pd_session = nullptr;
-	}
-	
-	Pd_root(Genode::Env &env,
-	        Genode::Allocator &alloc,
-	        Genode::Entrypoint &ep,
-	        Genode::Lock &childs_lock,
-	        Genode::List<Child_info> &childs,
-		Genode::Registry<Genode::Service> &registry)
-		:
-		Root_component<Pd_session>(env, alloc, ep, childs_lock, childs, registry)
-	{}
-};
-
 
 #endif /* _RTCR_PD_SESSION_H_ */
-
-
-
-
-
-
-
-
-
-
-
-
-
-

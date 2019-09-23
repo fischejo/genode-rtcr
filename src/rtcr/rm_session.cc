@@ -42,13 +42,14 @@ Rm_session::Rm_session(Genode::Env &env,
 {
 	DEBUG_THIS_CALL;
 	_ep.rpc_ep().manage(this);
+	child_info->rm_session = this;	
 }
 
 
 Rm_session::~Rm_session()
 {
 	_ep.rpc_ep().dissolve(this);
-	
+	_child_info->rm_session = nullptr;	
 	while(Region_map_info *rm = _region_maps.first()) {
 		_region_maps.remove(static_cast<Region_map*>(rm));
 		Genode::destroy(_md_alloc, rm);

@@ -25,11 +25,9 @@
 #include <rtcr/pd/pd_session.h>
 #include <rtcr/checkpointable.h>
 #include <rtcr/child_info.h>
-#include <rtcr/root_component.h>
 
 namespace Rtcr {
 	class Cpu_session;
-	class Cpu_root;
 }
 
 /**
@@ -172,34 +170,6 @@ public:
 	void dead(Genode::Dataspace_capability ds) override;
 
 	void killed() override;
-};
-
-
-class Rtcr::Cpu_root : public Root_component<Cpu_session>
-{
-public:	
-	Rtcr::Cpu_session *_create_session(Child_info *info, const char *args) override
-	{
-		Cpu_session *cpu_session = new (_alloc) Cpu_session(_env, _alloc, _ep, args, info);
-		info->cpu_session = cpu_session;
-		return cpu_session;
-	}
-
-	void _destroy_session(Child_info *info, Cpu_session *session) override
-	{
-		Genode::destroy(_alloc, session);
-		info->cpu_session = nullptr;
-	}
-
-	Cpu_root(Genode::Env &env,
-	         Genode::Allocator &alloc,
-	         Genode::Entrypoint &ep,
-	         Genode::Lock &childs_lock,
-	         Genode::List<Child_info> &childs,
-	         Genode::Registry<Genode::Service> &registry)
-		:
-		Root_component<Cpu_session>(env, alloc, ep, childs_lock, childs, registry)
-	{}
 };
 
 
