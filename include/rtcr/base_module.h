@@ -52,12 +52,6 @@ private:
   
 public:	
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);
-
-
-	Genode::Service *resolve_session_request(const char *service_name,
-	                                         const char *args);
-
-
   
 	Module_name name() override { return "base"; }
 };

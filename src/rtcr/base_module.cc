@@ -40,26 +40,3 @@ Base_module::Base_module(Genode::Env &env, Genode::Allocator &alloc)
 {
 	DEBUG_THIS_CALL;
 }
-
-
-Genode::Service *Base_module::resolve_session_request(const char *service_name,
-                                                      const char *args)
-{
-	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-	/*
-	if(!Genode::strcmp(service_name, "PD")) {
-		return _pd_factory.service();
-	} else if(!Genode::strcmp(service_name, "CPU")) {
-		return _cpu_factory.service();
-	} else if(!Genode::strcmp(service_name, "LOG")) {
-		return _log_factory.service();
-	} else if(!Genode::strcmp(service_name, "Timer")) {
-		return _timer_factory.service();
-	} else if(!Genode::strcmp(service_name, "RM")) {
-		return _rm_factory.service();
-	} else if(!Genode::strcmp(service_name, "ROM")) {
-		return _rom_factory.service();
-	}
-	*/
-	return 0;
-}

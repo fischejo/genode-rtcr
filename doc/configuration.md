@@ -6,15 +6,15 @@ A child is initialized with a label, which corresponds to an `child` node in the
 XML config. Following parameters exists:
 
 * `name` Name of the child
-* `quota` A portion of memory which is transfered to the child. Default is `512 KB`
+* `quota` A portion of memory which is transfered to the child. The current
+	maximum is 140000 bytes (136Kb). 
 * `xpos` and `ypos` assign the child to a specific CPU core. Default is `0`
-* `binary` Multiple childs can share the same binary. **NOTE: This is
-  experimental and does not work yet**. The binary is chosen by the child name.
+* `caps` the number of assigned capabilities.
 
 ```xml
 <start name="rtcr_app">
 	<config>
-		<child name="sheep_counter" quota="1048576"  xpos="1" ypos="1"/>
+		<child name="sheep_counter" quota="140000"  caps='1000' xpos="1" ypos="1"/>
 		...
 	</config>
 </start>
