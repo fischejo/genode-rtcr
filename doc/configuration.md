@@ -21,18 +21,18 @@ XML config. Following parameters exists:
 ```
 
 ## Rtcr
-The checkpoint mechanism consists of several threads each checkpointing a
-session. It is possible to assign a thread to a CPU by the `checkpointable`
+The checkpoint mechanism consists of several threads each checkpointing a part
+of session. It is possible to assign a thread to a CPU by the `checkpointable`
 node. Existing threads:
 
 * `cpu_session`
 * `pd_session`
-* `ram_session`
 * `rom_session`
 * `rm_session`
 * `log_session`
 * `timer_session`
 * `capability_mapping`
+* `ram_dataspaces`
 
 Parameters:
 
@@ -42,8 +42,7 @@ Parameters:
 ```xml
 <start name="rtcr_app">
 	<config>
-		<checkpointable name="ds_session" xpos="1" ypos="1"/>
-
+		<checkpointable name="cpu_session" xpos="1" ypos="1"/>
 		...
 	</config>
 </start>
@@ -60,16 +59,3 @@ In order to run all threads in parallel, it is necessary to activate it with the
 	</config>
 </start>
 ```
-
-
-If the module factory for loading a module is used, the module can be specified
-in a `module` node.
-```xml
-<start name="rtcr_app">
-	<config>
-       <module name="base"/>
-		...
-	</config>
-</start>
-```
-

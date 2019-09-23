@@ -18,11 +18,10 @@ beginning.
 Base_module module(env, heap);
 ```
 
-It is possible to configure a module name in the XML config and use the factory
-to initialize the module.
+It is possible to to initialize the module based on the module name.
 
 ```C++
-Init_module &module = *Module_factory::get()->create(env, heap);
+Init_module &module = *Module_factory::get("base")->create(env, heap);
 ```
 
 
@@ -30,9 +29,7 @@ Init_module &module = *Module_factory::get()->create(env, heap);
 # Child Creation
 
 ```C++
-Child sheep (env, heap, "sheep_counter", module);
-sheep.start();
-
+Child sheep (env, heap, "sheep_counter", module.services(), parent_servies);
 ```
 
 Multiple child are supported.
