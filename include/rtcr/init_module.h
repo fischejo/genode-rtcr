@@ -84,7 +84,7 @@ public:
 	 *
 	 * \return Name of your module
 	 */
-	virtual Module_name name() = 0;
+	static Module_name name();
 };
 
 #endif /* _RTCR_BASE_MODULE_H_ */

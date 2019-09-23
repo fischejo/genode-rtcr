@@ -21,7 +21,9 @@ using namespace Rtcr;
 
 namespace Rtcr {
 	class Module_factory;
+	template <typename> struct Module_factory_builder;
 }
+
 
 /**
  * Factory and registry class for modules
@@ -49,9 +51,7 @@ private:
 	 */
 	static Module_factory* _head;
 	Module_factory* _next;
-  
 public:
-
 	/**
 	 * Factory Method which creates a instance of a `Module` class.
 	 *
@@ -82,6 +82,24 @@ public:
 	
 	static Module_factory* first();
 	Module_factory* next();
+};
+
+
+/**
+ * Builder template for creating a Module_factory
+ */
+template <typename MODULE>
+struct Rtcr::Module_factory_builder : Module_factory
+{
+	Module_factory_builder() : Module_factory() {};
+
+	virtual Init_module* create(Genode::Env &env,
+	                            Genode::Allocator &alloc) override
+	{
+		return new(alloc) MODULE(env, alloc);
+	}
+
+	virtual Module_name name() { return MODULE::name(); }
 };
 
 

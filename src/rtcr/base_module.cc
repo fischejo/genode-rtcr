@@ -4,8 +4,7 @@
  * \date   2019-08-29
  */
 #include <rtcr/base_module.h>
-#include <base/service.h>
-#include <base/registry.h>
+#include <rtcr/module_factory.h>
 
 #ifdef PROFILE
 #include <util/profiler.h>
@@ -23,8 +22,9 @@
 using namespace Rtcr;
 
 /* Create a static instance of the Init_module_factory. This registers the
- * module */
-Rtcr::Base_module_factory _base_module_factory_instance;
+ * module.
+ */
+Module_factory_builder<Base_module> _base_module_factory_instance;
 
 
 Base_module::Base_module(Genode::Env &env, Genode::Allocator &alloc)

@@ -29,7 +29,6 @@
 
 namespace Rtcr {
 	class Base_module;
-	class Base_module_factory;
 }
 
 using namespace Rtcr;
@@ -53,20 +52,8 @@ private:
 public:	
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);
   
-	Module_name name() override { return "base"; }
+	static Module_name name() { return "base"; }
 };
 
-/**
- * Factory class for creating the Rtcr::Base_module
- */
-class Rtcr::Base_module_factory : public Module_factory
-{
-public:
-	Init_module* create(Genode::Env &env, Genode::Allocator &alloc) override {
-		return new (alloc) Base_module(env, alloc);
-	}
-    
-	Module_name name() override { return "base"; }
-};
 
 #endif /* _RTCR_BASE_MODULE_H_ */
