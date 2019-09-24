@@ -1,5 +1,5 @@
 #
-# brief: Simple checkpoint/restore example for dualcore
+# brief: Simple checkpoint/restore example
 # author: Fischer Johannes
 # date: 2019-06-14
 #
@@ -8,7 +8,7 @@
 # Build
 #
 
-build { core init drivers/timer app/rtcr_app app/sheep_counter }
+build { core init drivers/timer app/sheep_counter rtcr_init app/rtcr_trigger }
 
 create_boot_directory
 
@@ -18,60 +18,85 @@ create_boot_directory
 
 install_config {
 <config>
-    <affinity-space width="2"/>
-	<parent-provides>
-		<service name="PD"/>
-		<service name="CPU"/>
-		<service name="ROM"/>
-		<service name="RM"/>
-		<service name="LOG"/>
-		<service name="IO_MEM"/>
-		<service name="IO_PORT"/>
-		<service name="IRQ"/>
-	</parent-provides>
+  <affinity-space width="2"/>
+  <parent-provides>
+    <service name="PD"/>
+    <service name="CPU"/>
+    <service name="ROM"/>
+    <service name="RM"/>
+    <service name="LOG"/>
+    <service name="IO_MEM"/>
+    <service name="IO_PORT"/>
+    <service name="IRQ"/>
+  </parent-provides>
 
-	<default-route>
-		<any-service> <parent/> <any-child/> </any-service>	
-	</default-route>
+  <default-route>
+    <service name="Timer"> <child name="timer"/> </service> 
+    <any-service> <parent/> <any-child/> </any-service>	
+  </default-route>
 
-	<default caps="50"/>
+  <default caps="50"/>
 
-	<start name="timer">
+  <start name="timer">
+    <resource name="RAM" quantum="1M"/>
+    <provides>
+      <service name="Timer"/>
+    </provides>
+  </start>
+
+  <start name="rtcr_trigger" caps="1000">
+    <resource name="RAM" quantum="50M"/>
+  </start>
+
+  <start name="rtcr_init" caps="5000">
+    <resource name="RAM" quantum="50M"/>
+    <provides>
+      <service name="Timer"/>
+      <service name="PD"/>
+      <service name="CPU"/>
+      <service name="ROM"/>
+      <service name="RM"/>
+      <service name="LOG"/>
+      <service name="Rtcr"/>
+    </provides>
+    <route>
+      <service name="Timer"> <child name="timer"/> </service> 
+      <any-service> <parent/> </any-service>
+    </route>
+    <config>
+      <parent-provides>
+	<service name="PD"/>
+	<service name="CPU"/>
+	<service name="ROM"/>
+	<service name="RM"/>
+	<service name="LOG"/>
+	<service name="IO_MEM"/>
+	<service name="IO_PORT"/>
+	<service name="IRQ"/>
+        <service name="Timer"/>
+      </parent-provides>
+      <start name="sheep_counter" caps="100">
      	<resource name="RAM" quantum="1M"/>
-        <provides>
-            <service name="Timer"/>
-       </provides>
-	</start>
-
-	<start name="rtcr_app" caps="8000">
-	       <route>
-		       <service name="Timer"> <child name="timer"/> </service>
-               <any-service> <parent/> </any-service>
-       	   </route>
-		   <provides>
-               <service name="Timer"/>
-    		   <service name="PD"/>
-			   <service name="CPU"/>
-			   <service name="ROM"/>
-			   <service name="RM"/>
-			   <service name="LOG"/>
-            </provides>
-    		<resource name="RAM" quantum="256M"/>
-            <config>
-	             <module name="base"/>
-                 <child name="sheep_counter" quota="140000" xpos="1" caps="1000"/>
-                 <checkpoint parallel="true"/>
-                 <checkpointable name="cpu_session" xpos="0" />
-                 <checkpointable name="pd_session" xpos="0" />    
-                 <checkpointable name="ram_dataspaces" xpos="1" />    
-                 <checkpointable name="rm_session" xpos="0" />    
-                 <checkpointable name="rom_session" xpos="0" />    
-                 <checkpointable name="log_session" xpos="0" />    
-                 <checkpointable name="timer_session" xpos="0" />    
-                 <checkpointable name="capability_mapping" xpos="0" />    
-           </config>
-	</start>
-</config>}
+        <route>
+	  <service name="Timer"> <rtcr label="sheep_counter"/> </service> 
+	  <service name="ROM">  <parent/> </service> 
+	  <any-service> <rtcr/> </any-service>
+       	</route>
+      </start>
+      <module name="base"/>
+      <checkpoint parallel="true"/>
+      <checkpointable name="cpu_session" xpos="0" />
+      <checkpointable name="pd_session" xpos="0" />    
+      <checkpointable name="ram_dataspaces" xpos="1" />    
+      <checkpointable name="rm_session" xpos="0" />    
+      <checkpointable name="rom_session" xpos="0" />    
+      <checkpointable name="log_session" xpos="0" />    
+      <checkpointable name="timer_session" xpos="0" />    
+      <checkpointable name="capability_mapping" xpos="0" />    
+    </config>
+  </start>
+</config>
+}
 
 
 #
@@ -82,8 +107,9 @@ build_boot_image {
 core
 ld.lib.so
 init
+rtcr_init
 timer
-rtcr_app
+rtcr_trigger
 sheep_counter
 libc.lib.so
 pthread.lib.so
