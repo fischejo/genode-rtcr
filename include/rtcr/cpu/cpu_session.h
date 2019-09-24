@@ -170,6 +170,10 @@ public:
 	void dead(Genode::Dataspace_capability ds) override;
 
 	void killed() override;
+
+	Genode::Capability<Cpu_session> const cap() const {
+		return Genode::reinterpret_cap_cast<Cpu_session>(_parent_cpu.cap());	
+	}	
 };
 
 
