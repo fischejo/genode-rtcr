@@ -53,9 +53,7 @@ public:
 			free();
 		}
 
-		_module.pause();
 		_module.checkpoint();
-		_module.resume();
 		
 		_serialized_cap = _serializer.serialize(_module.child_info(), &_serialized_size);
 		_free = false;

@@ -1,5 +1,5 @@
 #
-# brief: Simple checkpoint/restore example for dual core
+# brief: Trigger checkpoint and print internal measurement information to report rom
 # author: Fischer Johannes
 # date: 2019-06-14
 #
@@ -8,7 +8,7 @@
 # Build
 #
 
-build { core init drivers/timer app/sheep_counter rtcr_init app/rtcr_trigger }
+build { core init drivers/timer app/sheep_counter rtcr_init app/rtcr_trigger server/report_rom }
 
 create_boot_directory
 
@@ -17,8 +17,8 @@ create_boot_directory
 #
 
 install_config {
-<config>
-  <affinity-space width="2"/>
+<config verbose="no">
+  <affinity-space width="1"/>
   <parent-provides>
     <service name="PD"/>
     <service name="CPU"/>
@@ -44,13 +44,26 @@ install_config {
     </provides>
   </start>
 
+	<start name="report_rom">
+		<resource name="RAM" quantum="2M"/>
+		<provides> <service name="ROM"/> <service name="Report"/> </provides>
+		<config verbose="yes">
+			<policy label="rtcr_trigger -> rtcr_state"  report="rtcr_init -> rtcr_state"/>
+		</config>
+	</start>
+	
   <start name="rtcr_trigger" caps="1000">
     <resource name="RAM" quantum="50M"/>
+	<route>
+      <service name="Timer"> <child name="timer"/> </service>
+      <any-service> <parent/> <any-child/> </any-service>	
+	</route>
   </start>
 
   <start name="rtcr_init" caps="5000">
-    <resource name="RAM" quantum="50M"/>
+    <resource name="RAM" quantum="50M"/>    
     <provides>
+      <service name="Report"/>
       <service name="Timer"/>
       <service name="PD"/>
       <service name="CPU"/>
@@ -61,9 +74,12 @@ install_config {
     </provides>
     <route>
       <service name="Timer"> <child name="timer"/> </service> 
+      <service name="Report"> <child name="report_rom"/> </service>
+      <service name="ROM" label="rtcr_state"> <child name="report_rom"/> </service>
       <any-service> <parent/> </any-service>
     </route>
-    <config>
+    <config verbose="yes">
+      <reporter rtcr="true"/>
       <parent-provides>
 	<service name="PD"/>
 	<service name="CPU"/>
@@ -79,15 +95,15 @@ install_config {
      	<resource name="RAM" quantum="1M"/>
         <route>
 	  <service name="Timer"> <rtcr label="sheep_counter"/> </service> 
-	  <service name="ROM">  <parent/> </service> 
+	  <service name="ROM">  <parent/> </service>
 	  <any-service> <rtcr/> </any-service>
        	</route>
       </start>
       <module name="base"/>
-      <checkpoint parallel="true"/>
+      <checkpoint parallel="false"/>
       <checkpointable name="cpu_session" xpos="0" />
       <checkpointable name="pd_session" xpos="0" />    
-      <checkpointable name="ram_dataspaces" xpos="1" />    
+      <checkpointable name="ram_dataspaces" xpos="0" />    
       <checkpointable name="rm_session" xpos="0" />    
       <checkpointable name="rom_session" xpos="0" />    
       <checkpointable name="log_session" xpos="0" />    
@@ -109,6 +125,7 @@ ld.lib.so
 init
 rtcr_init
 timer
+report_rom
 rtcr_trigger
 sheep_counter
 libc.lib.so

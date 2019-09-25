@@ -39,9 +39,7 @@ Multiple child are supported.
 All childs are paused, checkpointed and resumed in parallel.
 
 ```C++
-module.pause();
 module.checkpoint();
-module.resume();
 ```
 
 The last checkpointed state can be examined:

@@ -13,7 +13,7 @@
 #include <util/list.h>
 #include <base/attached_rom_dataspace.h>
 #include <base/registry.h>
-
+#include <os/reporter.h>
 
 /* Rtcr includes */
 #include <rtcr/cpu/cpu_session.h>
@@ -52,6 +52,8 @@ protected:
 	Genode::List<Child_info> _childs;
 
 	Genode::Registry<Genode::Service> _services;
+
+	Genode::Reporter _reporter;
 	
 	/**
 	 * Rom dataspace holding configuration
@@ -61,7 +63,9 @@ protected:
 	inline bool read_parallel();
 
 	void checkpoint(Child_info *child);
-
+	void pause();
+	void resume();
+	void report();
 public:
 
 	Init_module(Genode::Env &env, Genode::Allocator &alloc);
@@ -75,9 +79,9 @@ public:
 		return _services;
 	}
 	
-	void pause();
-	void resume();
 	void checkpoint();
+
+	void report_enabled(bool enabled);
 
 	/**
 	 * Name of your module.

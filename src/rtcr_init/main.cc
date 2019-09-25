@@ -124,6 +124,7 @@ struct Init_rtcr::Main : State_reporter::Producer, Child::Default_route_accessor
 
 	void produce_state_report(Xml_generator &xml, Report_detail const &detail) const
 	{
+		Genode::log("produce_state_report");
 		if (detail.init_ram())
 			xml.node("ram",  [&] () { generate_ram_info (xml, _env.ram()); });
 
@@ -319,6 +320,13 @@ void Init_rtcr::Main::_handle_config()
 	_verbose.construct(_config_xml);
 	_state_reporter.apply_config(_config_xml);
 
+	/* enable rtcr_state only if `<report rtcr=true />` is set */
+	try {
+		Xml_node report = _config_xml.sub_node("reporter");
+		bool rtcr_state = report.attribute_value("rtcr", false);
+		_rtcr_module->report_enabled(rtcr_state);
+	} catch (Xml_node::Nonexistent_sub_node) {}
+	
 	/* determine default route for resolving service requests */
 	try {
 		_default_route.construct(_heap, _config_xml.sub_node("default-route")); }

@@ -27,16 +27,10 @@ Init_module::Init_module(Genode::Env &env, Genode::Allocator &alloc)
 	_env(env),
 	_alloc(alloc),
 	_config(env, "config"),
-	_parallel(read_parallel())
+	_parallel(read_parallel()),
+	_reporter(env, "rtcr_state")
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-	// env.parent().announce(_ep.manage(_pd_root));
-	// env.parent().announce(_ep.manage(_ram_root));
-	// env.parent().announce(_ep.manage(_cpu_root));
-	// env.parent().announce(_ep.manage(_rm_root));
-	// env.parent().announce(_ep.manage(_rom_root));
-	// env.parent().announce(_ep.manage(_timer_root));
-	// env.parent().announce(_ep.manage(_log_root));
 }
 
 
@@ -100,11 +94,17 @@ void Init_module::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
+	pause();
+	
 	Child_info *child = _childs.first();
 	while(child) {
 		checkpoint(child);
 		child = child->next();
 	}
+
+	resume();
+
+	report();
 }
 
 
@@ -180,3 +180,42 @@ void Init_module::checkpoint(Child_info *child)
 		capability_mapping->join_checkpoint();
 	}
 }
+
+
+void Init_module::report_enabled(bool enabled)
+{
+	_reporter.enabled(enabled);
+}
+
+
+void Init_module::report()
+{
+	Genode::Reporter::Xml_generator xml(_reporter, [&] () {
+			Child_info *child = _childs.first();
+			while(child) {				
+				Pd_session::Pd_checkpointable *pd_session = &static_cast<Pd_session*>(child->pd_session)->pd_checkpointable;
+				Pd_session::Ram_checkpointable *ram_dataspaces = &static_cast<Pd_session*>(child->pd_session)->ram_checkpointable;
+
+				Cpu_session *cpu_session = static_cast<Cpu_session*>(child->cpu_session);
+				Rm_session *rm_session = static_cast<Rm_session*>(child->rm_session);
+				Rom_session *rom_session = static_cast<Rom_session*>(child->rom_session);
+				Timer_session *timer_session = static_cast<Timer_session*>(child->timer_session);
+				Log_session *log_session = static_cast<Log_session*>(child->log_session);
+				Capability_mapping *capability_mapping = child->capability_mapping;
+
+				xml.node("child", [&] () {
+						xml.attribute("name",   child->name);
+						if(cpu_session) xml.attribute("cpu_session", cpu_session->checkpoint_time());
+						if(rm_session) xml.attribute("rm_session", rm_session->checkpoint_time());
+						if(rom_session) xml.attribute("rom_session", rom_session->checkpoint_time());
+						if(timer_session) xml.attribute("timer_session", timer_session->checkpoint_time());
+						if(log_session) xml.attribute("log_session", log_session->checkpoint_time());
+						if(capability_mapping) xml.attribute("capability_mapping", capability_mapping->checkpoint_time());
+						if(pd_session) xml.attribute("pd_session", pd_session->checkpoint_time());
+						if(ram_dataspaces) xml.attribute("ram_dataspaces", ram_dataspaces->checkpoint_time());
+					});
+				child = child->next();
+			}	
+		});
+}
+   
