@@ -1,6 +1,6 @@
 TARGET   = rtcr_init
 SRC_CC   = main.cc child.cc server.cc
-LIBS     = base  rtcr syscall-foc
+LIBS     = base  rtcr
 INC_DIR += $(PRG_DIR)
 
 # include serializer
