@@ -263,30 +263,6 @@ Genode::Capability<Genode::Cpu_session::Native_cpu> Cpu_session::native_cpu()
 }
 
 
-void Cpu_session::deploy_queue(Genode::Dataspace_capability ds)
-{
-	_parent_cpu.deploy_queue(ds);
-}
-
-
-void Cpu_session::rq(Genode::Dataspace_capability ds)
-{
-	_parent_cpu.rq(ds);
-}
-
-
-void Cpu_session::dead(Genode::Dataspace_capability ds)
-{
-	_parent_cpu.dead(ds);
-}
-
-
-void Cpu_session::killed()
-{
-	_parent_cpu.killed();
-}
-
-
 void Cpu_session::upgrade(const char *upgrade_args)
 {
 	/* instead of upgrading the intercepting session, the
