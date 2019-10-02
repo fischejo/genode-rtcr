@@ -8,7 +8,7 @@
 # Build
 #
 
-build { core init drivers/timer app/rtcr_app app/sheep_counter }
+build { core init timer app/rtcr_app app/sheep_counter }
 
 create_boot_directory
 
@@ -90,7 +90,6 @@ stdcxx.lib.so
 libm.lib.so
 libprotobuf.lib.so
 zlib.lib.so
-pthread.lib.so
 }
 
 
