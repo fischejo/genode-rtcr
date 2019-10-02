@@ -42,6 +42,7 @@ class Rtcr::Base_module : public Init_module
 {
 private:
 	Genode::Entrypoint _ep;    
+
 	Root_component<Pd_session> _pd;
 	Root_component<Cpu_session> _cpu;
 	Root_component<Log_session> _log;
@@ -53,6 +54,10 @@ public:
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);
   
 	static Module_name name() { return "base"; }
+
+	Genode::Local_service<Pd_session>::Factory &pd_factory() override {
+		return _pd;
+	}
 };
 
 

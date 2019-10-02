@@ -78,7 +78,7 @@ public:
 	Genode::Registry<Genode::Service> &services() {
 		return _services;
 	}
-	
+
 	void checkpoint();
 
 	void report_enabled(bool enabled);
@@ -89,6 +89,12 @@ public:
 	 * \return Name of your module
 	 */
 	static Module_name name();
+
+	/**
+	 * A PD session must be created in adavanced for the child. Therefore a
+	 * factory for a PD_session is available.
+	 */
+	virtual Genode::Local_service<Pd_session>::Factory &pd_factory() = 0;
 };
 
 #endif /* _RTCR_BASE_MODULE_H_ */
