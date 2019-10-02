@@ -76,9 +76,9 @@ void Checkpointable::entry()
 			_ready_event.unset();
 
 			/* do checkpoint */
-			unsigned long long start = _timer.elapsed_ms();
+			unsigned long long start = _timer.elapsed_us();
 			checkpoint();
-			_checkpoint_time =  _timer.elapsed_ms() - start;
+			_checkpoint_time =  _timer.elapsed_us() - start;
 			_checkpoint_finished.set();
 
 			/* do post checkpoint */
