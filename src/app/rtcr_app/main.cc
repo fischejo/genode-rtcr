@@ -64,10 +64,11 @@ struct Rtcr::Main
 	Main(Genode::Env &env_) : env(env_)
 	{
 		/* load module based on the configured module name */
-		Module_name module_name = config.xml().sub_node("module")
-			.attribute_value("name", Module_name());
+		Genode::Xml_node module_node = config.xml().sub_node("module");
+		Module_name module_name = module_node.attribute_value("name", Module_name());
 		Init_module &module = *Module_factory::get(module_name)->create(env, heap);
-
+		module.report_enabled(module_node.attribute_value("report", false));
+		
 		/* create serializer */
 		Serializer serializer(env, heap);
 
