@@ -108,13 +108,12 @@ void Pd_session::_checkpoint_signal_contexts()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-	Signal_context_info *sc = nullptr;
-	while(sc = _destroyed_signal_contexts.dequeue()) {
-		_signal_contexts.remove(sc);
-		Genode::destroy(_md_alloc, &sc);
-	}
+	_destroyed_signal_contexts.dequeue_all([&] (Signal_context_info &sc) {
+			_signal_contexts.remove(&sc);
+			Genode::destroy(_md_alloc, &sc);
+		});
 
-	sc = _signal_contexts.first();
+	Signal_context_info *sc = _signal_contexts.first();
 	while(sc) {
 		static_cast<Signal_context*>(sc)->checkpoint();
 		sc = sc->next();
@@ -128,12 +127,11 @@ void Pd_session::_checkpoint_signal_sources()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-	Signal_source_info *ss = nullptr;
-	while(ss = _destroyed_signal_sources.dequeue()) {
-		_signal_sources.remove(ss);
-		Genode::destroy(_md_alloc, &ss);
-	}
-
+	_destroyed_signal_sources.dequeue_all([&] (Signal_source_info &ss) {
+			_signal_sources.remove(&ss);
+			Genode::destroy(_md_alloc, &ss);
+		});
+	
 	/* Signal_source only stores const values. No need for checkpoint() */
 
 	i_signal_sources = _signal_sources.first();
@@ -144,11 +142,10 @@ void Pd_session::_checkpoint_native_capabilities()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
 
-	Native_capability_info *nc = nullptr;
-	while(nc = _destroyed_native_caps.dequeue()) {
-		_native_caps.remove(nc);
-		Genode::destroy(_md_alloc, &nc);
-	}
+	_destroyed_native_caps.dequeue_all([&] (Native_capability_info &nc) {
+			_native_caps.remove(&nc);
+			Genode::destroy(_md_alloc, &nc);
+		});
 
 	/* Native_capability only stores const values. No need for
 	   checkpoint() */
@@ -163,14 +160,13 @@ void Pd_session::_checkpoint_ram_dataspaces()
 		i_upgrade_args = _upgrade_args;
 
 	/* step 1: remove all destroyed dataspaces */
-	Ram_dataspace_info *dataspace = nullptr;
-	while(dataspace = _destroyed_ram_dataspaces.dequeue()) {
-		_ram_dataspaces.remove(dataspace);
-		_destroy_dataspace(static_cast<Ram_dataspace*>(dataspace));
-	}
+	_destroyed_ram_dataspaces.dequeue_all([&] (Ram_dataspace_info &ds) {
+		_ram_dataspaces.remove(&ds);
+		_destroy_dataspace(static_cast<Ram_dataspace*>(&ds));
+		});
 
 	/* step 2: allocate cold dataspace for recently added dataspaces */
-	dataspace = _ram_dataspaces.first();
+	Ram_dataspace_info *dataspace = _ram_dataspaces.first();
 	while(dataspace && dataspace != i_ram_dataspaces) {
 		_alloc_dataspace(static_cast<Ram_dataspace*>(dataspace));
 		_attach_dataspace(static_cast<Ram_dataspace*>(dataspace));
@@ -288,7 +284,7 @@ void Pd_session::free_signal_source(Genode::Capability<Genode::Signal_source> ca
 	if(ss) {
 		/* Free signal source */
 		_parent_pd.free_signal_source(cap);
-		_destroyed_signal_sources.enqueue(ss);
+		_destroyed_signal_sources.enqueue(*ss);
 	} else {
 		Genode::error("No list element found!");
 	}
@@ -322,7 +318,7 @@ void Pd_session::free_context(Genode::Signal_context_capability cap)
 	if(sc) {
 		/* Free signal context */
 		_parent_pd.free_context(cap);
-		_destroyed_signal_contexts.enqueue(sc);
+		_destroyed_signal_contexts.enqueue(*sc);
 	} else {
 		Genode::error("No list element found!");
 	}
@@ -358,7 +354,7 @@ void Pd_session::free_rpc_cap(Genode::Native_capability cap)
 	if(nc) {
 		/* Free native capability */
 		_parent_pd.free_rpc_cap(cap);
-		_destroyed_native_caps.enqueue(nc);
+		_destroyed_native_caps.enqueue(*nc);
 	} else {
 		Genode::error("No list element found!");
 	}
@@ -467,7 +463,7 @@ void Pd_session::free(Genode::Ram_dataspace_capability ds_cap)
 	if(rds) rds = rds->find_by_badge(ds_cap.local_name());
 	if(rds) {
 		Genode::Lock::Guard lock_guard(_destroyed_ram_dataspaces_lock);
-		_destroyed_ram_dataspaces.enqueue(rds);
+		_destroyed_ram_dataspaces.enqueue(*rds);
 	} else {
 		Genode::warning(__func__, " Ram_dataspace not found for ", ds_cap);
 		return;

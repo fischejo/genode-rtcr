@@ -38,9 +38,9 @@ public:
 	void release()
 	{
 		_meta_lock.lock();
-		while(Caller *caller = _waiting_callers.dequeue()) {
-			caller->wake_up();
-		}
+		_waiting_callers.dequeue_all([] (Caller &caller) {
+				caller.wake_up();
+			});
 		_meta_lock.unlock();
 	}
 
@@ -50,7 +50,7 @@ public:
 
 		_meta_lock.lock();
 		Caller caller;
-		_waiting_callers.enqueue(&caller);
+		_waiting_callers.enqueue(caller);
 		_meta_lock.unlock();
 		caller.block();
 	}

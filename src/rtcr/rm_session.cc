@@ -94,13 +94,13 @@ void Rm_session::checkpoint()
 	DEBUG_THIS_CALL PROFILE_THIS_CALL
 		i_upgrade_args = _upgrade_args;
 
-	Region_map_info *region_map = nullptr;
-	while(region_map = _destroyed_region_maps.dequeue()) {
-		_region_maps.remove(region_map);
-		Genode::destroy(_md_alloc, &region_map);
-	}
+	_destroyed_region_maps.dequeue_all([&] (Region_map_info &region_map) {
+			_region_maps.remove(&region_map);
+			Genode::destroy(_md_alloc, &region_map);
+		});
+	
 
-	region_map = _region_maps.first();
+	Region_map_info *region_map = _region_maps.first();
 	while(region_map) {
 		static_cast<Region_map*>(region_map)->checkpoint();
 		region_map = region_map->next();
@@ -128,7 +128,7 @@ void Rm_session::destroy(Genode::Capability<Genode::Region_map> region_map_cap)
 		Genode::error("Issuing Rm_session::destroy, which is bugged and hangs up.");
 
 		Genode::Lock::Guard lock(_destroyed_region_maps_lock);
-		_destroyed_region_maps.enqueue(region_map);
+		_destroyed_region_maps.enqueue(*region_map);
 
 		_destroy(static_cast<Region_map*>(region_map));
 	} else {

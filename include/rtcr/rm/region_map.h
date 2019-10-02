@@ -48,7 +48,7 @@ protected:
 	 * Wrapped region map from parent, usually core
 	 */
 	Genode::Region_map_client _parent_region_map;
-
+	Genode::Capability<Genode::Region_map> _parent_region_map_cap;
 	/**
 	 * Dataspace representation
 	 */
@@ -97,8 +97,9 @@ public:
 
 	~Region_map();
 
-//	Genode::Capability<Genode::Region_map> parent_cap() { return _parent_region_map.cap(); }
-
+	Genode::Capability<Genode::Region_map> parent_cap() {
+		return _parent_region_map_cap;
+	}
 
 	/* TODO FJO: this is not thread safe... */
 	Genode::List<Attached_region_info> attached_regions() { return _attached_regions; }

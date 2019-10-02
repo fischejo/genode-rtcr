@@ -99,7 +99,7 @@ void Cpu_session::_kill_thread(Cpu_thread_info &cpu_thread_info)
 
 	/* Remove custom CPU thread form list */
 	Genode::Lock::Guard lock(_destroyed_cpu_threads_lock);
-	_destroyed_cpu_threads.enqueue(&cpu_thread_info);
+	_destroyed_cpu_threads.enqueue(cpu_thread_info);
 
 	/* Destroy real CPU thread from parent */
 	_parent_cpu.kill_thread(parent_cap);
@@ -131,13 +131,12 @@ void Cpu_session::checkpoint()
 		i_upgrade_args = _upgrade_args;
 	i_sigh_badge = _sigh.local_name();
 
-	Cpu_thread_info *cpu_thread;
-	while(cpu_thread = _destroyed_cpu_threads.dequeue()) {
-		_cpu_threads.remove(cpu_thread);
-		Genode::destroy(_md_alloc, &cpu_thread);
-	}
+	_destroyed_cpu_threads.dequeue_all([&] (Cpu_thread_info &cpu_thread) {
+			_cpu_threads.remove(&cpu_thread);
+			Genode::destroy(_md_alloc, &cpu_thread);
+		});
 
-	cpu_thread = _cpu_threads.first();
+	Cpu_thread_info *cpu_thread = _cpu_threads.first();
 	while(cpu_thread) {
 		static_cast<Cpu_thread*>(cpu_thread)->checkpoint();
 		cpu_thread = cpu_thread->next();

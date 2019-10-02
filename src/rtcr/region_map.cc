@@ -35,6 +35,7 @@ Region_map::Region_map(Genode::Allocator &md_alloc,
 	_bootstrap_phase   (bootstrap_phase),
 	_label             (label),
 	_parent_region_map (region_map_cap),
+	_parent_region_map_cap (region_map_cap), 	
 	_size(size),
 	_ds_cap(_parent_region_map.dataspace())
 {
@@ -61,12 +62,11 @@ void Region_map::checkpoint()
 	i_ds_badge = _ds_cap.local_name();
 	i_sigh_badge = _sigh.local_name();
 
-	Attached_region_info *region = nullptr;
-	while(region = _destroyed_attached_regions.dequeue()) {
-		_attached_regions.remove(region);
-		Genode::destroy(_md_alloc, region);
-	}
-
+	_destroyed_attached_regions.dequeue_all([&] (Attached_region_info &region) {
+			_attached_regions.remove(&region);
+			Genode::destroy(_md_alloc, &region);
+		});
+	
 	/* Attached_region has only static values; no need for checkpoint() */
 	i_attached_regions = _attached_regions.first();
 }
@@ -172,7 +172,7 @@ void Region_map::detach(Region_map::Local_addr local_addr)
 	if(region) {
 		/* Remove and destroy region from list and allocator */
 		Genode::Lock::Guard lock_guard(_destroyed_attached_regions_lock);
-		_destroyed_attached_regions.enqueue(region);
+		_destroyed_attached_regions.enqueue(*region);
 	} else {
 		Genode::warning("Region not found in Rm::detach(). Local address",
 		                Genode::Hex(local_addr), " not in regions list.");
