@@ -59,7 +59,7 @@ struct Rtcr::Main
 	                               Genode::Cpu_session,
 	                               Genode::Rm_session,	                               
 	                               Genode::Rom_session,
-	                               Genode::Log_session> parent_services { };
+	                               Genode::Log_session> parent_services { env };
 
 	Main(Genode::Env &env_) : env(env_)
 	{

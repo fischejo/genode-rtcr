@@ -37,6 +37,7 @@ Cpu_thread::Cpu_thread(Genode::Allocator &md_alloc,
 	_ep (ep),
 	_md_alloc (md_alloc),
 	_parent_cpu_thread (cpu_thread_cap),
+	_parent_cpu_thread_cap(cpu_thread_cap),
 	_pd_session_cap(pd_session_cap),
 	_affinity(affinity),
 	bootstrapped(bootstrapped)

@@ -30,7 +30,7 @@ Module_factory_builder<Base_module> _base_module_factory_instance;
 Base_module::Base_module(Genode::Env &env, Genode::Allocator &alloc)
 	:
 	Init_module(env, alloc),
-	_ep(env, 16*1024, "resources ep"),
+	_ep(env, 16*1024, "resources ep", Genode::Affinity::Location()),
 	_pd(env, alloc, _ep, _childs_lock, _childs, _services),
 	_cpu(env, alloc, _ep, _childs_lock, _childs, _services),
 	_log(env, alloc, _ep, _childs_lock, _childs, _services),

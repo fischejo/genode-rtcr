@@ -102,7 +102,7 @@ protected:
 	Genode::Lock _destroyed_native_caps_lock;
 	Genode::Fifo<Native_capability_info> _destroyed_native_caps;
 
-	Genode::Ram_session_capability _ref_account_cap;
+	Genode::Pd_session_capability _ref_account_cap;
 
 	/**
 	 * List of allocated ram dataspaces

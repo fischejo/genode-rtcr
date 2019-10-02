@@ -97,7 +97,7 @@ public:
 
 	~Region_map();
 
-	Genode::Capability<Genode::Region_map> parent_cap() { return _parent_region_map; }
+//	Genode::Capability<Genode::Region_map> parent_cap() { return _parent_region_map.cap(); }
 
 
 	/* TODO FJO: this is not thread safe... */
@@ -121,7 +121,9 @@ public:
 	                  Genode::off_t offset,
 	                  bool use_local_addr,
 	                  Region_map::Local_addr local_addr,
-	                  bool executable) override;
+	                  bool executable = false,
+					  bool writeable = true) override;
+
 	/**
 	 * Detaches the dataspace from parent's region map and destroys the
 	 * information about the attachment

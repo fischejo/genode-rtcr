@@ -11,7 +11,6 @@
 /* Genode includes */
 #include <util/list.h>
 #include <util/fifo.h>
-#include <ram_session/ram_session.h>
 
 /* Rtcr includes */
 #include <rtcr/info_structs.h>

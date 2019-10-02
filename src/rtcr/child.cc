@@ -47,7 +47,7 @@ Child::Child(Genode::Env &env,
 	_config(env, "config"),
 	_caps_quota(read_cap_quota()),
 	_ram_quota(read_ram_quota()),
-	_child_ep(env, 4*1024*sizeof(Genode::addr_t), "child_ep"),
+	_child_ep(env, 4*1024*sizeof(Genode::addr_t), "child_ep", Genode::Affinity::Location()),
 	_child(env.rm(), _child_ep.rpc_ep(), *this)
 {
 	DEBUG_THIS_CALL;

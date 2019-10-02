@@ -89,7 +89,9 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
                                                   Genode::off_t offset,
                                                   bool use_local_addr,
                                                   Region_map::Local_addr local_addr,
-                                                  bool executable)
+												  bool executable,
+												  bool writeable)
+
 {
 	DEBUG_THIS_CALL
 #ifdef DEBUG
@@ -119,7 +121,8 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 	                                                offset,
 	                                                use_local_addr,
 	                                                local_addr,
-	                                                executable);
+	                                                executable,
+		writeable);
 
 	/* Actual size of the attached region; page-aligned */
 	Genode::size_t actual_size;
@@ -158,6 +161,7 @@ Genode::Region_map::Local_addr Region_map::attach(Genode::Dataspace_capability d
 
 void Region_map::detach(Region_map::Local_addr local_addr)
 {
+	DEBUG_THIS_CALL;	
 	/* Detach from real region map */
 	_parent_region_map.detach(local_addr);
 
@@ -178,6 +182,7 @@ void Region_map::detach(Region_map::Local_addr local_addr)
 
 void Region_map::fault_handler(Genode::Signal_context_capability handler)
 {
+	DEBUG_THIS_CALL;
 	_sigh = handler;
 	_parent_region_map.fault_handler(handler);
 }
@@ -185,6 +190,7 @@ void Region_map::fault_handler(Genode::Signal_context_capability handler)
 
 Genode::Region_map::State Region_map::state()
 {
+	DEBUG_THIS_CALL;	
 	auto result = _parent_region_map.state();
 	const char* type = result.type == Genode::Region_map::State::READ_FAULT ? "READ_FAULT" :
 		result.type == Genode::Region_map::State::WRITE_FAULT ? "WRITE_FAULT" :
@@ -195,5 +201,6 @@ Genode::Region_map::State Region_map::state()
 
 Genode::Dataspace_capability Region_map::dataspace()
 {
+	DEBUG_THIS_CALL;	
 	return _parent_region_map.dataspace();
 }

@@ -52,7 +52,8 @@ private:
 	 * Wrapped region map from parent, usually core
 	 */
 	Genode::Cpu_thread_client  _parent_cpu_thread;
-
+	Genode::Capability<Genode::Cpu_thread> _parent_cpu_thread_cap;	
+	
 public:
 	
 	Cpu_thread(Genode::Allocator &md_alloc,
@@ -83,7 +84,7 @@ public:
 	 */	
 	void silent_resume();
   
-	Genode::Capability<Genode::Cpu_thread> parent_cap() { return _parent_cpu_thread; }
+	Genode::Capability<Genode::Cpu_thread> parent_cap() { return _parent_cpu_thread_cap; }
 
 
 	/******************************
