@@ -90,6 +90,7 @@ stdcxx.lib.so
 libm.lib.so
 libprotobuf.lib.so
 zlib.lib.so
+vfs.lib.so	
 }
 
 
