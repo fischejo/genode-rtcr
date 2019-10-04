@@ -45,14 +45,26 @@ public:
 		/* get child label from args */
 		Genode::Session_label label = Genode::label_from_args(args);
 
-		/* find child based on label */
+		/* there are seveal ways how a label is formed:
+		 * 
+		 * * `sheep_counter` used by CPU, PD
+		 * * `sheep_counter -> ` used by Timer
+		 * * `sheep_counter -> config` used by ROM
+		 *
+		 * The ROM formed label is not supported yet.  Following lines filter
+		 * the name of the component from CPU, PD & Timer formed labels.
+		 */
+		Genode::Session_label prefix = label.prefix();
+		Genode::Session_label name = prefix == "" ? label : prefix;
+
+		/* find child based on name */
 		_childs_lock.lock();
 		Child_info *info = _childs.first();
-		if(info) info = info->find_by_name(label.string());
+		if(info) info = info->find_by_name(name.string());
 
 		/* child_info does not exist, let's create it */
 		if(!info) {
-			info = new(_alloc) Child_info(label.string());
+			info = new(_alloc) Child_info(name.string());
 			_childs.insert(info);
 		}
 		_childs_lock.unlock();
