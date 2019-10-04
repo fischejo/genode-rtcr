@@ -63,9 +63,8 @@ protected:
 	inline bool read_parallel();
 
 	void checkpoint(Child_info *child);
-	void pause();
-	void resume();
 	void report();
+	
 public:
 
 	Init_module(Genode::Env &env, Genode::Allocator &alloc);
@@ -80,7 +79,10 @@ public:
 	}
 
 	void checkpoint();
+	void pause();
+	void resume();
 
+	
 	void report_enabled(bool enabled);
 
 	/**
@@ -91,10 +93,10 @@ public:
 	static Module_name name();
 
 	/**
-	 * A PD session must be created in adavanced for the child. Therefore a
-	 * factory for a PD_session is available.
+	 * A PD session must be created in adavanced for the child.
 	 */
-	virtual Genode::Local_service<Pd_session>::Factory &pd_factory() = 0;
+	virtual Pd_session &create_pd_session(Genode::Session_state::Args args,
+										  Genode::Affinity affinity) = 0;
 };
 
 #endif /* _RTCR_BASE_MODULE_H_ */

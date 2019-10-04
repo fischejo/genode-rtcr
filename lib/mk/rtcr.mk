@@ -28,3 +28,5 @@ endif
 
 LIBS += base
 CC_OPT += -w
+
+LIBS += rtcr_inc rtcr_para rtcr_cdma

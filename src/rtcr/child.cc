@@ -176,12 +176,10 @@ Genode::Child_policy::Route Child::resolve_session_request(Genode::Service::Name
 	
 	/* service is provided locally */
 	if (name != "ROM") {
-		if(!Genode::strcmp(_name,label.string())) {
 			_module.services().for_each([&] (Genode::Service &s) {
 				                         if (service || s.name() != name) return;
 				                         service = &s;
 			                         });
-		}
 	}
 	
 	/* service is provided by parent */
@@ -212,8 +210,8 @@ Pd_session &Child::create_pd_session()
 					 1, 1024*1024, 13, _name);
 
 	/* create a Pd_session */
-	return _module.pd_factory().create(Genode::Session_state::Args(args_buf),
-									   Genode::Affinity());
+	return _module.create_pd_session(Genode::Session_state::Args(args_buf),
+									 Genode::Affinity());
 }
 
 

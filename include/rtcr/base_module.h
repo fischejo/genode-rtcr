@@ -54,10 +54,12 @@ public:
 	Base_module(Genode::Env &env, Genode::Allocator &alloc);
   
 	static Module_name name() { return "base"; }
-
-	Genode::Local_service<Pd_session>::Factory &pd_factory() override {
-		return _pd;
+	
+	Pd_session &create_pd_session(Genode::Session_state::Args args,
+								  Genode::Affinity affinity) override {
+		return _pd.create(args, affinity);
 	}
+	
 };
 
 

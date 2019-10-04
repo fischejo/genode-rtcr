@@ -69,6 +69,7 @@ void Init_module::pause()
 	_childs_lock.lock();
 	Child_info *child = _childs.first();
 	while(child) {
+		Genode::log("pause: child=",child->name);
 		static_cast<Cpu_session*>(child->cpu_session)->pause();
 		child = child->next();
 	}
@@ -93,18 +94,12 @@ void Init_module::resume()
 void Init_module::checkpoint()
 {
 	DEBUG_THIS_CALL PROFILE_THIS_CALL;
-
-	pause();
 	
 	Child_info *child = _childs.first();
 	while(child) {
 		checkpoint(child);
 		child = child->next();
 	}
-
-	resume();
-
-	report();
 }
 
 

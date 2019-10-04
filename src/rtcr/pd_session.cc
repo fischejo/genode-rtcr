@@ -178,7 +178,6 @@ void Pd_session::_checkpoint_ram_dataspaces()
 	while(dataspace) {
 		static_cast<Ram_dataspace*>(dataspace)->checkpoint();
 		_copy_dataspace(static_cast<Ram_dataspace*>(dataspace));
-
 		dataspace = dataspace->next();
 	}
 
