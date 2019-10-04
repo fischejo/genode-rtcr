@@ -612,6 +612,9 @@ Genode::List<Child_info> *Serializer::parse(Genode::Dataspace_capability compres
 		                                     uncompressed_ds_addr));
 	}
 
+	/* free uncompressed dataspaces */
+	_env.ram().free(uncompressed_ds_cap);
+	
 	return _child_list;
 }
 
