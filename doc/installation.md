@@ -13,23 +13,20 @@ pip2 install --user future tempita ply six
 ```
 
 ## Genode Toolchain
-Install genode toolchain in `/usr/local/genode-gcc`
-```bash
-sudo su
-cd /
-wget -qO- https://nextcloud.os.in.tum.de/s/oHeGQp3rVk5MPpQ/download | tar x -J .
-```
+Download and Install
+[genode-toolchain-19.05](https://sourceforge.net/projects/genode/files/genode-toolchain/19.05/).
+
 
 ## Downloads
 
 ### Genode
 ```bash
-git clone -b focnados_sel4_18.02_r78 git@gitlab.lrz.de:rtcr_workspace/genode-malsami.git genode
+git clone -b 19.08 https://github.com/genodelabs/genode.git
 ```
 
 ### Genode Repositories
 ```bash
-git clone git@gitlab.lrz.de:rtcr_workspace/rtcr.git genode/repos/rtcr
+git clone -b 19.08 git@gitlab.lrz.de:rtcr_workspace/rtcr.git genode/repos/rtcr
 git clone git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repos/world
 ```
 
@@ -48,14 +45,22 @@ git clone git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repos/world
 
 ## Create Build Directory
 
-### focnados Kernel
+### Choose Platform
 ```bash
-genode/tool/create_builddir focnados_pbxa9 BUILD_DIR=./build
+# for foc kernel:
+genode/tool/create_builddir pbxa9 BUILD_DIR=./build
+
+# for sel4 kernel:
+genode/tool/create_builddir wand_quad BUILD_DIR=./build
 ```
 
-### seL4 Kernel
+
+### Choose Kernel
 ```bash
-genode/tool/create_builddir wand_quad BUILD_DIR=./build
+# for foc kernel:
+sed -i 's/# KERNEL ?= hw/KERNEL ?= foc/' ./build/etc/build.conf
+
+# for sel4 kernel:
 sed -i 's/# KERNEL ?= hw/KERNEL ?= sel4/' ./build/etc/build.conf
 ```
 
