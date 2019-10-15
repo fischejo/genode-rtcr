@@ -81,19 +81,19 @@ public:
 	 ** Timer session Rpc interface **
 	 ************************************/
 
-	void trigger_once(unsigned us) override;
+	void trigger_once(Genode::uint64_t us) override;
 
-	void trigger_periodic(unsigned us) override;
+	void trigger_periodic(Genode::uint64_t us) override;
 
 	void sigh(Genode::Signal_context_capability sigh) override;
 
-	unsigned long elapsed_ms() const override;
+	Genode::uint64_t elapsed_ms() const override;
 
-	unsigned long elapsed_us() const override;
+	Genode::uint64_t elapsed_us() const override;
 
-	void msleep(unsigned ms) override;
+	void msleep(Genode::uint64_t ms) override;
 
-	void usleep(unsigned us) override;
+	void usleep(Genode::uint64_t us) override;
 };
 
 #endif /* _RTCR_TIMER_SESSION_H_ */

@@ -59,7 +59,7 @@ void Timer_session::checkpoint()
 }
 
 
-void Timer_session::trigger_once(unsigned us)
+void Timer_session::trigger_once(Genode::uint64_t us)
 {
 	_timeout = us;
 	_periodic = false;
@@ -67,7 +67,7 @@ void Timer_session::trigger_once(unsigned us)
 }
 
 
-void Timer_session::trigger_periodic(unsigned us)
+void Timer_session::trigger_periodic(Genode::uint64_t us)
 {
 	_timeout = us;
 	_periodic = true;
@@ -82,19 +82,19 @@ void Timer_session::sigh(Genode::Signal_context_capability sigh)
 }
 
 
-unsigned long Timer_session::elapsed_ms() const
+Genode::uint64_t Timer_session::elapsed_ms() const
 {
 	return _parent_timer.elapsed_ms();
 }
 
 
-unsigned long Timer_session::elapsed_us() const
+Genode::uint64_t Timer_session::elapsed_us() const
 {
 	return _parent_timer.elapsed_us();
 }
 
 
-void Timer_session::msleep(unsigned ms)
+void Timer_session::msleep(Genode::uint64_t ms)
 {
 	_timeout = 1000*ms;
 	_periodic = false;
@@ -102,7 +102,7 @@ void Timer_session::msleep(unsigned ms)
 }
 
 
-void Timer_session::usleep(unsigned us)
+void Timer_session::usleep(Genode::uint64_t us)
 {
 	_timeout = us;
 	_periodic = false;
