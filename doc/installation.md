@@ -21,13 +21,13 @@ Download and Install
 
 ### Genode
 ```bash
-git clone -b 19.08 https://github.com/genodelabs/genode.git
+git clone -b 19.08 git@gitlab.lrz.de:rtcr_workspace/genode-19.08.git
 ```
 
 ### Genode Repositories
 ```bash
 git clone -b 19.08 git@gitlab.lrz.de:rtcr_workspace/rtcr.git genode/repos/rtcr
-git clone git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repos/world
+git clone -b 19.08 git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repos/world
 ```
 
 ## Prepare Ports
