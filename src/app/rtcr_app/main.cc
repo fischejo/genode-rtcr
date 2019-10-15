@@ -76,7 +76,11 @@ struct Rtcr::Main
 		Child sheep (env, heap, "sheep_counter", parent_services, module);
 
 		/* Checkpoint all childs */
-		timer.msleep(2000);
+		Genode::log("before sleep");
+		for(int i = 0; i < 1000000000; i++)
+			__asm__("NOP");		
+
+		Genode::log("after sleep");
 		module.checkpoint();
 
 		/* Print all information of the *_info objects. These represents the
