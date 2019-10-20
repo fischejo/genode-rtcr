@@ -114,6 +114,11 @@ protected:
 	                                  unsigned priority,
 	                                  unsigned deadline);
 
+	Genode::Capability<Cpu_session::Native_cpu> _native_cpu_cap;
+	Genode::Capability<Cpu_session::Native_cpu> _setup_native_cpu();
+	void _cleanup_native_cpu();
+
+
 	
 public:
 	using Genode::Rpc_object<Genode::Cpu_session>::cap;
@@ -125,6 +130,8 @@ public:
 	            Child_info *child_info);
 	
 	~Cpu_session();
+
+	Genode::Rpc_entrypoint &thread_ep() { return _ep.rpc_ep(); }
 
 	/**
 	 * Pause all child threads of this session 
@@ -143,6 +150,8 @@ public:
 	void upgrade(const char *upgrade_args);
 
 	const char* upgrade_args() { return _upgrade_args; }
+
+	Genode::Cpu_session &real_cpu_session() { return _parent_cpu; }
 	
 	Genode::Cpu_session_capability parent_cap() { return _parent_cpu.cap(); }
 

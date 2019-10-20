@@ -10,7 +10,7 @@ vpath % $(REP_DIR)/src/rtcr
 
 ifeq ($(filter-out $(SPECS),focnados),)
 vpath % $(REP_DIR)/src/rtcr/spec/focnados
-SRC_CC += capability_mapping_focnados.cc cpu_session_focnados.cc
+SRC_CC += capability_mapping_focnados.cc cpu_session_focnados.cc native_cpu_focnados.cc
 INC_DIR += $(BASE_DIR)/../base-focnados/src/include
 LIBS += syscall-foc
 endif
@@ -22,11 +22,24 @@ endif
 
 ifeq ($(filter-out $(SPECS),foc),)
 vpath % $(REP_DIR)/src/rtcr/spec/foc
-SRC_CC += capability_mapping_foc.cc cpu_session_foc.cc
+SRC_CC += capability_mapping_foc.cc cpu_session_foc.cc 
+LIBS += syscall-foc
 endif
-
 
 LIBS += base
 CC_OPT += -w
 
-LIBS += rtcr_inc rtcr_para rtcr_cdma
+# include cdma module if corresponding repository is provided
+ifneq ($(call select_from_repositories,lib/mk/rtcr_cdma.mk),)
+LIBS += rtcr_cdma
+endif
+
+# include inc module if corresponding repository is provided
+ifneq ($(call select_from_repositories,lib/mk/rtcr_inc.mk),)
+LIBS += rtcr_inc
+endif
+
+# include para module if corresponding repository is provided
+ifneq ($(call select_from_repositories,lib/mk/rtcr_para.mk),)
+LIBS += rtcr_para
+endif

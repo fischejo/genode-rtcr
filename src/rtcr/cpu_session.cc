@@ -37,7 +37,8 @@ Cpu_session::Cpu_session(Genode::Env &env,
 	_ep              (ep),
 	_parent_cpu      (env, child_info->name.string()),
 	_child_affinity (_read_child_affinity(child_info->name.string())),
-	_child_info (child_info)
+	_child_info (child_info),
+	_native_cpu_cap(_setup_native_cpu())
 {
 	DEBUG_THIS_CALL;
 
@@ -48,6 +49,7 @@ Cpu_session::Cpu_session(Genode::Env &env,
 
 Cpu_session::~Cpu_session()
 {
+	_cleanup_native_cpu();
 	_ep.rpc_ep().dissolve(this);
 	_child_info->cpu_session = nullptr;	
 	while(Cpu_thread_info *cpu_thread_info = _cpu_threads.first()) {
@@ -258,7 +260,7 @@ int Cpu_session::transfer_quota(Genode::Cpu_session_capability c, Genode::size_t
 
 Genode::Capability<Genode::Cpu_session::Native_cpu> Cpu_session::native_cpu()
 {
-	return _parent_cpu.native_cpu();
+	return _native_cpu_cap;
 }
 
 
