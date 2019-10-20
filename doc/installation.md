@@ -46,12 +46,13 @@ git clone -b 19.08 git@gitlab.lrz.de:rtcr_workspace/genode-world.git genode/repo
 ## Create Build Directory
 
 ### Choose Platform
+Only Wandboard is tested and supported:
 ```bash
-# for foc kernel:
-genode/tool/create_builddir pbxa9 BUILD_DIR=./build
+# for Wandboard, choose The configuration of the sabrelite board
+genode/tool/create_builddir imx6q_sabrelite BUILD_DIR=./build
 
-# for sel4 kernel:
-genode/tool/create_builddir wand_quad BUILD_DIR=./build
+# the Wandboard use another serial console as the sabrelite. This requires changes.
+sed -i 's/CONFIG_PLAT_SABRE/CONFIG_PLAT_WANDQ/g' genode/contrib/sel4-*/src/kernel/sel4/configs/imx6/imx6q_sabrelite/autoconf.h
 ```
 
 
