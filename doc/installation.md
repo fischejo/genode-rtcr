@@ -51,8 +51,10 @@ Only Wandboard is tested and supported:
 # for Wandboard, choose The configuration of the sabrelite board
 genode/tool/create_builddir imx6q_sabrelite BUILD_DIR=./build
 
-# the Wandboard use another serial console as the sabrelite. This requires changes.
+# the Wandboard use another serial console as the sabrelite. This requires
+changes for foc and sel4:
 sed -i 's/CONFIG_PLAT_SABRE/CONFIG_PLAT_WANDQ/g' genode/contrib/sel4-*/src/kernel/sel4/configs/imx6/imx6q_sabrelite/autoconf.h
+sed -i 's/PLATFORM_UART_NR.*/PLATFORM_UART_NR = 1/g' contrib/foc-91ca3363690c5b9c992a110375242f5d426a6848/src/kernel/foc/l4/mk/platforms/imx6.conf
 ```
 
 
