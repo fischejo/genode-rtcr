@@ -43,3 +43,14 @@ endif
 ifneq ($(call select_from_repositories,lib/mk/rtcr_para.mk),)
 LIBS += rtcr_para
 endif
+
+# include mbox module if corresponding repository is provided
+ifneq ($(call select_from_repositories,lib/mk/rtcr_mbox.mk),)
+LIBS += rtcr_mbox
+endif
+
+# include memtrace module if corresponding repository is provided
+ifneq ($(call select_from_repositories,lib/mk/rtcr_memtrace.mk),)
+LIBS += rtcr_memtrace
+endif
+
