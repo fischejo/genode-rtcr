@@ -5,7 +5,7 @@ SRC_CC += rm_session.cc region_map.cc
 SRC_CC += rom_session.cc
 SRC_CC += log_session.cc
 SRC_CC += timer_session.cc
-SRC_CC += cpu_session.cc
+SRC_CC += cpu_session.cc cpu_thread_info.cc
 vpath % $(REP_DIR)/src/rtcr
 
 ifeq ($(filter-out $(SPECS),focnados),)
@@ -25,6 +25,16 @@ vpath % $(REP_DIR)/src/rtcr/spec/foc
 SRC_CC += capability_mapping_foc.cc cpu_session_foc.cc 
 LIBS += syscall-foc
 endif
+
+ifeq ($(filter-out $(SPECS),arm),)
+vpath % $(REP_DIR)/src/rtcr/spec/arm
+endif
+
+ifeq ($(filter-out $(SPECS),arm_64),)
+vpath % $(REP_DIR)/src/rtcr/spec/arm_64
+endif
+
+
 
 LIBS += base
 CC_OPT += -w

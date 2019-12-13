@@ -1,0 +1,207 @@
+syntax = "proto3";
+package Rtcr.Pb;
+
+/**
+ * General
+ */
+
+message Child_list{
+	repeated Child_info child_info = 1;
+}
+
+
+message Attachment{
+	uint32 offset =1;
+}
+
+message Child_info{
+	Cpu_session_info cpu_session_info = 1;
+	Pd_session_info pd_session_info = 2;
+	Rom_session_info rom_session_info = 4;
+	Rm_session_info rm_session_info = 5;
+	Log_session_info log_session_info = 6;
+	Timer_session_info timer_session_info = 7;
+	Capability_mapping capability_mapping = 8;
+	Attachment binary = 9;
+	string name = 10;
+}
+
+
+message Normal_info{
+	uint32   kcap = 1;
+	uint32	 badge = 2;
+}
+
+message Session_info{
+	string   creation_args = 1;
+	string	 upgrade_args = 2;
+	Normal_info normal_info = 3;
+}
+
+/**
+ * CPU Session
+ */
+
+message Cpu_state{
+	uint64 r0 = 1;
+	uint64 r1 = 2;
+	uint64 r2 = 3;
+	uint64 r3 = 4;
+	uint64 r4 = 5;
+	uint64 r5 = 6;
+	uint64 r6 = 7;
+	uint64 r7 = 8;
+	uint64 r8 = 9;
+	uint64 r9 = 10;
+	uint64 r10= 11;
+	uint64 r11= 12;
+	uint64 r12= 13;	
+	uint64 r13 = 14;
+	uint64 r14 = 15;
+	uint64 r15 = 16;
+	uint64 r16 = 17;
+	uint64 r17 = 18;
+	uint64 r18 = 19;
+	uint64 r19 = 20;
+	uint64 r20 = 21;
+	uint64 r21 = 22;
+	uint64 r22 = 23;
+	uint64 r23= 24;
+	uint64 r24= 25;
+	uint64 r25= 26;
+	uint64 r26 = 27;
+	uint64 r27 = 28;
+	uint64 r28 = 29;	
+	uint64 r29 = 30;
+    uint64 sp = 31;
+	uint64 ip = 32;
+}
+
+
+message Cpu_thread_info{
+	Normal_info normal_info = 1;
+	uint32 weight = 2;	
+	string name = 3;
+	uint32 utcb = 4;
+	bool started = 5;
+	bool paused = 6;
+	bool single_step = 7;
+	uint32 affinity_x = 8;
+	uint32 affinity_y = 9;	
+	uint32 sigh_badge = 10;
+	Cpu_state ts = 11;
+	uint32 pd_session_badge = 12;
+}
+
+
+message Cpu_session_info{
+	Session_info session_info = 1;
+	uint32 sigh_badge = 2;
+	repeated Cpu_thread_info cpu_thread_info = 3;
+}
+
+/**
+ * Capability Mapping
+ */
+
+message Capability_mapping{
+	uint32 _cap_idx_alloc_addr = 2;  
+}
+
+
+/**
+ * RM Session
+ */
+
+message Attached_region_info{
+	Normal_info normal_info = 1;
+
+	uint32 attached_ds_badge = 6;
+	uint32 size = 2;
+	uint32 offset = 3;
+	uint32 rel_addr = 4;
+	bool executable = 5;
+}
+
+message Region_map_info{
+    Normal_info normal_info = 1;
+	uint32   size = 2;
+	uint32   ds_badge = 3;
+	uint32   sigh_badge = 4;
+	repeated Attached_region_info attached_region_info = 5;
+}
+
+message Rm_session_info{
+	Session_info session_info = 1;
+	repeated Region_map_info region_map_info = 2;
+}
+
+/**
+ * PD Session
+ */
+
+message Native_capability_info {
+	Normal_info normal_info = 1;
+	uint32 ep_badge = 2;		
+}
+
+message Signal_context_info{
+  uint32 signal_source_badge = 1;
+  uint64 imprint = 2;
+  Normal_info normal_info = 3;
+}
+
+message Signal_source_info{
+	Normal_info normal_info = 1;
+}
+
+message Ram_dataspace_info{
+	uint32                   size = 1;
+	uint32                   cached = 2;
+	uint32                   timestamp = 4;
+	Attachment               attachment = 5;
+	Normal_info normal_info = 3;
+}
+
+message Pd_session_info {
+	repeated Signal_context_info signal_context_info = 1;
+	repeated Signal_source_info signal_source_info = 2;
+	repeated Native_capability_info native_capability_info = 3;
+	repeated Ram_dataspace_info ram_dataspace_info = 4;	
+	Region_map_info address_space = 5;
+	Region_map_info stack_area = 6;
+	Region_map_info linker_area = 7;
+
+	Session_info session_info = 8;
+}
+
+/**
+ * ROM Session
+ */
+
+
+message Rom_session_info{
+	uint32 dataspace_badge = 1;
+	uint32 sigh_badge = 2;
+	Session_info session_info = 3;
+}
+
+
+/**
+ * Timer session
+ */
+
+message Timer_session_info{
+	uint32	 sigh_badge = 1;
+	uint32   timeout = 2;
+	bool     periodic = 3;
+	Session_info session_info = 4;
+}
+
+/**
+ * Log session
+ */
+
+message Log_session_info{
+	Session_info session_info = 1;
+}
